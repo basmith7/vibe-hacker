@@ -1514,13 +1514,18 @@ notify("#general", "10x-ing that shit 🔥");`,
       termLine("t-git","🧰","stashed "+item.name+" (Lv "+item.ilvl+") in Toolbox");
     }
   }
-  function equipFromToolbox(itemId){
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    const item=P.toolbox.splice(idx,1)[0], old=P.equip[item.slot];
+  // shared by equipFromToolbox()/equipFromCraftSlot() — swaps whatever's currently in that slot
+  // back into the Toolbox (rather than deleting it) before equipping the new item
+  function equipItem(item){
+    const old=P.equip[item.slot];
     if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
     P.equip[item.slot]=item; recompute();
     toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
     termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
+  }
+  function equipFromToolbox(itemId){
+    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
+    equipItem(P.toolbox.splice(idx,1)[0]);
     save(); renderShop();
   }
   function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit + material refund
@@ -1550,11 +1555,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function equipFromCraftSlot(){
     if(!P.craftSlot) return;
-    const item=P.craftSlot, old=P.equip[item.slot]; P.craftSlot=null;
-    if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
-    P.equip[item.slot]=item; recompute();
-    toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
-    termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
+    const item=P.craftSlot; P.craftSlot=null;
+    equipItem(item);
     save(); renderShop();
   }
   function rollCost(){ return Math.round(15+P.level*3); }   // Toolbox "Roll for Hardware" gamble cost
@@ -1611,67 +1613,73 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function craftCost(item){ return Math.round(5+item.ilvl*0.5); }
+  // shared afford-check + deduct for every IDE craft action below — each one still handles its
+  // own precondition (open patch slot? has patches to reroll?) and mutation, since those genuinely
+  // differ; this only dedupes the "can I pay for this, then pay for it" boilerplate.
+  function spendCraftMaterial(matId,cost){
+    if((P.materials[matId]||0)<1||P.credits<cost) return false;
+    P.materials[matId]--; P.credits-=cost;
+    return true;
+  }
   function craftAddPatch(){
     const it=P.craftSlot; if(!it||it.patches.length>=it.maxPatches) return;
-    const cost=craftCost(it); if(P.materials.commit<1||P.credits<cost) return;
     const ids=availablePatchIds(it); if(!ids.length) return;
+    if(!spendCraftMaterial("commit",craftCost(it))) return;
     const id=pick(ids);
     it.patches.push(makePatch(id,it.ilvl));
-    P.materials.commit--; P.credits-=cost; recompute();
+    recompute();
     toast("📝 Commit applied",PATCH_DEFS[id].lbl+" added to "+it.name,"#39ff14");
     termLine("t-git","📝","committed a patch onto "+it.name);
     save(); renderShop();
   }
   function craftHotfix(){
     const it=P.craftSlot; if(!it||!it.patches.length) return;
-    const cost=craftCost(it); if(P.materials.hotfix<1||P.credits<cost) return;
+    if(!spendCraftMaterial("hotfix",craftCost(it))) return;
     const p=pick(it.patches), def=PATCH_DEFS[p.id];
     p.value=def.tiers[p.tier]*rand(0.9,1.1);
-    P.materials.hotfix--; P.credits-=cost; recompute();
+    recompute();
     toast("🩹 Hotfixed",def.lbl+" value rerolled","#00e5ff");
     termLine("t-git","🩹","hotfixed a patch on "+it.name);
     save(); renderShop();
   }
   function craftRefactor(){
     const it=P.craftSlot; if(!it||!it.patches.length) return;
-    const cost=craftCost(it); if(P.materials.refactor<1||P.credits<cost) return;
     const idx=(Math.random()*it.patches.length)|0;
     const have=new Set(it.patches.filter((_,i)=>i!==idx).map(p=>p.id));
     const ids=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===it.slot)&&!have.has(id); });
     if(!ids.length) return;
+    if(!spendCraftMaterial("refactor",craftCost(it))) return;
     it.patches[idx]=makePatch(pick(ids),it.ilvl);
-    P.materials.refactor--; P.credits-=cost; recompute();
+    recompute();
     toast("🔀 Refactored","Patch type rerolled on "+it.name,"#c77dff");
     termLine("t-git","🔀","refactored a patch on "+it.name);
     save(); renderShop();
   }
   function craftFullRewrite(){
     const it=P.craftSlot; if(!it||!it.patches.length) return;
-    const cost=craftCost(it); if(P.materials.rewrite<1||P.credits<cost) return;
     const n=it.patches.length, pool=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return d.slot===null||d.slot===it.slot; });
+    if(!spendCraftMaterial("rewrite",craftCost(it))) return;
     const chosen=[];
     while(chosen.length<n && chosen.length<pool.length){ const id=pick(pool); if(!chosen.includes(id)) chosen.push(id); }
     it.patches=chosen.map(id=>makePatch(id,it.ilvl));
-    P.materials.rewrite--; P.credits-=cost; recompute();
+    recompute();
     toast("📦 Full Rewrite","All patches rerolled on "+it.name,"#ffb000");
     termLine("t-git","📦","fully rewrote "+it.name);
     save(); renderShop();
   }
   function craftRevert(){
     const it=P.craftSlot; if(!it||!it.patches.length) return;
-    const cost=craftCost(it); if(P.materials.revert<1||P.credits<cost) return;
+    if(!spendCraftMaterial("revert",craftCost(it))) return;
     it.patches=[];
-    P.materials.revert--; P.credits-=cost; recompute();
+    recompute();
     toast("⏪ Reverted",it.name+" stripped back to Stock","#5b6b86");
     termLine("t-dim","⏪","reverted "+it.name+" to Stock");
     save(); renderShop();
   }
   function craftAddSlot(){
     const it=P.craftSlot; if(!it||it.maxPatches>=4) return;
-    const cost=craftCost(it)*2;   // adding a slot is more impactful than any single reroll — priced accordingly
-    if(P.materials.merge<1||P.credits<cost) return;
+    if(!spendCraftMaterial("merge",craftCost(it)*2)) return;   // adding a slot is more impactful than any single reroll — priced accordingly
     it.maxPatches++;
-    P.materials.merge--; P.credits-=cost;
     toast("🔗 Feature Branch Merged",it.name+" now holds "+it.maxPatches+" patches","#39ff14");
     termLine("t-git","🔗","merged a feature branch onto "+it.name);
     save(); renderShop();
