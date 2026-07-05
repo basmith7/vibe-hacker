@@ -224,7 +224,8 @@
     border:1px solid var(--edge);border-radius:6px;padding:4px 6px;flex:1;min-width:0}
   .rollBtns{display:flex;gap:6px;flex-shrink:0}
   .rollBtns .buy{padding:8px 9px}
-  .stashCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .stashCard .actions,.missionCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .missionCard .buy{font-size:9.5px;padding:6px 8px;white-space:normal;text-align:center}
   .buy.danger{border-color:var(--red);color:var(--red);background:rgba(255,43,94,.08)}
   .buy.danger:hover:not(:disabled){background:rgba(255,43,94,.18);box-shadow:0 0 12px rgba(255,43,94,.3)}
   .stashEmpty{font-size:10.5px;color:var(--dim);padding:14px 4px;text-align:center;line-height:1.4}
@@ -795,6 +796,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       toolbox:[], itemSeq:0, craftSlot:null,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
+      missions:[], sprintConfig:0, missionSeq:0,
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -804,7 +806,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
-    "materials","matPity","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "materials","matPity","missions","sprintConfig","missionSeq",
+    "themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -1041,6 +1044,13 @@ notify("#general", "10x-ing that shit 🔥");`,
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
+    const mbh=document.createElement("div"); mbh.className="shopCat"; mbh.id="missionCat"; body.appendChild(mbh);
+    const missionsWrap=document.createElement("div"); missionsWrap.id="missionList"; missionsWrap.className="stashWrap"; body.appendChild(missionsWrap);
+    const rerollCard=document.createElement("div"); rerollCard.className="card"; rerollCard.innerHTML=
+      `<span class="em">🔄</span><div class="mid"><div class="nm">Reroll Board</div><div class="fx">Scrap every not-yet-complete mission for a fresh set of 3. Cost scales with their level — cheap early, pricier the more you've invested.</div></div>`+
+      `<button class="buy" id="rerollBtn"></button>`;
+    body.appendChild(rerollCard);
+    rerollCard.querySelector("#rerollBtn").addEventListener("click",e=>{e.stopPropagation();rerollBoard();});
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 The IDE (crafting bench)"; body.appendChild(ih);
     const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; body.appendChild(ideCard);
     const ideActions=document.createElement("div"); ideActions.id="ideActions"; ideActions.className="stashWrap"; body.appendChild(ideActions);
@@ -1130,6 +1140,30 @@ notify("#general", "10x-ing that shit 🔥");`,
       el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
     }
   }
+  function renderMissionBoard(){
+    const cat=$("#missionCat"), wrap=$("#missionList"), btn=$("#rerollBtn");
+    if(!cat||!wrap) return;
+    cat.textContent="📋 Mission Board — "+(P.sprintConfig||0)+" ⚙️ Sprint Config";
+    wrap.innerHTML=(P.missions||[]).map(m=>{
+      const def=MISSION_DEF[m.defId];
+      const pct=Math.round(Math.min(1,1-Math.max(0,m.tasksLeft)/m.totalTasks)*100);
+      const status=m.done?"Complete — waiting on the rest of the board":(Math.max(0,m.tasksLeft)+"/"+m.totalTasks+" tasks left");
+      return `<div class="card missionCard" data-id="${m.id}"><span class="em">${def.em}</span>`+
+        `<div class="mid"><div class="nm">${def.lbl} <span class="lv">Lv ${m.level}</span></div>`+
+        `<div class="fx">${status} · bonus ${def.bonusMat} on ${def.allStats?"any":STAT[def.favorStat].lbl} task${m.rewardMult>1?" · ×"+m.rewardMult.toFixed(2)+" payout":""}</div>`+
+        `<div class="pity"><i style="width:${pct}%"></i></div></div>`+
+        `<div class="actions">`+
+        `<button class="buy" data-act="extend" ${m.done||(P.sprintConfig||0)<2?"disabled":""}>+3 tasks (2⚙️)</button>`+
+        `<button class="buy" data-act="crunch" ${m.done||(P.sprintConfig||0)<3?"disabled":""}>×1.35 (3⚙️)</button>`+
+        `</div></div>`;
+    }).join("");
+    wrap.querySelectorAll(".missionCard").forEach(card=>{
+      const id=Number(card.dataset.id);
+      card.querySelector('[data-act="extend"]').addEventListener("click",e=>{e.stopPropagation();missionExtend(id);});
+      card.querySelector('[data-act="crunch"]').addEventListener("click",e=>{e.stopPropagation();missionCrunch(id);});
+    });
+    if(btn){ const cost=rerollCost(); btn.textContent="Reroll — "+money(cost); btn.disabled=P.credits<cost; }
+  }
   function renderToolbox(){
     if(!toolboxBuilt) return;
     for(const s of SLOTS){
@@ -1139,6 +1173,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
     }
     renderMaterials();
+    renderMissionBoard();
     renderIdeCard();
     const c=rollCost();
     for(const s of SLOTS){
@@ -1585,6 +1620,74 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-git","🔗","merged a feature branch onto "+it.name);
     save(); renderShop();
   }
+
+  /* ============ missions (crafting update Phase 6) ============ */
+  // 3 always-active contracts. Each qualifying task decrements every non-done mission's counter
+  // (so nothing ever stalls from the player ignoring it); a task matching a mission's favored stat
+  // has a bonus-material chance and gets weighted higher in task selection (assignTask()) so
+  // leaning into a mission is worth it without being mandatory.
+  const MISSION_DEFS=[
+    {id:"debug_sprint",lbl:"Debugging Sprint", em:"🐛",favorStat:"debug",  bonusMat:"hotfix",  tasks:8,bonusChance:0.5},
+    {id:"deploy_week", lbl:"Deploy Week",       em:"🚀",favorStat:"systems",bonusMat:"refactor",tasks:8,bonusChance:0.5},
+    {id:"algo_grind",  lbl:"Algorithm Grind",   em:"🧮",favorStat:"algo",   bonusMat:"commit",  tasks:8,bonusChance:0.5},
+    {id:"focus_block", lbl:"Focus Block",       em:"🎯",favorStat:"focus",  bonusMat:"commit",  tasks:8,bonusChance:0.5},
+    {id:"hackathon",   lbl:"Hackathon",         em:"⚡",favorStat:null,     bonusMat:"commit",  tasks:5,bonusChance:0.8,allStats:true},
+  ];
+  const MISSION_DEF=Object.fromEntries(MISSION_DEFS.map(m=>[m.id,m]));
+  function rollMission(){
+    const def=pick(MISSION_DEFS), level=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
+    return {id:++P.missionSeq, defId:def.id, level, tasksLeft:def.tasks, totalTasks:def.tasks, rewardMult:1, done:false};
+  }
+  function refreshBoard(){
+    P.missions=[rollMission(),rollMission(),rollMission()];
+    toast("📋 New mission board","3 fresh contracts available","#00e5ff");
+    termLine("t-git","📋","mission board refreshed");
+  }
+  function rerollCost(){ return P.missions.filter(m=>!m.done).reduce((s,m)=>s+m.level,0)*8; }
+  function rerollBoard(){
+    const cost=rerollCost(); if(P.credits<cost) return;
+    P.credits-=cost; refreshBoard();
+    save(); renderShop();
+  }
+  function completeMission(m){
+    m.done=true;
+    const def=MISSION_DEF[m.defId];
+    const matGain=Math.max(1,Math.round(m.level*0.15*m.rewardMult));
+    P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+matGain;
+    const sprintGain=Math.max(1,Math.round(1+m.level/20));
+    P.sprintConfig=(P.sprintConfig||0)+sprintGain;
+    toast("📋 Mission complete: "+def.lbl,"+"+matGain+" "+def.bonusMat+" · +"+sprintGain+" Sprint Config","#39ff14");
+    termLine("t-git","📋","completed mission: "+def.lbl+" (+"+matGain+" "+def.bonusMat+")");
+    if(Math.random()<0.35) dropHardware();   // missions can reward items directly, not just materials
+    if(P.missions.every(mm=>mm.done)) refreshBoard();
+  }
+  function progressMissions(stat){
+    for(const m of P.missions){
+      if(m.done) continue;
+      m.tasksLeft--;
+      const def=MISSION_DEF[m.defId];
+      if((def.favorStat===stat||def.allStats) && Math.random()<def.bonusChance*m.rewardMult){
+        P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+1;
+      }
+      if(m.tasksLeft<=0) completeMission(m);
+    }
+  }
+  // Sprint Config — spend on an active mission to make it (and its eventual payout) bigger, the
+  // mission-crafting analogue of gear patches: same add/reroll-flavored verbs, different target.
+  function missionExtend(missionId){
+    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<2) return;
+    P.sprintConfig-=2; m.tasksLeft+=3; m.totalTasks+=3; m.rewardMult*=1.15;
+    toast("⚙️ Sprint Config spent","Extended "+MISSION_DEF[m.defId].lbl+" — bigger payout, more tasks","#c77dff");
+    termLine("t-git","⚙️","extended mission: "+MISSION_DEF[m.defId].lbl);
+    save(); renderShop();
+  }
+  function missionCrunch(missionId){
+    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<3) return;
+    P.sprintConfig-=3; m.rewardMult*=1.35;
+    toast("⚙️ Sprint Config spent","Crunched "+MISSION_DEF[m.defId].lbl+" — bigger payout, same length","#c77dff");
+    termLine("t-git","⚙️","crunched mission: "+MISSION_DEF[m.defId].lbl);
+    save(); renderShop();
+  }
   function levelUp(){
     const before=titleFor();
     P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);   // tuned so Lv100 is a real, hard-fought (but reachable) milestone — see "crafting update.md" Phase 2
@@ -1637,7 +1740,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function assignTask(w){
     const pool=TASKS.filter(t=>P.unlockedStats.includes(t[1]));
-    const [name,stat]=pick(pool.length?pool:TASKS);
+    // crafting update Phase 6 — active missions favoring a stat triple that stat's tasks in the
+    // pick pool, so leaning into a mission's stat is worth it without making other tasks impossible
+    const favored=new Set((P.missions||[]).filter(m=>!m.done).map(m=>MISSION_DEF[m.defId].favorStat).filter(Boolean));
+    let weighted=pool;
+    if(favored.size){ weighted=[]; for(const t of pool){ weighted.push(t); if(favored.has(t[1])) weighted.push(t,t); } }
+    const [name,stat]=pick(weighted.length?weighted:TASKS);
     const diff=5+P.stage*1.35+rand(0,4);
     const sv=P.stats[stat]+GEAR.stat[stat];   // patches (Phase 5) add flat stat bonus on top of the base value
     const speed=(1+sv/22+(P.stats.focus+GEAR.stat.focus)/60)*MULT.speed;    // relevant stat + Focus + hardware → faster
@@ -1667,6 +1775,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color);
       if(Math.random()<.16){ if(Math.random()<.7) dropHardware(); else addLoot(); }
       grantMaterials(stat,locBefore);
+      progressMissions(stat);
       if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
     } else {
       const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)*(1-MULT.resist)));   // Rizz damage-reduction retired with Phase 1; returned as MULT.resist (a gear patch, Phase 5)
@@ -1955,6 +2064,7 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ boot ============ */
   const restored=loadState();
+  if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();

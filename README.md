@@ -27,7 +27,9 @@ progression is real and auto-saves.
   are equip slots filled by drops (or gambled for with credits). Extras land in the **🧰 Toolbox**, a
   filterable stash where you compare candidates, equip, or decommission for credits + materials.
   Stage gear in **🛠 The IDE** to spend those materials on **patches** (Stock → Modded →
-  Custom-Built). Level-ups grant **skill points** you spend on any stat via the `+` buttons.
+  Custom-Built). A rotating **📋 Mission Board** biases what you earn and pays out bonus materials,
+  Sprint Config, and the occasional item. Level-ups grant **skill points** you spend on any stat
+  via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **22 achievements** that unlock as you play.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing
