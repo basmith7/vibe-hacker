@@ -430,6 +430,17 @@
 </div>
 
 <script>
+/* ============================================================================
+   VIBE//HACKER — single-file idle-RPG. Everything (HTML/CSS/JS) lives here.
+   Jump map (search for these "=== name ===" banners):
+     DATA        stats · tasks · campaign stages · titles · loot · upgrade economy
+     CORE        state + persistence · derived multipliers (MULT/recompute)
+     SHOP        shop/upgrades · prestige (IPO) · achievements
+     FEEDBACK    surge · celebrations/flash · terminal · toasts · meme banner
+     ENGINE      progression engine (HUD/themes) · workers · counters + HUD update
+     RENDER      canvas helpers · globe · charts · matrix rain
+     RUNTIME     main loop · interaction · offline earnings · boot
+   ============================================================================ */
 (() => {
   "use strict";
   const $ = s => document.querySelector(s);
@@ -438,6 +449,8 @@
   const clamp=(v,a,b)=>v<a?a:v>b?b:v;
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fmt=n=>Math.floor(n).toLocaleString("en-US");
+  const UI={};   // cached DOM refs for the per-frame hot loop (populated in cacheUI)
+  let bodyFont="ui-monospace,monospace";   // canvas font family, refreshed on theme change
 
   /* ============ stats ============ */
   const STATS=[
@@ -668,7 +681,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
   function recompute(){
     const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
-    MULT.mult=m.mult;
     MULT.speed=Math.pow(1.08,u.ram)*m.speed*md.speed;
     const pres=1+P.equity*0.02;                        // permanent prestige bonus (+2% per Equity)
     MULT.xp=Math.pow(1.12,u.cpu)*m.mult*pres;
@@ -774,8 +786,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function allocate(id){ if(P.sp<=0) return; P.sp--; statUp(id,1); updateSPui(); save(); }
   function updateSPui(){
-    const e=$("#s_sp"); if(e) e.textContent=P.sp;
-    const st=$("#spStat"); if(st) st.classList.toggle("sppulse",P.sp>0);
+    if(UI.s_sp) UI.s_sp.textContent=P.sp;
+    if(UI.spStat) UI.spStat.classList.toggle("sppulse",P.sp>0);
     if(HUD.chip) for(const id of STAT_IDS){ const b=HUD.chip[id]&&HUD.chip[id].plus; if(b) b.classList.toggle("on",P.sp>0); }
   }
 
@@ -923,9 +935,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   ];
   let curTheme=null, themeManual=false;
   function themeForLevel(){ let t=THEMES[0]; for(const th of THEMES) if(P.level>=th.min) t=th; return t; }
+  function setTheme(id){ document.documentElement.dataset.theme=id; bodyFont=getComputedStyle(document.body).fontFamily; }
   function applyTheme(announce){
     const t=themeForLevel();
-    document.documentElement.dataset.theme=t.id;
+    setTheme(t.id);
     const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name;
     if(announce && curTheme && curTheme!==t.id){
       celebrate("🖥 SYSTEM UPGRADE","#00e5ff"); flyMeme(t.name.toUpperCase());
@@ -936,7 +949,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function cycleTheme(){   // manual preview toggle (key: T)
     const i=THEMES.findIndex(t=>t.id===document.documentElement.dataset.theme);
     const t=THEMES[(i+1)%THEMES.length];
-    document.documentElement.dataset.theme=t.id;
+    setTheme(t.id);
     const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name+" (preview)";
     themeManual=true; toast("🎨 Theme preview", t.name, "#c77dff");
   }
@@ -1078,15 +1091,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     // achievements (throttled)
     achTimer+=dt; if(achTimer>=1){ achTimer=0; checkAch(); }
 
-    $("#s_credits").textContent=money(P.credits);
-    $("#s_task").textContent=fmt(P.tasksDone);
-    $("#s_streak").textContent=P.streak;
-    $("#s_loot").textContent=fmt(P.loot);
+    UI.s_credits.textContent=money(P.credits);
+    UI.s_task.textContent=fmt(P.tasksDone);
+    UI.s_streak.textContent=P.streak;
+    UI.s_loot.textContent=fmt(P.loot);
     const t=P.playSecs; const hh=String((t/3600|0)).padStart(2,"0"),mm=String((t/60%60|0)).padStart(2,"0"),ss=String((t%60|0)).padStart(2,"0");
-    $("#s_up").textContent=`${hh}:${mm}:${ss}`;
+    UI.s_up.textContent=`${hh}:${mm}:${ss}`;
     const hpPct=clamp(P.hp/P.hpMax*100,0,100);
-    $("#s_hp").textContent=Math.round(hpPct);
-    $("#hpfill").style.width=hpPct+"%";
+    UI.s_hp.textContent=Math.round(hpPct);
+    UI.hpfill.style.width=hpPct+"%";
     hpbar.classList.toggle("low",hpPct<28);
 
     HUD.lv.textContent="LVL "+P.level+(P.prestige?(" ✦"+P.prestige):"");
@@ -1097,13 +1110,16 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const id of STAT_IDS) HUD.chip[id].v.textContent=Math.floor(P.stats[id]);
     updateSPui();
 
-    $("#g_stage").textContent=P.stage+1; $("#g_streak").textContent=P.streak; $("#g_arcs").textContent=globe?globe.arcs.length:0;
-    $("#agentCount").textContent=WK.filter(w=>w.task).length+"/"+WK.length+" agents on task";
+    UI.g_stage.textContent=P.stage+1; UI.g_streak.textContent=P.streak; UI.g_arcs.textContent=globe?globe.arcs.length:0;
+    UI.agentCount.textContent=WK.filter(w=>w.task).length+"/"+WK.length+" agents on task";
 
     if(shopOpen){ shopRefresh+=dt; if(shopRefresh>=0.2){ shopRefresh=0; renderShop(); } }
-    else { const b=$("#shopBtn"); if(b) b.classList.toggle("pip",anyAffordable()); }
+    else if(UI.shopBtn) UI.shopBtn.classList.toggle("pip",anyAffordable());
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
+  }
+  function cacheUI(){   // cache per-frame DOM refs once (avoids ~13 querySelector calls per frame)
+    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","shopBtn","spStat"]) UI[id]=$("#"+id);
   }
 
   /* ============ canvas helpers ============ */
@@ -1198,7 +1214,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     ctx.strokeStyle="rgba(255,255,255,.06)";ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();
     const a=a0+(a1-a0)*val;const col=val<0.28?"#ff2b5e":"#39ff14";
     ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(cx,cy,r,a0,a);ctx.stroke();ctx.shadowBlur=0;
-    ctx.fillStyle=col;ctx.font="700 15px "+getComputedStyle(document.body).fontFamily;ctx.textAlign="center";
+    ctx.fillStyle=col;ctx.font="700 15px "+bodyFont;ctx.textAlign="center";
     ctx.fillText(Math.round(val*100)+"%",cx,cy+2);
     $("#cv_gauge").textContent=Math.round(val*100)+"%";$("#cv_gauge").style.color=col;
   }
@@ -1214,7 +1230,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   const GLYPHS="アイウエオカキクケコ01<>{}[]$#/*+=;クサ日本ヲabcdef".split("");
   function initMatrix(){const {w,h}=fitCanvas(mcv);mFont=Math.max(12,Math.min(18,w/90));mCols=Math.floor(w/mFont);mYs=new Array(mCols).fill(0).map(()=>rand(0,h/mFont));}
   function drawMatrix(dt){const {ctx,w,h}=fitCanvas(mcv);ctx.fillStyle="rgba(5,7,13,0.10)";ctx.fillRect(0,0,w,h);
-    ctx.font=mFont+"px "+getComputedStyle(document.body).fontFamily;
+    ctx.font=mFont+"px "+bodyFont;
     for(let i=0;i<mCols;i++){const x=i*mFont,y=mYs[i]*mFont;ctx.fillStyle=Math.random()<.03?"#eafff0":"#1f8a3d";
       ctx.fillText(pick(GLYPHS),x,y);if(y>h&&Math.random()>.975)mYs[i]=0;else mYs[i]+=(0.4+surge*0.25);}}
 
@@ -1296,6 +1312,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ boot ============ */
   const restored=loadState();
   recompute();
+  cacheUI();
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
   applyTheme(false);
   applyUnlocks();
