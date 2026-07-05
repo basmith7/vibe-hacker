@@ -213,7 +213,21 @@
   #shopHead .bal{margin-left:auto;color:var(--green);font-weight:700;font-size:12px;text-shadow:0 0 8px rgba(57,255,20,.4)}
   #shopHead .x{cursor:pointer;color:var(--dim);border:1px solid var(--edge);border-radius:6px;padding:2px 9px}
   #shopHead .x:hover{color:var(--red);border-color:var(--red)}
-  #shopBody{flex:1;overflow-y:auto;padding:8px 12px 16px;display:flex;flex-direction:column;gap:7px}
+  .tabBtn{font:inherit;font-size:15px;line-height:1;background:#0a1120;color:var(--dim);
+    border:1px solid var(--edge);border-radius:6px;padding:5px 8px;cursor:pointer}
+  .tabBtn:hover:not(.on){color:#fff}
+  .tabBtn.on{color:var(--amber);border-color:var(--amber);box-shadow:0 0 8px rgba(255,176,0,.3)}
+  #shopBody{flex:1;overflow-y:auto;padding:8px 12px 16px}
+  #paneUpgrades,#paneToolbox,.stashWrap{display:flex;flex-direction:column;gap:7px}
+  .toolFilters{display:flex;gap:8px;margin:2px 2px 2px}
+  .toolFilters select{font:inherit;font-size:10.5px;background:#0a1120;color:var(--dim);
+    border:1px solid var(--edge);border-radius:6px;padding:4px 6px;flex:1;min-width:0}
+  .rollBtns{display:flex;gap:6px;flex-shrink:0}
+  .rollBtns .buy{padding:8px 9px}
+  .stashCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+  .buy.danger{border-color:var(--red);color:var(--red);background:rgba(255,43,94,.08)}
+  .buy.danger:hover:not(:disabled){background:rgba(255,43,94,.18);box-shadow:0 0 12px rgba(255,43,94,.3)}
+  .stashEmpty{font-size:10.5px;color:var(--dim);padding:14px 4px;text-align:center;line-height:1.4}
   .shopCat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:9px 2px 1px}
   .card{border:1px solid var(--edge);border-radius:9px;background:#0a1120;padding:9px 11px;display:flex;gap:10px;align-items:center}
   .card.hot{border-color:rgba(57,255,20,.4)}
@@ -458,11 +472,16 @@
 <div id="shopScrim"></div>
 <aside id="shop">
   <div id="shopHead">
-    <span class="t">🛒 UPGRADES</span>
+    <button class="tabBtn on" id="tabUpg" title="Upgrades">🛒</button>
+    <button class="tabBtn" id="tabTool" title="Toolbox (hardware inventory)">🧰</button>
+    <span class="t" id="shopTitle">UPGRADES</span>
     <span class="bal" id="shopBal">$0</span>
     <span class="x" id="shopClose">✕</span>
   </div>
-  <div id="shopBody"></div>
+  <div id="shopBody">
+    <div id="paneUpgrades"></div>
+    <div id="paneToolbox" style="display:none"></div>
+  </div>
   <div id="shopFooter"><button id="resetBtn" title="wipe your save">⟲ reset save</button></div>
 </aside>
 
@@ -612,10 +631,11 @@
     ["Quantum Flux Core","Photonic Array","Neuro-Cache"],
     ["Singularity Core","Graviton Lattice","Zero-Point Module"],
   ];
+  const TOOLBOX_CAP=18;   // crafting update Phase 4 — stash size before the worst item auto-scraps
   function rollItem(slotId){
     const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
     const ilvl=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
-    return {slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl};
+    return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl, rarity:"stock"};
   }
   function itemPower(slotId){ return P.equip[slotId]?P.equip[slotId].ilvl:0; }   // 0 if Stock/empty
   const UPG=[
@@ -703,6 +723,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
       up:{hire:0,skill:0,u_tele:0,u_globe:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
+      toolbox:[], itemSeq:0, craftSlot:null,
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -711,7 +732,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -774,7 +795,7 @@ notify("#general", "10x-ing that shit 🔥");`,
         // become starter equipped items, so existing investment converts into gear instead of vanishing.
         if(!("equip" in d)){
           const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
-          const starter=(oldLvl,slotId,mult)=>oldLvl>0?{slot:slotId,name:pick(era)+" "+SLOT[slotId].lbl,ilvl:Math.round(oldLvl*mult)}:null;
+          const starter=(oldLvl,slotId,mult)=>oldLvl>0?{id:++P.itemSeq,slot:slotId,name:pick(era)+" "+SLOT[slotId].lbl,ilvl:Math.round(oldLvl*mult),rarity:"stock"}:null;
           P.equip={
             ram:starter(P.up.ram,"ram",6), cpu:starter(P.up.cpu,"cpu",6),
             harddrive:starter(P.up.ssd,"harddrive",6), monitor:starter(P.up.monitors,"monitor",5),
@@ -783,6 +804,12 @@ notify("#general", "10x-ing that shit 🔥");`,
         }
         if(!P.equip) P.equip={ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null};
         for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
+        // migration: crafting-update Phase 4 — saves from between Phase 3 and Phase 4 have equipped
+        // items with no `id`/`rarity` (the Toolbox stash didn't exist yet); backfill both so
+        // unequip-into-Toolbox and stash filtering work on gear equipped before this update.
+        if(!Array.isArray(P.toolbox)) P.toolbox=[];
+        if(typeof P.itemSeq!=="number") P.itemSeq=0;
+        for(const s of SLOTS){ const it=P.equip[s.id]; if(it && it.id==null){ it.id=++P.itemSeq; it.rarity=it.rarity||"stock"; } }
         return true;
       }
     }catch(e){}
@@ -871,9 +898,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
-  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={},slotEls={};
+  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
+  let toolboxBuilt=false,slotEls={},rollEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
   function buildShop(){
-    const body=$("#shopBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
+    const body=$("#paneUpgrades"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
     const pc=document.createElement("div"); pc.className="card prestige";
     pc.innerHTML=`<span class="em">💰</span><div class="mid"><div class="nm">IPO — Cash Out <span class="lv" id="eqLv"></span></div><div class="fx" id="eqFx"></div></div><button class="buy" id="eqBtn"></button>`;
@@ -882,16 +910,6 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(!canPrestige()) return;
       if(confirm("Cash out now?\n\nResets your level, stats, credits, and all upgrades — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
     });
-    // equipped hardware slots — dropped from tasks, not bought; click Unequip to clear a slot
-    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🔧 Equipped Hardware"; body.appendChild(sh);
-    for(const s of SLOTS){
-      const card=document.createElement("div"); card.className="card slotCard";
-      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
-      body.appendChild(card);
-      const btn=card.querySelector(".buy");
-      btn.addEventListener("click",e=>{ e.stopPropagation(); if(P.equip[s.id]){ P.equip[s.id]=null; recompute(); renderShop(); save(); } });
-      slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
-    }
     // upgrades
     for(const u of UPG){
       if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); catHeaderEls[cat]=h; }
@@ -910,6 +928,110 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     shopBuilt=true; renderShop();
   }
+  // crafting update Phase 4 — the Toolbox tab: equipped-hardware overview, gambling for a random
+  // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
+  // unequipped candidates (filterable card list rather than a spatial grid — see the plan's
+  // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
+  function buildToolbox(){
+    const body=$("#paneToolbox"); body.innerHTML=""; slotEls={}; rollEls={};
+    const eh=document.createElement("div"); eh.className="shopCat"; eh.textContent="🔧 Equipped Hardware"; body.appendChild(eh);
+    for(const s of SLOTS){
+      const card=document.createElement("div"); card.className="card slotCard";
+      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
+      body.appendChild(card);
+      const btn=card.querySelector(".buy");
+      btn.addEventListener("click",e=>{ e.stopPropagation();
+        const it=P.equip[s.id]; if(!it) return;
+        if(it.id==null) it.id=++P.itemSeq; if(!it.rarity) it.rarity="stock";
+        P.toolbox.push(it); enforceToolboxCap(); P.equip[s.id]=null; recompute();
+        renderShop(); save();
+      });
+      slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
+    }
+    const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 The IDE (crafting bench)"; body.appendChild(ih);
+    const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; body.appendChild(ideCard);
+    const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; body.appendChild(rh);
+    for(const s of SLOTS){
+      const card=document.createElement("div"); card.className="card";
+      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl}</div>`+
+        `<div class="fx">Gamble credits for a random ${s.lbl} — lands in the Toolbox, or equips right away if that slot is empty</div></div>`+
+        `<div class="rollBtns"><button class="buy" data-n="1"></button><button class="buy" data-n="10"></button></div>`;
+      body.appendChild(card);
+      const b1=card.querySelector('[data-n="1"]'), b10=card.querySelector('[data-n="10"]');
+      b1.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,1);});
+      b10.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,10);});
+      rollEls[s.id]={btn1:b1,btn10:b10};
+    }
+    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🧰 Toolbox stash"; body.appendChild(sh);
+    const filters=document.createElement("div"); filters.className="toolFilters";
+    filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
+      SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
+      `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option></select>`;
+    body.appendChild(filters);
+    filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
+    filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
+    const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; body.appendChild(stash);
+    toolboxBuilt=true; renderToolbox();
+  }
+  function renderStashList(){
+    const wrap=$("#stashList"); if(!wrap) return;
+    const items=P.toolbox.filter(it=>(toolFilter.slot==="all"||it.slot===toolFilter.slot) && (toolFilter.rarity==="all"||(it.rarity||"stock")===toolFilter.rarity));
+    items.sort((a,b)=>b.ilvl-a.ilvl);
+    if(!items.length){
+      wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
+      return;
+    }
+    wrap.innerHTML=items.map(it=>`<div class="card stashCard" data-id="${it.id}"><span class="em">${SLOT[it.slot].em}</span>`+
+      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${SLOT[it.slot].lbl} · ${it.rarity||"stock"}</div></div>`+
+      `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
+    wrap.querySelectorAll(".stashCard").forEach(card=>{
+      const id=Number(card.dataset.id);
+      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromToolbox(id);});
+      card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(id);});
+      card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(id);});
+    });
+  }
+  function renderIdeCard(){
+    const card=$("#ideCard"); if(!card) return;
+    const it=P.craftSlot;
+    if(it){
+      card.innerHTML=`<span class="em">${SLOT[it.slot].em}</span><div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
+        `<div class="fx">${SLOT[it.slot].lbl} · being worked on — patches/crafting actions land in Phase 5</div></div>`+
+        `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button></div>`;
+      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
+      card.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
+    } else {
+      card.innerHTML=`<span class="em">🛠</span><div class="mid"><div class="nm">Empty</div>`+
+        `<div class="fx">Send an item here from the Toolbox stash below to stage it for crafting.</div></div>`;
+    }
+  }
+  function renderToolbox(){
+    if(!toolboxBuilt) return;
+    for(const s of SLOTS){
+      const el=slotEls[s.id]; if(!el) continue;
+      const item=P.equip[s.id];
+      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name; el.btn.disabled=false; }
+      else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
+    }
+    renderIdeCard();
+    const c=rollCost();
+    for(const s of SLOTS){
+      const r=rollEls[s.id]; if(!r) continue;
+      r.btn1.textContent=money(c); r.btn1.disabled=P.credits<c;
+      r.btn10.textContent="×10 "+money(c*10); r.btn10.disabled=P.credits<c*10;
+    }
+    renderStashList();
+  }
+  function setShopTab(tab){
+    shopTab=tab;
+    $("#tabUpg").classList.toggle("on",tab==="up");
+    $("#tabTool").classList.toggle("on",tab==="tb");
+    $("#shopTitle").textContent=tab==="up"?"UPGRADES":"TOOLBOX";
+    $("#paneUpgrades").style.display=tab==="up"?"flex":"none";
+    $("#paneToolbox").style.display=tab==="tb"?"flex":"none";
+    if(tab==="tb"&&!toolboxBuilt) buildToolbox();
+    renderShop();
+  }
   function renderShop(){
     if(!shopBuilt) return;
     $("#shopBal").textContent=money(P.credits)+"  ·  +"+money(MULT.passive)+"/s";
@@ -918,12 +1040,6 @@ notify("#general", "10x-ing that shit 🔥");`,
       eqLv.textContent=P.equity?("· "+P.equity+" Equity (+"+(P.equity*2)+"%)"):"";
       eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at Lv 10 (worth +"+g+" now)");
       eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 Lv 10"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
-    }
-    for(const s of SLOTS){
-      const el=slotEls[s.id]; if(!el) continue;
-      const item=P.equip[s.id];
-      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name; el.btn.disabled=false; }
-      else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
     }
     const catVisible={};
     for(const s of shopCards){
@@ -942,6 +1058,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
     renderAch();
+    renderToolbox();
   }
   function toggleShop(force){
     shopOpen=force!==undefined?force:!shopOpen;
@@ -1151,18 +1268,90 @@ notify("#general", "10x-ing that shit 🔥");`,
     toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color);
     termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
   }
-  function dropHardware(){   // real gear — auto-equips if better than what's in that slot, else salvaged for credits
-    const slotId=pick(SLOTS).id, item=rollItem(slotId), current=P.equip[slotId];
-    if(!current || item.ilvl>current.ilvl){
-      P.equip[slotId]=item; recompute();
-      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")"+(current?" — replaced "+current.name:""),"#4d8cff");
+  function salvageValue(item){ return Math.round(item.ilvl*2)+1; }
+  // crafting update Phase 4 — a new item auto-equips only if that slot is empty (nothing to
+  // choose between yet); otherwise it becomes a Toolbox candidate instead of auto-equip-if-better,
+  // so comparing/picking between multiple rolls is an actual decision, not something the game
+  // makes for you. Shared by natural task drops and the Toolbox's "Roll for Hardware" purchases.
+  function addHardwareItem(item){
+    if(!P.equip[item.slot]){ P.equip[item.slot]=item; recompute(); return "equipped"; }
+    P.toolbox.push(item);
+    enforceToolboxCap();
+    return "stashed";
+  }
+  function enforceToolboxCap(){   // Toolbox has finite space — scrap the single worst item to make room
+    while(P.toolbox.length>TOOLBOX_CAP){
+      let worst=0; for(let i=1;i<P.toolbox.length;i++) if(P.toolbox[i].ilvl<P.toolbox[worst].ilvl) worst=i;
+      const gone=P.toolbox.splice(worst,1)[0], refund=salvageValue(gone);
+      P.credits+=refund;
+      toast("🧰 Toolbox full","Auto-scrapped "+gone.name+" (Lv "+gone.ilvl+") → +"+money(refund),"#5b6b86");
+      termLine("t-dim","♻","toolbox full, auto-scrapped "+gone.name+" for "+money(refund));
+    }
+  }
+  function dropHardware(){   // real gear — see addHardwareItem() for the equip-or-stash rule
+    const slotId=pick(SLOTS).id, item=rollItem(slotId);
+    if(addHardwareItem(item)==="equipped"){
+      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")","#4d8cff");
       termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[slotId].lbl+" (Lv "+item.ilvl+")");
     } else {
-      const salvage=Math.round(item.ilvl*2)+1;
-      P.credits+=salvage;
-      toast("♻️ Salvaged",item.name+" (Lv "+item.ilvl+", worse than equipped) → +"+money(salvage),"#5b6b86");
-      termLine("t-dim","♻","salvaged "+item.name+" for "+money(salvage));
+      toast("🧰 Found gear","+1 "+item.name+" (Lv "+item.ilvl+") → Toolbox","#4d8cff");
+      termLine("t-git","🧰","stashed "+item.name+" (Lv "+item.ilvl+") in Toolbox");
     }
+  }
+  function equipFromToolbox(itemId){
+    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
+    const item=P.toolbox.splice(idx,1)[0], old=P.equip[item.slot];
+    if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
+    P.equip[item.slot]=item; recompute();
+    toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
+    termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
+    save(); renderShop();
+  }
+  function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit refund
+    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
+    const item=P.toolbox.splice(idx,1)[0], refund=salvageValue(item);
+    P.credits+=refund;
+    toast("♻️ Decommissioned",item.name+" (Lv "+item.ilvl+") → +"+money(refund),"#5b6b86");
+    termLine("t-dim","♻","decommissioned "+item.name+" for "+money(refund));
+    save(); renderShop();
+  }
+  // crafting update Phase 4 — The IDE holds one item you're "working on," separate from the general
+  // stash. No craft verbs exist yet (that's Phase 5); for now it's just a staging spot Phase 5's
+  // add/reroll actions will attach to, so save-state and UI plumbing exist ahead of time.
+  function sendToCraftSlot(itemId){
+    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
+    const item=P.toolbox.splice(idx,1)[0];
+    if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
+    P.craftSlot=item;
+    termLine("t-git","🛠","sent "+item.name+" to the IDE");
+    save(); renderShop();
+  }
+  function returnCraftSlotToToolbox(){
+    if(!P.craftSlot) return;
+    P.toolbox.push(P.craftSlot); P.craftSlot=null; enforceToolboxCap();
+    save(); renderShop();
+  }
+  function equipFromCraftSlot(){
+    if(!P.craftSlot) return;
+    const item=P.craftSlot, old=P.equip[item.slot]; P.craftSlot=null;
+    if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
+    P.equip[item.slot]=item; recompute();
+    toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
+    termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
+    save(); renderShop();
+  }
+  function rollCost(){ return Math.round(15+P.level*3); }   // Toolbox "Roll for Hardware" gamble cost
+  function rollForSlot(slotId,count){
+    let did=0;
+    for(let i=0;i<count;i++){
+      const c=rollCost(); if(P.credits<c) break;
+      P.credits-=c; addHardwareItem(rollItem(slotId)); did++;
+    }
+    if(did>0){
+      toast("🎲 Rolled Hardware","Bought "+did+"× "+SLOT[slotId].lbl+" roll"+(did>1?"s":""),"#c77dff");
+      termLine("t-git","🎲","rolled "+did+"× "+SLOT[slotId].lbl);
+    }
+    save(); renderShop();
   }
   function levelUp(){
     const before=titleFor();
@@ -1509,6 +1698,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#cornerReset").addEventListener("click",confirmReset);
   $("#shopBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(); fadeHint(); });
   $("#shopClose").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
+  $("#tabUpg").addEventListener("click",e=>{ e.stopPropagation(); setShopTab("up"); });
+  $("#tabTool").addEventListener("click",e=>{ e.stopPropagation(); setShopTab("tb"); });
   $("#shopScrim").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
   $("#shop").addEventListener("click",e=>{ e.stopPropagation(); });   // don't grind while shopping
   $("#themeLabel").addEventListener("click",e=>{ e.stopPropagation(); toggleThemeMenu(); fadeHint(); });

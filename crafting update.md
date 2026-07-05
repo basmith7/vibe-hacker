@@ -11,14 +11,16 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phases 1-3 are done.** Next up: **Phase 4 — Toolbox & crafting slot.** Phase 3 replaced the
-repeatable Hardware upgrades with real equip slots (RAM/CPU/Hard Drive/Monitor/GPU/Modem),
-auto-equip-if-better drop logic, and a migration path from old saves — verified end-to-end
-(including a simulated-real-play natural-drop test) on branch `phase3-hardware-slots`, merged to
-`main`. Phase 4 is the first phase to need actual inventory management (multiple candidate items
-per slot, not just auto-equip-or-salvage), so expect more UI work than Phase 3. See the checklist
-in "Phased delivery" below for exact sub-step progress — that list is the source of truth for
-where to pick back up. Each phase works on its own branch, gets the full verify pass, updates
+**Phases 1-4 are done.** Next up: **Phase 5 — Patches + crafting materials.** Phase 4 added a
+real 🧰 Toolbox (card-list stash, filterable by slot/rarity), gambling for random hardware
+(×1/×10), Decommission, and a dedicated 🛠 IDE staging slot — on branch `phase4-toolbox`, verified
+end-to-end, merged to `main`. It also changed Phase 3's auto-equip-if-better rule: a full slot now
+sends new drops to the Toolbox instead of silently comparing and discarding, since that's what
+makes "stockpile and choose" meaningful. Phase 5 is where the itemization actually gets interesting
+— patches/affixes, rarity tiers (the Toolbox's rarity filter has been sitting ready since Phase 4),
+and the crafting materials that make the IDE's staging slot do something. See the checklist in
+"Phased delivery" below for exact sub-step progress — that list is the source of truth for where to
+pick back up. Each phase works on its own branch, gets the full verify pass, updates
 `guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at the end
 of "Phased delivery").
 
@@ -303,12 +305,47 @@ staleness is treated as part of "done," not a follow-up.
       proving `dropHardware()` is actually reachable through live play, not just injectable state.
 - [x] Update `guide.md`/`todo.md`; commit + push
 
-### Phase 4 — Toolbox & crafting slot
-- [ ] Card-list inventory (Toolbox) — filterable by slot and rarity
-- [ ] Buying/gambling multiple base-item rolls (absorbs the Bulk-buy backlog idea)
-- [ ] Decommission (disenchant) action
-- [ ] Dedicated in-progress crafting slot in The IDE
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 4 — Toolbox & crafting slot ✅ DONE
+- [x] Card-list inventory (`P.toolbox`) as a new **🧰 Toolbox** tab alongside **🛒 Upgrades** in the
+      existing shop aside (tab buttons in `shopHead`, two panes toggled by `setShopTab()`) — reused
+      the shop's own `.card`/`.shopCat` patterns rather than building a second modal from scratch.
+      Filterable by slot (dropdown) and rarity (dropdown, currently only "Stock" since Phase 5's
+      rarity tiers don't exist yet — the control is real and wired, just not interesting until then).
+- [x] **Changed the Phase 3 drop rule as part of this**: a slot with nothing equipped still
+      auto-equips a new item (nothing to compare yet), but a slot that's already filled now sends
+      the new item to the Toolbox instead of Phase 3's auto-equip-if-better/auto-salvage. This was
+      necessary for "stockpile candidates and decide" to mean anything — auto-equip-if-better would
+      have keept the Toolbox permanently empty in practice. `addHardwareItem()` is the shared
+      equip-or-stash helper both natural drops and Toolbox rolls call into.
+- [x] "🎲 Roll for Hardware" — gamble credits for a random item in a chosen slot (`rollForSlot()`),
+      cost `round(15 + level*3)`, flat across slots. Implemented **×1** and **×10** buttons per slot;
+      deliberately dropped the "max" variant from the original Bulk-buy idea as unnecessary UI
+      clutter for the value it'd add (×10 already covers "buy a bunch at once").
+- [x] Decommission (`decommissionItem()`) — same salvage formula as Phase 3's auto-salvage
+      (`round(ilvl*2)+1` credits), now a manual action on any stash card instead of an automatic
+      fallback.
+- [x] Dedicated crafting slot — **🛠 The IDE**: a single `P.craftSlot` staging spot, separate from
+      both the stash and equipped gear. Stash cards get a "→ IDE" action; the IDE card itself offers
+      Equip or "↩ Toolbox". No crafting verbs attach to it yet (that's Phase 5) — it's real,
+      persisted, structural plumbing for Phase 5 to build on, not a functional crafting bench yet.
+- [x] Toolbox capacity: capped at 18 items (`TOOLBOX_CAP`); past that the single lowest-ilvl item
+      auto-scraps for credits so saves can't grow unbounded from repeated rolling.
+- [x] Unequip (in the Equipped Hardware section) changed from Phase 3's "delete the item" to
+      "return it to the Toolbox" — now that a real stash exists, deleting on unequip would've been
+      a step backward.
+- [x] Migration: pre-Phase-4 saves get `toolbox:[]`/`itemSeq:0` for free (new `PERSIST` keys not
+      present in old saves just keep `defaults()`'s values); their already-equipped items are
+      backfilled with an `id`/`rarity` on load so Unequip-into-Toolbox and stash filtering work on
+      gear equipped before this update.
+- [x] Verify end-to-end: syntax-checked the script block standalone; headless-driver pass covering
+      tab switching, rolling ×1 and ×10 into a full slot's Toolbox (confirmed no auto-equip since
+      the slot was occupied), slot/rarity filtering, sending a stash item to the IDE then equipping
+      from there (confirmed the previously-equipped item returned to the stash, net Toolbox count
+      unchanged), decommissioning (confirmed credit refund), and unequip-returns-to-Toolbox
+      (confirmed the unequipped item reappears in the stash rather than vanishing). No console
+      errors; screenshots confirmed the tabbed layout, IDE staging card, and stash list all render
+      and sort sensibly (highest ilvl first).
+- [x] Update `guide.md`/`README.md`; commit + push
 
 ### Phase 5 — Patches + crafting materials
 - [ ] Tiered, weighted patch tables (slot-specific + generic pools), gated by item level

@@ -176,10 +176,12 @@ A successful task has a 16% chance to drop something — most of the time (70%) 
 **Hardware item** for one of six equip slots: 🧠 RAM, ⚙️ CPU, 💾 Hard Drive, 🖥️ Monitor,
 🎮 GPU, 📡 Modem. Each item has an item level (ilvl) that scales roughly with your character
 level, and a retro-flavored name drawn from an era matching your current OS tier (e.g. an early
-OS gets "Orange II RAM"; a late one gets "Singularity Core RAM"). There's no inventory to
-manage yet — a new item **auto-equips** if its ilvl beats what's in that slot, otherwise it's
-automatically **salvaged** for a small credit refund. You can also manually unequip any slot
-from the shop's **🔧 Equipped Hardware** section.
+OS gets "Orange II RAM"; a late one gets "Singularity Core RAM").
+
+- If a slot is **empty**, a new item for it **auto-equips** immediately — nothing to choose
+  between yet, so there's no reason to make you do it manually.
+- If that slot is **already filled**, the new item goes to your **🧰 Toolbox** stash instead
+  (see below) so you can compare it against what's equipped before deciding.
 
 Each slot has a distinct effect, scaling with the equipped item's ilvl:
 - 🧠 **RAM** — task speed
@@ -191,6 +193,26 @@ Each slot has a distinct effect, scaling with the equipped item's ilvl:
 
 The other 30% of drops are flavor **loot** (Mechanical Keyboard of Clackening, Rubber Duck of
 Debugging, etc.) — a small one-time stat bump with no equip slot of its own.
+
+## The Toolbox
+
+Press the **🧰** tab at the top of the shop panel (next to **🛒**) to open the Toolbox — your
+hardware inventory, separate from the Upgrades list:
+
+- **🔧 Equipped Hardware** — the same 6 slots as before; **Unequip** now returns that item to
+  your stash instead of deleting it.
+- **🛠 The IDE (crafting bench)** — a single dedicated staging slot for "the item you're
+  currently working on." Send a stash item here with **→ IDE**, then either **Equip** it or send
+  it **↩ Toolbox** back to the stash. There's nothing to craft on it yet — actual patches/rerolls
+  are a later update — but the slot is real and already saves with your game.
+- **🎲 Roll for Hardware** — gamble credits for a random item in a specific slot instead of
+  waiting on a task drop. Cost scales with your level and rises the same for every slot. Roll
+  once or **×10** at a time.
+- **Toolbox stash** — every item you haven't equipped or decommissioned, as a filterable card
+  list (by slot; by rarity, though everything is "stock" for now). Each card can **Equip**
+  (swapping whatever's currently in that slot back into the stash), send **→ IDE**, or
+  **Decommission** for a small credit refund. The stash holds 18 items — past that, the single
+  worst one auto-scraps for credits to make room.
 
 ## Themes (Upgrade OS)
 
