@@ -649,7 +649,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
-      credits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
+      credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
       up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,offline:0,autoAlloc:0,autoBuy:0},
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -658,7 +658,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -683,6 +683,8 @@ notify("#general", "10x-ing that shit 🔥");`,
         // migration: saves from before the intro funnel skip it (they've already progressed)
         if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
         if(!P.reveal) P.reveal={credits:false,shop:false};
+        // migration: backfill maxCredits from saves predating the shop-reveal-at-50%-saved system
+        if(typeof P.maxCredits!=="number") P.maxCredits=P.credits||0;
         return true;
       }
     }catch(e){}
@@ -727,6 +729,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
   function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c) return true; } return false; }
+  function isRevealed(u){
+    // "Getting Started" is the guided funnel — always visible as the roadmap, never gated.
+    if(u.cat==="Getting Started") return true;
+    if(P.up[u.id]>0) return true;   // already invested in it — never re-hide something owned, even after spending elsewhere
+    const c=upCost(u);
+    if(c==null) return true;        // maxed/owned edge case
+    return P.maxCredits >= c*0.5;   // revealed once you've EVER banked half its price (peak wealth, not current balance)
+  }
   function buy(u){
     const c=upCost(u); if(c==null||P.credits<c) return;
     P.credits-=c;
@@ -753,9 +763,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
-  let shopBuilt=false,shopOpen=false,shopCards=[];
+  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
   function buildShop(){
-    const body=$("#shopBody"); body.innerHTML=""; shopCards=[]; achEls={}; let cat=null;
+    const body=$("#shopBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
     const pc=document.createElement("div"); pc.className="card prestige";
     pc.innerHTML=`<span class="em">💰</span><div class="mid"><div class="nm">IPO — Cash Out <span class="lv" id="eqLv"></span></div><div class="fx" id="eqFx"></div></div><button class="buy" id="eqBtn"></button>`;
@@ -766,7 +776,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     });
     // upgrades
     for(const u of UPG){
-      if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); }
+      if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); catHeaderEls[cat]=h; }
       const card=document.createElement("div"); card.className="card";
       card.innerHTML=`<span class="em">${u.emoji}</span><div class="mid"><div class="nm">${u.name} <span class="lv"></span></div><div class="fx"></div></div><button class="buy"></button>`;
       body.appendChild(card);
@@ -791,8 +801,13 @@ notify("#general", "10x-ing that shit 🔥");`,
       eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at Lv 10 (worth +"+g+" now)");
       eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 Lv 10"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
     }
+    const catVisible={};
     for(const s of shopCards){
       const u=s.u, lvl=P.up[u.id], c=upCost(u);
+      const revealed=isRevealed(u);
+      s.card.style.display=revealed?"":"none";
+      if(revealed) catVisible[u.cat]=true;
+      if(!revealed) continue;   // skip formatting hidden cards — nothing depends on it, just saves a little work
       if(u.kind==="repeat"){ s.lv.textContent="Lv "+lvl; }
       else if(u.kind==="skill"){ s.lv.textContent=(P.unlockedStats.length)+"/"+STATS.length; }
       else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
@@ -801,6 +816,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(c==null){ s.btn.textContent=(u.kind==="repeat"||u.kind==="skill")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
+    for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
     renderAch();
   }
   function toggleShop(force){
@@ -1125,6 +1141,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function tickProgress(dt){
     P.hp=clamp(P.hp+dt*(MULT.regen+P.stats.caffeine*0.02),0,P.hpMax);   // Caffeine + espresso → recovery
     P.credits+=MULT.passive*dt;                                          // passive income (monitors)
+    if(P.credits>P.maxCredits) P.maxCredits=P.credits;   // peak wealth — drives shop-item reveal, never decreases on spend
     P.playSecs+=dt;
     let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
     // automation upgrades

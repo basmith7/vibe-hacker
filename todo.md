@@ -18,6 +18,9 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
   first purchase graduates into the full cockpit. Mid-intro saves resume correctly; old saves skip it.
 - [x] **Prestige layer** — "IPO / Cash Out" banks **Equity** for a permanent +2%/pt XP & credit multiplier.
 - [x] **Achievements** — 21 achievements with live unlock toasts + completion % in the shop.
+- [x] **Shop items reveal at 50%-saved** — Hardware/Rigs/Automation cards (and their category headers)
+  stay hidden until your peak-ever credits reach half the price; owned items always stay visible; peak
+  resets on prestige. "Getting Started" items and the IPO card are exempt (always the visible roadmap).
 - [ ] **Onboarding polish** — reveal animations beyond the fade-in, a "next unlock" progress hint once
   past the intro, gate more stats/panels, retune early credit pacing once there's playtest data.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
