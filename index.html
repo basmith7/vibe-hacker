@@ -84,10 +84,6 @@
   .hpbar.low i{background:linear-gradient(90deg,var(--amber),var(--red));box-shadow:0 0 12px var(--red)}
   .hpbar.hit{animation:hpflash .4s}
   @keyframes hpflash{0%,100%{filter:none}30%{filter:brightness(2.4) saturate(2)}}
-  #resetBtn{margin-left:6px;align-self:center;font:inherit;font-size:10px;color:var(--dim);background:#0a1120;border:1px solid var(--edge);
-    border-radius:6px;padding:3px 8px;cursor:pointer}
-  #resetBtn:hover{color:var(--red);border-color:var(--red)}
-
   /* grid */
   #grid{flex:1;display:grid;gap:8px;min-height:0;grid-template-columns:1.05fr 1.35fr 1fr;grid-template-rows:1fr 1fr;
     grid-template-areas:"globe agents charts" "globe agents terminal"}
@@ -191,12 +187,18 @@
 
   /* ---------- shop / upgrades ---------- */
   .stat.credits .v{color:var(--green);text-shadow:0 0 10px rgba(57,255,20,.55)}
-  #shopBtn,#resetBtn{align-self:center;font:inherit;font-size:10px;color:var(--dim);background:#0a1120;
-    border:1px solid var(--edge);border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap}
-  #shopBtn{color:var(--amber);border-color:#3a2f10;margin-left:6px}
+  #shopBtn{align-self:center;font:inherit;font-size:10px;color:var(--amber);background:#0a1120;
+    border:1px solid #3a2f10;border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap;margin-left:6px}
   #shopBtn:hover{color:#fff;border-color:var(--amber);box-shadow:0 0 12px rgba(255,176,0,.4)}
   #shopBtn.pip{animation:pip 1.1s infinite}
-  #resetBtn{margin-left:4px}#resetBtn:hover{color:var(--red);border-color:var(--red)}
+  #shopFooter{border-top:1px solid var(--edge);padding:10px 12px;flex:none}
+  #resetBtn{width:100%;font:inherit;font-size:10.5px;color:var(--dim);background:#0a1120;
+    border:1px solid var(--edge);border-radius:6px;padding:8px 9px;cursor:pointer}
+  #resetBtn:hover{color:var(--red);border-color:var(--red);box-shadow:0 0 10px rgba(255,43,94,.3)}
+  #cornerReset{display:none;position:fixed;left:8px;bottom:8px;z-index:46;font:inherit;font-size:11px;color:var(--dim);
+    background:rgba(10,17,32,.7);border:1px solid var(--edge);border-radius:6px;padding:3px 7px;cursor:pointer;opacity:.55}
+  #cornerReset:hover{opacity:1;color:var(--red);border-color:var(--red)}
+  body.intro #cornerReset{display:block}   /* fallback while the real shop/reset aren't reachable yet */
   @keyframes pip{0%,100%{box-shadow:0 0 0 rgba(57,255,20,0)}50%{box-shadow:0 0 14px rgba(57,255,20,.65)}}
   .agent.crit{border-color:var(--amber);box-shadow:0 0 18px rgba(255,176,0,.45) inset}
   #shopScrim{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .25s}
@@ -277,7 +279,6 @@
     .stat .v{font-size:14px}
     .stat.grow{flex:1 1 100%;order:9;min-width:100%;padding:2px 4px 0}
     #shopBtn{order:10;margin-left:auto}
-    #resetBtn{order:11;margin-left:4px}
 
     #grid{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
     .panel{min-height:0}
@@ -405,7 +406,6 @@
       <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
     </div>
     <button id="shopBtn" title="upgrades (U)">🛒 upgrades</button>
-    <button id="resetBtn" title="wipe your save">⟲ reset</button>
   </header>
 
   <footer id="hud">
@@ -463,7 +463,10 @@
     <span class="x" id="shopClose">✕</span>
   </div>
   <div id="shopBody"></div>
+  <div id="shopFooter"><button id="resetBtn" title="wipe your save">⟲ reset save</button></div>
 </aside>
+
+<button id="cornerReset" title="wipe your save">⟲</button>
 
 <div id="hint">
   🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd> boss key
@@ -1402,7 +1405,9 @@ notify("#general", "10x-ing that shit 🔥");`,
   addEventListener("resize",initMatrix);
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
-  $("#resetBtn").addEventListener("click",e=>{ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); });
+  function confirmReset(e){ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); }
+  $("#resetBtn").addEventListener("click",confirmReset);
+  $("#cornerReset").addEventListener("click",confirmReset);
   $("#shopBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(); fadeHint(); });
   $("#shopClose").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
   $("#shopScrim").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
