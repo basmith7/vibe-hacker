@@ -25,7 +25,7 @@
   html,body{height:100%}
   body{
     margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.35;
-    overflow:hidden;cursor:crosshair;text-shadow:0 0 4px rgba(0,229,255,.15);
+    overflow:hidden;cursor:crosshair;text-shadow:0 0 4px rgba(0,229,255,.15);touch-action:manipulation;
   }
   body::after{
     content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
@@ -157,9 +157,42 @@
   .statchip.up{animation:statup .6s}
   @keyframes statup{0%{filter:none}30%{filter:brightness(2.2)}}
 
-  @media (max-width:900px){
-    #grid{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;grid-template-areas:"globe" "agents" "charts" "terminal"}
-    .stat{min-width:70px}
+  /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
+  @media (max-width:820px){
+    html,body{height:auto;min-height:100%}
+    body{overflow-x:hidden;overflow-y:auto;font-size:12px;cursor:auto}
+    #cockpit{position:static;height:auto;min-height:100vh;padding:6px;gap:6px}
+
+    #statusbar{padding:5px 6px;gap:4px 6px}
+    .brand{width:100%;border-right:none;padding-right:0;margin-right:0;
+      justify-content:space-between;border-bottom:1px solid var(--edge);padding-bottom:5px;margin-bottom:2px}
+    .stat{min-width:0;flex:1 1 21%;padding:0 4px;border-right:none}
+    .stat .v{font-size:14px}
+    .stat.grow{flex:1 1 100%;order:9;min-width:100%;padding:2px 4px 0}
+    #resetBtn{order:10;margin-left:auto}
+
+    #grid{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+    .panel{min-height:0}
+    #globePanel{height:64vw;min-height:220px;max-height:340px}
+    #agentsPanel{height:460px}
+    #chartsPanel{height:300px}
+    #terminalPanel{height:240px}
+
+    #hud{flex-direction:column;gap:8px}
+    .hud-block{min-width:0;width:100%}
+    .hud-block.stats{flex:none;border-left:none;border-top:1px solid var(--edge);padding-left:0;padding-top:8px;
+      display:grid;grid-template-columns:repeat(4,1fr);gap:8px 10px}
+    .statchip{min-width:0}
+
+    #toasts{right:6px;bottom:52px;max-width:74vw}
+    #hint{left:8px;right:8px;bottom:8px;transform:none;font-size:11px;padding:7px 10px;line-height:1.5}
+    #memes .meme,.levelup{font-size:clamp(22px,7vw,44px)}
+  }
+  @media (max-width:430px){
+    .stat{flex:1 1 30%}
+    .hud-block.stats{grid-template-columns:repeat(2,1fr)}
+    #globePanel{height:72vw}
+    #agentsPanel{height:420px}
   }
 </style>
 </head>
@@ -768,7 +801,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(!bossOn) bumpSurge(1.2); });
+  addEventListener("click",()=>{ if(bossOn) return; bumpSurge(1.2); addXp(2); P.plot+=0.5; for(const w of WK) if(w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",initMatrix);
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -781,6 +814,9 @@ notify("#general", "10x-ing that shit 🔥");`,
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
   if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")); }
   else { termLine("t-info","◈","new career started — welcome, Script Kiddie"); }
+  if(matchMedia("(pointer:coarse)").matches){
+    const h=$("#hint"); if(h) h.innerHTML='🎮 <b>TAP THE SCREEN</b> to grind faster · auto-saves · rotate to landscape for the full cockpit';
+  }
   setTimeout(fadeHint,10000);
   requestAnimationFrame(frame);
 })();
