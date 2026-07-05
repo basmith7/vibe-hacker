@@ -42,6 +42,12 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 
 ## Tech
 - [ ] Split the single file into modules + a tiny build step (keep a bundled single-file output).
+      Revisit ~2,500–3,000 lines, or when we want tests/reuse. Do CSS-dedup + chart-helper below then.
+- [ ] **DRY the theme CSS** — the win31/win95 (and other) `:root[data-theme=...]` surface-selector lists
+      repeat heavily. Clean once there's a preprocessor/build (risky to hand-refactor: specificity).
+- [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge share fit/clear/grid boilerplate.
+- [ ] **Wire up or drop write-only state** — `P.loc`, `P.deploys`, `P.bugsFixed` are tracked but unused;
+      turn them into achievements ("deploy 100×", "squash 500 bugs", "1M LOC shipped") or remove.
 - [ ] Move save to IndexedDB (bigger, structured) while keeping the cookie/localStorage fallback.
 - [ ] Real offline via a service worker (installable PWA).
 - [ ] Unit tests for the economy math (success/credit/cost formulas).
