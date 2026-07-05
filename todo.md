@@ -7,10 +7,10 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
   auto-fills +5%/sec per level (capped 75%), stacking with mashing. Baseline (0 levels) is unchanged:
   verified zero progress with zero input over 2.5s; at max level, verified 20%→63% progress over 2.5s
   with zero input. Typing/tapping is still required for the last stretch even at max level.
-- [x] Reset moved to the bottom of the shop drawer (danger-zone footer), plus a small always-visible
-  "⟲" fallback in the bottom-left corner for the pre-shop intro window (shop needs 10 credits to open,
-  so the corner button is the only way to reset from a truly fresh start). Verified: reachable at $9
-  credits mid-intro, correctly wipes and reloads; disappears once the shop is reachable.
+- [x] Reset lives only at the bottom of the shop drawer (danger-zone footer, labeled **"⟲ sudo rm -r /"**
+  for flavor, confirm-prompt unchanged). No reset option during the intro terminal — the shop needs
+  10 credits to open, and getting there is quick enough that waiting is fine; removed the bottom-left
+  corner fallback that used to cover that window.
 
 ## Themes & vibe
 - [x] **Era themes, bought not leveled** — "Upgrade OS" is a Rigs-tier shop item (like New Machine/AI
@@ -74,9 +74,9 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
       Revisit ~2,500–3,000 lines, or when we want tests/reuse. Do CSS-dedup + chart-helper below then.
 - [ ] **DRY the theme CSS** — the win31/win95 (and other) `:root[data-theme=...]` surface-selector lists
       repeat heavily. Clean once there's a preprocessor/build (risky to hand-refactor: specificity).
-- [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge share fit/clear/grid
-      boilerplate. Bundle into crafting-update Phase 1, since that phase touches the charts anyway
-      for the 9→5 stat change — near-zero marginal cost to clean up at the same time.
+- [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge each still repeat the
+      same `$(id)` → `fitCanvas()` → `clearRect()` one-liner. Small, low-value on its own; bundle
+      it in whenever these functions are touched for something else anyway.
 - [x] ~~Wire up or drop write-only state~~ — `P.loc`/`P.deploys`/`P.bugsFixed` become crafting
       material sources in [crafting update.md](crafting%20update.md) (Phase 5), no longer dead trackers.
 - [ ] Move save to IndexedDB (bigger, structured) while keeping the cookie/localStorage fallback.
@@ -89,13 +89,4 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] "AI co-founder" that occasionally gives cursed advice.
 - [ ] Konami code easter egg.
 - [ ] Export your career as a shareable "resume" card image.
-
-
-## triage
-  these are low priorty, check in after other stages to see if these can be worked into the plan somewhere 
-
- * day 1 should not auto type at all, user must type to make progress, game starts with blank terminal sceen and blinking cursor 
- * remove reset from bottom left of day 1 screen, its fine to make them wait for the upgrades sceen to reset. 
- * are there architectural changes that we should explore to make future updaets and changes easier? 
- * change "reset save to 'sudo rm -r /`, keep are you sure prompt 
  

@@ -327,10 +327,9 @@ you actually earn them. "Hello, World" is always visible as a first nudge.
 
 Your run auto-saves every few seconds to a cookie, with a `localStorage` mirror as a fallback
 (cookies don't work on `file://`, which is how the mirror keeps local play working). Nothing is
-sent anywhere — it's entirely local to your browser. **⟲ reset save** at the bottom of the shop
-wipes it and starts over, after confirming. Before you've reached the shop (still in the intro
-terminal), use the small **⟲** in the bottom-left corner instead — the shop needs 10 credits to
-open, so that corner button is the only reset available before then.
+sent anywhere — it's entirely local to your browser. **⟲ sudo rm -r /** at the bottom of the shop
+wipes it and starts over, after confirming. There's no reset option during the intro terminal —
+the shop needs 10 credits to open, and reaching it is quick enough that waiting is fine.
 
 ## Controls
 
@@ -342,8 +341,7 @@ open, so that corner button is the only reset available before then.
 | `T` | Cycle through your unlocked looks |
 | `F11` | Fullscreen (browser-native) |
 | `Esc` / `` ` `` | Boss key — hide behind a fake spreadsheet |
-| `⟲ reset save` (bottom of shop) | Wipe your save and start over |
-| `⟲` (bottom-left corner) | Same, but reachable before the shop opens |
+| `⟲ sudo rm -r /` (bottom of shop) | Wipe your save and start over |
 
 ## A few tips
 

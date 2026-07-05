@@ -48,7 +48,7 @@ future-ideas backlog.
 - **`U`** — open the upgrade shop · **`T`** — cycle your unlocked looks
 - **`F11`** — fullscreen (browser native)
 - **`Esc`** / **`` ` ``** — boss key (hide behind a fake spreadsheet)
-- **`⟲ reset`** (top-right) — wipe your save
+- **`⟲ sudo rm -r /`** (bottom of the shop panel) — wipe your save
 
 Runs fully ambient too, so it works as a background screen. Single self-contained `index.html` — also
 runs offline by opening the file directly.
