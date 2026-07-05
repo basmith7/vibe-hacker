@@ -15,10 +15,19 @@ progression is real and auto-saves.
   clearing a task levels its stat. Fail a roll and you take **Sanity (HP)** damage — hit 0 and you **burn out**.
 - **~28 stages** from *Day 1: The Onboarding* to *Singularity Onset*, escalating titles (Script Kiddie →
   CTO → **Benevolent AGI**), and loot that boosts stats.
+- **Incremental economy** — earn **credits** per task and spend them in the **🛒 Upgrade shop**: RAM, CPU,
+  SSD, monitors, coffee, GPU (crit), plus one-time **Machine** and **AI Model** tiers, more agents, and
+  automation (offline earnings, auto-allocate, auto-buyer). Level-ups grant **skill points** you spend
+  on any stat via the `+` buttons.
+- **Evolving UI** — the whole interface ages up with your level: **MS-DOS → Windows 3.1 → Windows 95 →
+  Windows 10 → NEON//OS → STARSHIP OS**.
+
+See [todo.md](todo.md) for the future-ideas backlog.
 
 ## Controls
 
-- **Mash any key** — grind faster
+- **Mash any key / tap** — grind faster
+- **`U`** — open the upgrade shop · **`T`** — preview themes
 - **`F11`** — fullscreen (browser native)
 - **`Esc`** / **`` ` ``** — boss key (hide behind a fake spreadsheet)
 - **`⟲ reset`** (top-right) — wipe your save

@@ -252,6 +252,81 @@
     #globePanel{height:72vw}
     #agentsPanel{height:420px}
   }
+
+  /* =========================================================
+     ERA THEMES — swapped automatically as your level climbs.
+     Base look (no overrides) is NEON. Shared "surface" list is
+     repeated per theme because CSS can't alias selector groups.
+     ========================================================= */
+
+  /* ---- MS-DOS: green phosphor, black, square, no glow ---- */
+  :root[data-theme="dos"]{
+    --bg:#000;--panel:#000;--panel2:#050b05;--edge:#1c5a1c;--txt:#39ff66;--dim:#1f9c40;
+    --green:#39ff66;--cyan:#39ff66;--magenta:#7dff9e;--amber:#9dff5f;--blue:#39ff66;--red:#ff6a6a;
+  }
+  :root[data-theme="dos"] body{text-shadow:none}
+  :root[data-theme="dos"] #statusbar,:root[data-theme="dos"] .panel,:root[data-theme="dos"] #hud,
+  :root[data-theme="dos"] .agent,:root[data-theme="dos"] .card,:root[data-theme="dos"] .chart,
+  :root[data-theme="dos"] #shop,:root[data-theme="dos"] .toast,:root[data-theme="dos"] .stat,
+  :root[data-theme="dos"] .hbar,:root[data-theme="dos"] .hpbar,:root[data-theme="dos"] .vibebar{
+    border-radius:0!important;box-shadow:none!important;background:#000!important;border-color:#1c5a1c!important}
+  :root[data-theme="dos"] .panel>.head,:root[data-theme="dos"] #shopHead{background:#001800!important;color:#39ff66!important}
+  :root[data-theme="dos"] .logo,:root[data-theme="dos"] .stat .v,:root[data-theme="dos"] .hl .lv,
+  :root[data-theme="dos"] .hl .title,:root[data-theme="dos"] .card .nm,:root[data-theme="dos"] .toast .tt{color:#39ff66!important;text-shadow:none!important}
+  :root[data-theme="dos"] .card .buy,:root[data-theme="dos"] #shopBtn,:root[data-theme="dos"] #resetBtn{
+    border-radius:0!important;border-color:#39ff66!important;color:#39ff66!important;background:#001800!important;box-shadow:none!important}
+  :root[data-theme="dos"] canvas{filter:grayscale(1) sepia(1) hue-rotate(70deg) saturate(5) brightness(.85)}
+
+  /* ---- shared retro-Windows (gray, beveled, sans-serif) ---- */
+  :root[data-theme="win31"] body,:root[data-theme="win95"] body{font-family:Tahoma,"MS Sans Serif",Geneva,sans-serif;text-shadow:none!important;cursor:default}
+  :root[data-theme="win31"] body::after,:root[data-theme="win95"] body::after,:root[data-theme="win10"] body::after{display:none}
+  :root[data-theme="win31"] #matrix,:root[data-theme="win95"] #matrix,:root[data-theme="win10"] #matrix{opacity:0}
+  :root[data-theme="win31"] #statusbar,:root[data-theme="win31"] .panel,:root[data-theme="win31"] #hud,
+  :root[data-theme="win31"] .agent,:root[data-theme="win31"] .card,:root[data-theme="win31"] .chart,
+  :root[data-theme="win31"] #shop,:root[data-theme="win31"] .toast,:root[data-theme="win31"] .stat,
+  :root[data-theme="win95"] #statusbar,:root[data-theme="win95"] .panel,:root[data-theme="win95"] #hud,
+  :root[data-theme="win95"] .agent,:root[data-theme="win95"] .card,:root[data-theme="win95"] .chart,
+  :root[data-theme="win95"] #shop,:root[data-theme="win95"] .toast,:root[data-theme="win95"] .stat{
+    background:#c3c3c3!important;color:#000!important;border-radius:0!important;box-shadow:none!important;
+    border:2px solid!important;border-color:#fff #808080 #808080 #fff!important}
+  :root[data-theme="win31"] .stat .v,:root[data-theme="win31"] .logo,:root[data-theme="win31"] .hl .lv,
+  :root[data-theme="win31"] .hl .title,:root[data-theme="win31"] .card .nm,:root[data-theme="win31"] .toast .tt,
+  :root[data-theme="win95"] .stat .v,:root[data-theme="win95"] .logo,:root[data-theme="win95"] .hl .lv,
+  :root[data-theme="win95"] .hl .title,:root[data-theme="win95"] .card .nm,:root[data-theme="win95"] .toast .tt{color:#000!important;text-shadow:none!important}
+  :root[data-theme="win31"] .card .buy,:root[data-theme="win31"] #shopBtn,:root[data-theme="win31"] #resetBtn,
+  :root[data-theme="win95"] .card .buy,:root[data-theme="win95"] #shopBtn,:root[data-theme="win95"] #resetBtn{
+    border-radius:0!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;background:#c3c3c3!important;color:#000!important;box-shadow:none!important}
+  :root[data-theme="win31"]{--bg:#008080;--txt:#000;--dim:#333;--green:#008000;--cyan:#008080;--magenta:#800080;--amber:#806000;--blue:#000080;--red:#a00000;--edge:#808080}
+  :root[data-theme="win95"]{--bg:#008080;--txt:#000;--dim:#333;--green:#008000;--cyan:#008080;--magenta:#800080;--amber:#806000;--blue:#000080;--red:#a00000;--edge:#808080}
+  :root[data-theme="win31"] .panel>.head,:root[data-theme="win31"] #shopHead{background:#000080!important;color:#fff!important;border-radius:0!important}
+  :root[data-theme="win95"] .panel>.head,:root[data-theme="win95"] #shopHead{background:linear-gradient(90deg,#000080,#1084d0)!important;color:#fff!important;border-radius:0!important}
+  :root[data-theme="win95"] canvas,:root[data-theme="win31"] canvas{filter:saturate(.6) contrast(1.05)}
+  :root[data-theme="win31"] #shopHead .t,:root[data-theme="win95"] #shopHead .t,
+  :root[data-theme="win31"] .panel>.head .tag,:root[data-theme="win95"] .panel>.head .tag{color:#fff!important;text-shadow:none!important}
+
+  /* ---- Windows 10: flat, light, blue accent ---- */
+  :root[data-theme="win10"]{--bg:#e9eef4;--panel:#ffffff;--panel2:#f4f7fb;--edge:#cdd7e3;--txt:#1b2733;--dim:#6b7787;
+    --green:#107c10;--cyan:#0078d7;--magenta:#b4009e;--amber:#a97e00;--blue:#0078d7;--red:#e81123}
+  :root[data-theme="win10"] body{font-family:"Segoe UI",system-ui,Arial,sans-serif;text-shadow:none!important;cursor:default;background:#e9eef4}
+  :root[data-theme="win10"] #statusbar,:root[data-theme="win10"] .panel,:root[data-theme="win10"] #hud,
+  :root[data-theme="win10"] .agent,:root[data-theme="win10"] .card,:root[data-theme="win10"] .chart,
+  :root[data-theme="win10"] #shop,:root[data-theme="win10"] .toast,:root[data-theme="win10"] .stat{
+    background:#fff!important;color:#1b2733!important;border-radius:4px!important;border:1px solid #d5dee8!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
+  :root[data-theme="win10"] .stat .v,:root[data-theme="win10"] .logo,:root[data-theme="win10"] .hl .lv,
+  :root[data-theme="win10"] .hl .title,:root[data-theme="win10"] .card .nm,:root[data-theme="win10"] .toast .tt{color:#1b2733!important;text-shadow:none!important}
+  :root[data-theme="win10"] .panel>.head,:root[data-theme="win10"] #shopHead{background:#0078d7!important;color:#fff!important}
+  :root[data-theme="win10"] .panel>.head .tag,:root[data-theme="win10"] #shopHead .t,:root[data-theme="win10"] #shopHead .bal{color:#fff!important;text-shadow:none!important}
+  :root[data-theme="win10"] .card .buy,:root[data-theme="win10"] #shopBtn,:root[data-theme="win10"] #resetBtn{
+    border-radius:4px!important;border:1px solid #0078d7!important;color:#0078d7!important;background:#fff!important;box-shadow:none!important}
+  :root[data-theme="win10"] canvas{filter:saturate(.9)}
+
+  /* ---- Starship OS: hyper-neon holographic (endgame) ---- */
+  :root[data-theme="spaceage"]{--bg:#0a0016;--panel:#160a2e;--panel2:#1e0f3d;--edge:#4a2c8f;--txt:#e6e0ff;--dim:#9a8fd0;
+    --green:#5cffd0;--cyan:#66e0ff;--magenta:#c86bff;--amber:#ffb0f0;--blue:#7b8cff;--red:#ff5db0}
+  :root[data-theme="spaceage"] body{background:radial-gradient(circle at 50% -10%,#231052,#0a0016 60%)}
+  :root[data-theme="spaceage"] .panel,:root[data-theme="spaceage"] #statusbar,:root[data-theme="spaceage"] #hud,:root[data-theme="spaceage"] #shop{
+    box-shadow:0 0 30px rgba(150,90,255,.22) inset,0 8px 40px rgba(0,0,0,.6)!important;border-color:#4a2c8f!important}
+  :root[data-theme="spaceage"] canvas{filter:saturate(1.35) brightness(1.08) hue-rotate(-12deg)}
 </style>
 </head>
 <body>
@@ -694,6 +769,35 @@ notify("#general", "10x-ing that shit 🔥");`,
     $("#g_stages").textContent=STAGES.length;
   }
   function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
+
+  /* ============ era themes (evolve with level) ============ */
+  const THEMES=[
+    {id:"dos",     name:"MS-DOS 6.22",  min:1},
+    {id:"win31",   name:"Windows 3.1",  min:4},
+    {id:"win95",   name:"Windows 95",   min:8},
+    {id:"win10",   name:"Windows 10",   min:14},
+    {id:"neon",    name:"NEON//OS v6",  min:22},
+    {id:"spaceage",name:"STARSHIP OS",  min:34},
+  ];
+  let curTheme=null, themeManual=false;
+  function themeForLevel(){ let t=THEMES[0]; for(const th of THEMES) if(P.level>=th.min) t=th; return t; }
+  function applyTheme(announce){
+    const t=themeForLevel();
+    document.documentElement.dataset.theme=t.id;
+    const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name;
+    if(announce && curTheme && curTheme!==t.id){
+      celebrate("🖥 SYSTEM UPGRADE","#00e5ff"); flyMeme(t.name.toUpperCase());
+      toast("🖥 New OS unlocked", t.name, "#00e5ff"); termLine("t-info","🖥","system upgraded → "+t.name);
+    }
+    curTheme=t.id; themeManual=false;
+  }
+  function cycleTheme(){   // manual preview toggle (key: T)
+    const i=THEMES.findIndex(t=>t.id===document.documentElement.dataset.theme);
+    const t=THEMES[(i+1)%THEMES.length];
+    document.documentElement.dataset.theme=t.id;
+    const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name+" (preview)";
+    themeManual=true; toast("🎨 Theme preview", t.name, "#c77dff");
+  }
   function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
   function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
   function addLoot(){
@@ -709,7 +813,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     celebrate("LEVEL UP · LVL "+P.level,"#ffb000");
     toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000");
     termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
-    HUD.title.textContent=nt; updateSPui(); save();
+    HUD.title.textContent=nt; updateSPui(); applyTheme(true); save();
   }
   function stageAdvance(){
     P.plot-=P.plotNeed; P.stage++; P.plotNeed=Math.round(P.plotNeed*1.16+45);
@@ -1006,6 +1110,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
     if(bossOn) return;
     if(e.key==="u"||e.key==="U"){ toggleShop(); fadeHint(); return; }
+    if(e.key==="t"||e.key==="T"){ cycleTheme(); fadeHint(); return; }
     bumpSurge(0.9); addXp(2); P.plot+=0.5; for(const w of WK) if(w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
@@ -1036,6 +1141,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   const restored=loadState();
   recompute();
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
+  applyTheme(false);
   if(restored) offlineEarnings();
   WK.forEach(w=>{ assignTask(w); w.elapsed=rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
