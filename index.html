@@ -40,6 +40,7 @@
   }
   *{box-sizing:border-box}
   html,body{height:100%}
+  *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
   body{
     margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.35;
     overflow:hidden;cursor:crosshair;text-shadow:0 0 4px rgba(0,229,255,.15);touch-action:manipulation;
@@ -233,6 +234,25 @@
   .lockmask .hint{font-size:11px;color:var(--dim);max-width:82%;line-height:1.4}
   .agent.manual{border-color:rgba(0,229,255,.4);box-shadow:0 0 14px rgba(0,229,255,.12) inset}
   .agent.manual .nm{color:#eafff0!important}
+  /* intro funnel: full-screen manual terminal; chrome revealed step by step */
+  body.intro #statusbar{display:none}
+  body.intro.reveal-credits #statusbar{display:flex}
+  body.intro #statusbar > *{display:none}
+  body.intro.reveal-credits #statusbar .stat.credits{display:flex;animation:reveal .5s ease-out}
+  body.intro.reveal-shop #statusbar #shopBtn{display:inline-flex;animation:reveal .5s ease-out}
+  body.intro #hud,body.intro #globePanel,body.intro #chartsPanel,body.intro #terminalPanel{display:none}
+  body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
+  body.intro .agent .ah .sTag,body.intro .agent .ah .diff{display:none}
+  body.intro #grid{display:flex;flex-direction:column;flex:1 1 auto;gap:0}
+  body.intro #agentsPanel{flex:1 1 auto;height:auto;border:none;border-radius:0}
+  body.intro #agentsPanel > .head{display:none}
+  body.intro #agentsPanel .code{font-size:15px;padding:16px 22px}
+  body.intro #agentsPanel .prog{height:10px}
+  body.intro .agent{border:none;border-radius:0;background:transparent}
+  body.intro .agent .ah{padding:14px 22px 6px;border-bottom:none}
+  body.intro .agent .ah .nm{font-size:14px}
+  body.intro .agent .ah .tk{font-size:13px;color:var(--dim)}
+  @keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
   /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
   @media (max-width:820px){
@@ -632,12 +652,13 @@ notify("#general", "10x-ing that shit 🔥");`,
       credits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
       up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,offline:0,autoAlloc:0,autoBuy:0},
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
+      intro:true, reveal:{credits:false,shop:false},
       achv:{},seenTips:{shop:false,sp:false}};
   }
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","achv","seenTips"];
+    "credits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -659,6 +680,9 @@ notify("#general", "10x-ing that shit 🔥");`,
         if(!("unlocked" in d) || !("unlockedStats" in d)) unlockAll();
         if(!P.unlocked) P.unlocked={telemetry:false,globe:false};
         if(!Array.isArray(P.unlockedStats)||!P.unlockedStats.length) P.unlockedStats=["coding"];
+        // migration: saves from before the intro funnel skip it (they've already progressed)
+        if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
+        if(!P.reveal) P.reveal={credits:false,shop:false};
         return true;
       }
     }catch(e){}
@@ -706,6 +730,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function buy(u){
     const c=upCost(u); if(c==null||P.credits<c) return;
     P.credits-=c;
+    if(P.intro) endIntro();   // first purchase ever = graduation from the intro terminal
     if(u.kind==="unlock"){
       P.up[u.id]=1; P.unlocked[u.unlocks]=true; applyUnlocks();
       toast("🔓 Unlocked — "+u.name, u.fx(), "#39ff14"); termLine("t-git","🔓","unlocked: "+u.name);
@@ -923,6 +948,25 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(cp) cp.classList.toggle("locked",!P.unlocked.telemetry);
     if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
   }
+  function applyReveal(){   // intro funnel: full-screen terminal → credits → shop button
+    const b=document.body.classList;
+    b.toggle("intro", !!P.intro);
+    b.toggle("reveal-credits", !!(P.reveal&&P.reveal.credits));
+    b.toggle("reveal-shop", !!(P.reveal&&P.reveal.shop));
+  }
+  function checkReveal(){
+    if(!P.intro) return;
+    if(!P.reveal.credits && P.credits>0){ P.reveal.credits=true; applyReveal(); save(); }
+    if(!P.reveal.shop && P.credits>=10){ P.reveal.shop=true; applyReveal(); save(); }
+  }
+  function endIntro(){
+    if(!P.intro) return;
+    P.intro=false; applyReveal(); applyUnlocks();
+    let h=$("#hint"); if(!h){ h=document.createElement("div"); h.id="hint"; document.body.appendChild(h); }
+    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd> boss key';
+    h.style.opacity=""; hintFaded=false; setTimeout(fadeHint,10000);
+    save();
+  }
   function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
 
   /* ============ era themes (evolve with level) ============ */
@@ -1028,12 +1072,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function resolveTask(w){
     const {name,stat,diff}=w.task, sv=P.stats[stat], s=STAT[stat];
-    const chance=clamp(0.58+(sv-diff)*0.045+Math.min(0.15,P.streak*0.01)+MULT.success,0.15,0.98);
+    const chance=(P.intro&&w.manual)?1:clamp(0.58+(sv-diff)*0.045+Math.min(0.15,P.streak*0.01)+MULT.success,0.15,0.98);
     if(Math.random()<chance){
       const crit=Math.random()<MULT.crit?3:1; if(crit>1)P.crits++;
       const xp=Math.round((diff+6)*(1+P.stage*0.08)*MULT.xp*crit);
       const cr=Math.round((diff*0.6+4)*MULT.credit*crit);
-      addXp(xp); P.credits+=cr; P.earned+=cr; statUp(stat,rand(0.4,1.0));
+      addXp(xp); P.credits+=cr; P.earned+=cr; statUp(stat,rand(0.4,1.0)); checkReveal();
       P.plot+=diff*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
       P.tasksDone++; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
       if(stat==="debug")P.bugsFixed++;
@@ -1282,8 +1326,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(e.key==="Escape"){ e.preventDefault(); if(shopOpen){ toggleShop(false); return; } toggleBoss(); return; }
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
     if(bossOn) return;
-    if(e.key==="u"||e.key==="U"){ toggleShop(); fadeHint(); return; }
-    if(e.key==="t"||e.key==="T"){ cycleTheme(); fadeHint(); return; }
+    if(!P.intro){   // shop/theme shortcuts only apply once the intro terminal has graduated
+      if(e.key==="u"||e.key==="U"){ toggleShop(); fadeHint(); return; }
+      if(e.key==="t"||e.key==="T"){ cycleTheme(); fadeHint(); return; }
+    }
     bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
@@ -1317,6 +1363,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
   applyTheme(false);
   applyUnlocks();
+  applyReveal();
   initAch();
   if(restored) offlineEarnings();
   WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });

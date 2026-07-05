@@ -13,10 +13,13 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 ## Gameplay depth
 - [x] **Progressive onboarding** — start as one manual terminal + one stat; unlock agents, panels, and
   skills step by step (ghosted panels show the potential). Old saves migrate to fully-unlocked.
+- [x] **Intro funnel** — fresh start is a full-screen terminal that only advances on keypress/tap
+  (pure hackertyper); first filled bar reveals the credits counter, 10 credits reveals the shop button,
+  first purchase graduates into the full cockpit. Mid-intro saves resume correctly; old saves skip it.
 - [x] **Prestige layer** — "IPO / Cash Out" banks **Equity** for a permanent +2%/pt XP & credit multiplier.
 - [x] **Achievements** — 21 achievements with live unlock toasts + completion % in the shop.
-- [ ] **Phase 2 unlock polish** — reveal animations, "next unlock" progress hint, gate more stats/panels,
-  retune early credit pacing.
+- [ ] **Onboarding polish** — reveal animations beyond the fade-in, a "next unlock" progress hint once
+  past the intro, gate more stats/panels, retune early credit pacing once there's playtest data.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
 - [ ] Stat **synergies / set bonuses** (e.g. high Focus + high Caffeine → "flow state" buff).
