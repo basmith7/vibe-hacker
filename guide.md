@@ -33,23 +33,23 @@ history — the funnel only runs once, on a brand-new save.
 ## Stats
 
 Every stat has the same job: it's checked against a task's difficulty to determine your success
-chance and your speed at that specific *kind* of task. Two stats also have a global side-effect:
+chance and your speed at that specific *kind* of task. One stat also has a global side-effect:
 
 | Stat | Governs tasks like… | Extra effect |
 |---|---|---|
-| ⌨️ **Coding** | Write your first function, fix a typo, center a div | — |
-| ⚡ **Git-Fu** | Rebase, merge conflicts, force-push | — |
+| ⌨️ **Coding** | Write your first function, fix a typo, center a div, rebase, merge conflicts | — |
 | 🧠 **Focus** | Deep work, ignoring Slack, pomodoros | **Speeds up every task**, not just its own |
 | 🐛 **Debugging** | Heisenbugs, race conditions, prod fires | — |
-| 🏛 **Architect** | System design, abstractions, migrations | — |
-| 🚀 **DevOps** | Deploys, Kubernetes, CI, on-call | — |
+| 🏛 **Systems** | System design, abstractions, migrations, deploys, Kubernetes, on-call | — |
 | 🧮 **Algorithms** | Big-O, LeetCode, DP | — |
-| ✨ **Rizz** | Code review, standups, demos | **Softens failure damage**, up to −50% at Rizz 60+ |
-| ☕ **Caffeine** | Coffee, breaks, sleep | **Speeds Sanity regen**; also raised by the Espresso Machine upgrade |
 
 You start with only Coding. The rest unlock one at a time via **🧠 Learn a New Skill** in the
 shop — buying it adds the next stat to the task pool *and* gives it a visible chip with a `+`
 button, at the same time. There's no stat you can see but not use.
+
+*(Rizz and Caffeine used to be their own grindable stats — softening failure damage and speeding
+Sanity regen, respectively. They're retired as active stats for now; a future update reintroduces
+both as equippable gear patches instead, see `crafting update.md`.)*
 
 ### How stats raise
 

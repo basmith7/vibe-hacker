@@ -496,16 +496,15 @@
   let bodyFont="ui-monospace,monospace";   // canvas font family, refreshed on theme change
 
   /* ============ stats ============ */
+  // Stats: merged 9->5 for the crafting-expansion rework (see "crafting update.md" Phase 1).
+  // Coding absorbs the old Git-Fu; Systems absorbs the old Architect+DevOps. Rizz and Caffeine
+  // are retired as active/grindable stats — their effects return later as gear patches (Phase 5).
   const STATS=[
     {id:"coding",  lbl:"Coding",     em:"⌨️", color:"#eafff0"},
-    {id:"gitfu",   lbl:"Git-Fu",     em:"⚡", color:"#ff2bd6"},
     {id:"focus",   lbl:"Focus",      em:"🧠", color:"#00e5ff"},
     {id:"debug",   lbl:"Debugging",  em:"🐛", color:"#39ff14"},
-    {id:"arch",    lbl:"Architect",  em:"🏛", color:"#4d8cff"},
-    {id:"devops",  lbl:"DevOps",     em:"🚀", color:"#ffb000"},
+    {id:"systems", lbl:"Systems",    em:"🏛", color:"#4d8cff"},
     {id:"algo",    lbl:"Algorithms", em:"🧮", color:"#c77dff"},
-    {id:"rizz",    lbl:"Rizz",       em:"✨", color:"#ff6ec7"},
-    {id:"caffeine",lbl:"Caffeine",   em:"☕", color:"#ff8a3d"},
   ];
   const STAT=Object.fromEntries(STATS.map(s=>[s.id,s]));
   const STAT_IDS=STATS.map(s=>s.id);
@@ -516,31 +515,30 @@
     ["Print 'hello world'","coding"],["Add a semicolon","coding"],["Rename a variable","coding"],
     ["Write a for-loop","coding"],["Comment out the bug","coding"],["Google the error message","coding"],
     ["Copy-paste from StackOverflow","coding"],["Make it compile","coding"],["Ship the MVP","coding"],
-    ["Rebase 47 commits without conflicts","gitfu"],["Resolve the merge from hell","gitfu"],["Cherry-pick across 3 branches","gitfu"],
-    ["Force-push and pray","gitfu"],["Bisect the sneaky regression","gitfu"],["Squash 200 commits into one","gitfu"],
-    ["Recover from a detached HEAD","gitfu"],["Write a coherent commit message","gitfu"],
+    ["Rebase 47 commits without conflicts","coding"],["Resolve the merge from hell","coding"],["Cherry-pick across 3 branches","coding"],
+    ["Force-push and pray","coding"],["Bisect the sneaky regression","coding"],["Squash 200 commits into one","coding"],
+    ["Recover from a detached HEAD","coding"],["Write a coherent commit message","coding"],
     ["Enter deep flow for 4 hours","focus"],["Ignore 38 Slack pings","focus"],["Achieve inbox zero","focus"],
     ["Resist the urge to refactor","focus"],["Read the entire RFC","focus"],["Finish the ticket, finally","focus"],
     ["Silence every notification","focus"],["Complete a full pomodoro","focus"],
     ["Corner the Heisenbug","debug"],["Fix the race condition","debug"],["Repro the 1-in-1000 crash","debug"],
     ["Trace the null pointer","debug"],["Fix prod at 3am","debug"],["Remove all the console.logs","debug"],
     ["Patch the memory leak","debug"],["Explain why it works now","debug"],
-    ["Design the microservice mesh","arch"],["Draw the system diagram","arch"],["Choose the right abstraction","arch"],
-    ["Slay the God object","arch"],["Define the API contract","arch"],["Plan the zero-downtime migration","arch"],
-    ["Whiteboard the data model","arch"],["Justify the monorepo","arch"],
-    ["Deploy to prod on a Friday","devops"],["Tame the Kubernetes cluster","devops"],["Optimize the CI pipeline","devops"],
-    ["Write the perfect Dockerfile","devops"],["Rotate the leaked secrets","devops"],["Survive the on-call page","devops"],
-    ["Roll back the bad deploy","devops"],["Provision the infra","devops"],
+    ["Design the microservice mesh","systems"],["Draw the system diagram","systems"],["Choose the right abstraction","systems"],
+    ["Slay the God object","systems"],["Define the API contract","systems"],["Plan the zero-downtime migration","systems"],
+    ["Whiteboard the data model","systems"],["Justify the monorepo","systems"],
+    ["Deploy to prod on a Friday","systems"],["Tame the Kubernetes cluster","systems"],["Optimize the CI pipeline","systems"],
+    ["Write the perfect Dockerfile","systems"],["Rotate the leaked secrets","systems"],["Survive the on-call page","systems"],
+    ["Roll back the bad deploy","systems"],["Provision the infra","systems"],
     ["Crush the O(n²) bottleneck","algo"],["Beat the LeetCode hard","algo"],["Memoize the recursion","algo"],
     ["Balance the binary tree","algo"],["Solve the knapsack, dynamically","algo"],["Prove the loop invariant","algo"],
     ["Shave the constant factor","algo"],["Reverse the linked list (again)","algo"],
-    ["Charm the code reviewer","rizz"],["Survive the standup","rizz"],["Negotiate the deadline","rizz"],
-    ["Demo without it crashing","rizz"],["Convince PM to cut scope","rizz"],["Mentor the new hire","rizz"],
-    ["End the tabs-vs-spaces debate","rizz"],["Get the giant PR approved","rizz"],
-    ["Brew the perfect pour-over","caffeine"],["Pull a double espresso","caffeine"],["Power through the slump","caffeine"],
-    ["Hydrate (revolutionary)","caffeine"],["Take an actual break","caffeine"],["Sleep 8 hours (mythical)","caffeine"],
-    ["Refill the office coffee pot","caffeine"],["Resist the 5th cup","caffeine"],
   ];
+  // Retired task flavor (Rizz/Caffeine) — kept here for reuse as gear-patch flavor in Phase 5:
+  // Charm the code reviewer, Survive the standup, Negotiate the deadline, Demo without it crashing,
+  // Convince PM to cut scope, Mentor the new hire, End the tabs-vs-spaces debate, Get the giant PR approved,
+  // Brew the perfect pour-over, Pull a double espresso, Power through the slump, Hydrate (revolutionary),
+  // Take an actual break, Sleep 8 hours (mythical), Refill the office coffee pot, Resist the 5th cup.
 
   /* ============ campaign stages ("weeks") ============ */
   const STAGES=[
@@ -641,7 +639,7 @@
   dev.rank
 }`,
 `const grind = () => {
-  stats.gitfu += 0.8;   // number go up
+  stats.coding += 0.8;   // number go up
   hp = clamp(hp + 2, 0, hpMax);
   return "we're so back";
 };`,
@@ -706,6 +704,31 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(d && d.ver===SAVE_VER){
         const hadOs=!!(d.up && ("os" in d.up));
         for(const k of PERSIST) if(k in d) P[k]=d[k];
+        // migration: 9-stat -> 5-stat merge (crafting-update Phase 1). Detect a pre-merge save by
+        // the presence of any retired stat id, then fold values into the surviving 5 before the
+        // generic per-id backfill below would otherwise hand "systems" a fresh random value.
+        const oldStats=d.stats||{};
+        if(("gitfu" in oldStats)||("arch" in oldStats)||("devops" in oldStats)||("rizz" in oldStats)||("caffeine" in oldStats)){
+          // NOTE: P.stats and oldStats are the SAME object here (the generic PERSIST copy above
+          // assigns by reference) — read every old value out before deleting any of them.
+          const newCoding=(oldStats.coding||0)+(oldStats.gitfu||0);
+          const newSystems=(oldStats.arch||0)+(oldStats.devops||0);
+          const leftover=(oldStats.rizz||0)+(oldStats.caffeine||0);   // Rizz/Caffeine retired as active stats
+          delete P.stats.gitfu; delete P.stats.arch; delete P.stats.devops; delete P.stats.rizz; delete P.stats.caffeine;
+          P.stats.coding=newCoding; P.stats.systems=newSystems;
+          P.sp=(P.sp||0)+Math.max(0,Math.floor(leftover/10));          // refund as skill points so the investment isn't lost
+          if(Array.isArray(P.unlockedStats)){
+            const remapped=new Set(["coding"]);
+            for(const id of P.unlockedStats){
+              if(id==="gitfu") remapped.add("coding");
+              else if(id==="arch"||id==="devops") remapped.add("systems");
+              else if(id==="rizz"||id==="caffeine") { /* retired, drop */ }
+              else if(STAT_IDS.includes(id)) remapped.add(id);
+            }
+            P.unlockedStats=STAT_IDS.filter(id=>remapped.has(id));
+            P.up.skill=Math.max(0,P.unlockedStats.length-1);
+          }
+        }
         for(const id of STAT_IDS) if(!(id in P.stats)) P.stats[id]=rand(6,12);
         const du=defaults().up; for(const k in du) if(!(k in P.up)) P.up[k]=du[k];
         if(!P.achv||typeof P.achv!=="object") P.achv={};
@@ -1097,7 +1120,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function burnout(){
     P.burnouts++; const lost=Math.round(P.xp*0.4); P.xp=Math.max(0,P.xp-lost);
-    P.hp=Math.round(P.hpMax*0.6); P.streak=0; P.stats.caffeine=Math.max(1,P.stats.caffeine-3);
+    P.hp=Math.round(P.hpMax*0.6); P.streak=0;   // Caffeine stat-dock retired with Phase 1; returns as a gear-patch downside in Phase 5
     celebrate("🔥 BURNOUT","#ff2b5e"); flashHp();
     toast("🔥 BURNOUT","Mental-health day forced · -"+lost+" XP","#ff2b5e");
     termLine("t-bad","☠","BURNOUT — sanity hit zero. -"+lost+" XP, coffee break enforced"); save();
@@ -1156,7 +1179,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(Math.random()<.16) addLoot();
       if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
     } else {
-      const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)*(1-Math.min(0.5,P.stats.rizz/120))));  // Rizz softens the blow
+      const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)));   // Rizz damage-reduction retired with Phase 1; returns as a gear patch in Phase 5
       P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2*MULT.xp));
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); flashHp();
       termLine("t-bad","✗",w.a.name+" FAILED ‹"+name+"›  -"+dmg+" HP  (streak reset)");
@@ -1192,7 +1215,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ counters + HUD update ============ */
   let saveTimer=0,autoBuyT=0,shopRefresh=0,achTimer=0;
   function tickProgress(dt){
-    P.hp=clamp(P.hp+dt*(MULT.regen+P.stats.caffeine*0.02),0,P.hpMax);   // Caffeine + espresso → recovery
+    P.hp=clamp(P.hp+dt*MULT.regen,0,P.hpMax);   // Espresso Machine → recovery; Caffeine-stat bonus returns as a gear patch in Phase 5
     P.credits+=MULT.passive*dt;                                          // passive income (monitors)
     if(P.credits>P.maxCredits) P.maxCredits=P.credits;   // peak wealth — drives shop-item reveal, never decreases on spend
     P.playSecs+=dt;

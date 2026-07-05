@@ -11,10 +11,11 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Currently on: Phase 1 — Stat consolidation.** See the checklist in "Phased delivery" below for
-exact sub-step progress — that list is the source of truth for where to pick back up. Each phase
-works on its own branch, gets the full verify pass, updates `guide.md`/`todo.md`, then merges to
-`main` before the next phase starts (see the note at the end of "Phased delivery").
+**Phase 1 (Stat consolidation) is done and merged.** Next up: **Phase 2 — Level 1–100 rework.**
+See the checklist in "Phased delivery" below for exact sub-step progress — that list is the
+source of truth for where to pick back up. Each phase works on its own branch, gets the full
+verify pass, updates `guide.md`/`todo.md`, then merges to `main` before the next phase starts
+(see the note at the end of "Phased delivery").
 
 ## Stats: 9 → 5
 
@@ -216,18 +217,24 @@ and what's next. Check items off as they land. Each phase's **last two sub-steps
 same**: verify end-to-end, then update `guide.md`/`todo.md` before moving on — documentation
 staleness is treated as part of "done," not a follow-up.
 
-### Phase 1 — Stat consolidation *(foundational; every later phase assumes the final 5-stat list)*
-- [ ] Merge Coding+Git-Fu → **Coding**; merge Architect+DevOps → **Systems**; retire **Rizz** and
+### Phase 1 — Stat consolidation *(foundational; every later phase assumes the final 5-stat list)* ✅ DONE
+- [x] Merge Coding+Git-Fu → **Coding**; merge Architect+DevOps → **Systems**; retire **Rizz** and
       **Caffeine** as active stats (no task pool/skill point/HUD chip)
-- [ ] Rewrite the `TASKS` pool onto the 5 surviving stats
-- [ ] Rewire HUD stat chips, the stat-sheet chart, achievements referencing old stat ids, and the
-      "Learn a New Skill" unlock funnel (now 5 skills to unlock, not 9 — retune its cost curve)
-- [ ] Migration: old saves' Coding+Git-Fu and Architect+DevOps values sum/scale into the merged
-      stat; old Rizz/Caffeine values convert into starter patches (placeholder effect until
-      Phase 5's real patch system exists, since patches don't exist yet at this point)
-- [ ] Verify end-to-end (fresh start, migration from a pre-merge save, achievements, charts) —
+- [x] Rewrite the `TASKS` pool onto the 5 surviving stats (60 tasks; old Rizz/Caffeine flavor kept
+      in a code comment for reuse as Phase 5 patch flavor)
+- [x] Rewire HUD stat chips, the stat-sheet chart, and the "Learn a New Skill" unlock funnel (now 5
+      skills, not 9 — left the cost curve formula as-is since fewer stats already re-paces it
+      sensibly; confirmed no achievement referenced an old stat id, so nothing to rewire there)
+- [x] Migration: old saves' Coding+Git-Fu and Architect+DevOps values **sum** into the merged stat;
+      old Rizz+Caffeine values convert into **bonus skill points** instead (`floor(leftover/10)`) —
+      simpler placeholder than starter patches since patches don't exist until Phase 5, and it lets
+      the player immediately reinvest via the existing `+` buttons. `unlockedStats` and `up.skill`
+      remapped too. (Caught and fixed a real aliasing bug here in testing: `P.stats` and the raw
+      save's `stats` object are the same reference after the generic PERSIST copy, so the old
+      Rizz/Caffeine values had to be read *before* the `delete` calls, not after.)
+- [x] Verify end-to-end (fresh start, migration from a pre-merge save, achievements, charts) —
       headless-driver pass, no console errors
-- [ ] Update `guide.md` (stats section) and `todo.md`; commit + push
+- [x] Update `guide.md` (stats section) and `README.md`; commit + push
 
 ### Phase 2 — Level 1–100 rework
 - [ ] Retune XP-curve constants so level 100 is a real, hard-fought milestone
