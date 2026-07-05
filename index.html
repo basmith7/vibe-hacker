@@ -228,6 +228,14 @@
   .buy.danger{border-color:var(--red);color:var(--red);background:rgba(255,43,94,.08)}
   .buy.danger:hover:not(:disabled){background:rgba(255,43,94,.18);box-shadow:0 0 12px rgba(255,43,94,.3)}
   .stashEmpty{font-size:10.5px;color:var(--dim);padding:14px 4px;text-align:center;line-height:1.4}
+  .matCard .nm .lv{color:var(--amber)}
+  .pity{margin-top:5px;height:3px;border-radius:2px;background:#0d1526;overflow:hidden}
+  .pity i{display:block;height:100%;width:0%;background:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,.5);transition:width .2s}
+  .craftCard{padding:7px 10px}
+  .craftCard .em{font-size:16px}
+  .craftCard .nm{font-size:11.5px}
+  .craftCard .fx{font-size:9.5px}
+  .craftCard .buy{padding:6px 10px;font-size:10px}
   .shopCat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:9px 2px 1px}
   .card{border:1px solid var(--edge);border-radius:9px;background:#0a1120;padding:9px 11px;display:flex;gap:10px;align-items:center}
   .card.hot{border-color:rgba(57,255,20,.4)}
@@ -632,12 +640,73 @@
     ["Singularity Core","Graviton Lattice","Zero-Point Module"],
   ];
   const TOOLBOX_CAP=18;   // crafting update Phase 4 — stash size before the worst item auto-scraps
+  // crafting update Phase 5 — patches (affixes). Slot-specific patches only roll on their matching
+  // slot; generic ones (stat/no) roll on anything. `tiers` are gated by item level via `gate` (a
+  // low-ilvl item can't roll the top tier), and weighted toward the common tier when multiple are
+  // available. `value` on a rolled patch is the tier's number times a small ±10% roll, so Hotfix
+  // (reroll value) has something to actually change.
+  const PATCH_DEFS={
+    ram_speed:  {slot:"ram",       lbl:"Overclocked",  tiers:[0.03,0.06,0.10], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% task speed"},
+    cpu_xp:     {slot:"cpu",       lbl:"JIT-Compiled", tiers:[0.04,0.08,0.14], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% XP"},
+    hdd_credit: {slot:"harddrive", lbl:"RAID-Striped", tiers:[0.04,0.08,0.14], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% credits"},
+    mon_passive:{slot:"monitor",   lbl:"Ultrawide",    tiers:[0.05,0.10,0.18], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% passive credits"},
+    gpu_crit:   {slot:"gpu",       lbl:"Liquid-Cooled",tiers:[0.02,0.04,0.07], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% crit chance"},
+    modem_succ: {slot:"modem",     lbl:"Low-Latency",  tiers:[0.02,0.04,0.06], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% success chance"},
+    gen_coding: {slot:null, statId:"coding",  lbl:"Coding",     tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Coding"},
+    gen_focus:  {slot:null, statId:"focus",   lbl:"Focus",      tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Focus"},
+    gen_debug:  {slot:null, statId:"debug",   lbl:"Debugging",  tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Debugging"},
+    gen_systems:{slot:null, statId:"systems", lbl:"Systems",    tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Systems"},
+    gen_algo:   {slot:null, statId:"algo",    lbl:"Algorithms", tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Algorithms"},
+    gen_sanity: {slot:null, kind:"sanity", lbl:"Ergonomic", tiers:[10,20,35],       gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Max Sanity"},
+    gen_resist: {slot:null, kind:"resist", lbl:"Defensive", tiers:[0.10,0.20,0.35],gate:[0,20,45], fmt:v=>"-"+Math.round(v*100)+"% failure damage"},
+  };
+  function initialMaxPatches(ilvl){ return ilvl>=60?4:ilvl>=25?3:2; }   // higher-ilvl drops have more room to patch
+  function rollPatchTier(def,ilvl){
+    const weights=[70,25,5], avail=[];
+    for(let t=0;t<def.tiers.length;t++) if(ilvl>=def.gate[t]) avail.push(t);
+    let total=0; for(const t of avail) total+=weights[t];
+    let r=Math.random()*total;
+    for(const t of avail){ r-=weights[t]; if(r<=0) return t; }
+    return avail[avail.length-1];
+  }
+  function makePatch(id,ilvl){
+    const def=PATCH_DEFS[id], tier=rollPatchTier(def,ilvl), base=def.tiers[tier];
+    return {id, tier, value:base*rand(0.9,1.1)};
+  }
+  function availablePatchIds(item){   // patches not already rolled on this item, matching its slot or generic
+    const have=new Set((item.patches||[]).map(p=>p.id));
+    return Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===item.slot) && !have.has(id); });
+  }
+  function rarityOf(item){   // derived, not stored — Stock/Modded/Custom-Built map to PoE's Normal/Magic/Rare
+    const n=(item.patches||[]).length; return n>=3?"custom-built":n>=1?"modded":"stock";
+  }
   function rollItem(slotId){
     const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
     const ilvl=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
-    return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl, rarity:"stock"};
+    return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
   }
   function itemPower(slotId){ return P.equip[slotId]?P.equip[slotId].ilvl:0; }   // 0 if Stock/empty
+  // crafting update Phase 5 — sum of all equipped patches, folded into MULT/stats each recompute()
+  const GEAR={speed:0,xp:0,credit:0,passive:0,crit:0,success:0,sanity:0,resist:0,stat:{coding:0,focus:0,debug:0,systems:0,algo:0}};
+  function recomputeGear(){
+    GEAR.speed=0; GEAR.xp=0; GEAR.credit=0; GEAR.passive=0; GEAR.crit=0; GEAR.success=0; GEAR.sanity=0; GEAR.resist=0;
+    for(const id of STAT_IDS) GEAR.stat[id]=0;
+    for(const s of SLOTS){
+      const it=P.equip[s.id]; if(!it||!it.patches) continue;
+      for(const p of it.patches){
+        const def=PATCH_DEFS[p.id]; if(!def) continue;
+        if(def.statId) GEAR.stat[def.statId]+=p.value;
+        else if(def.kind==="sanity") GEAR.sanity+=p.value;
+        else if(def.kind==="resist") GEAR.resist+=p.value;
+        else if(p.id==="ram_speed") GEAR.speed+=p.value;
+        else if(p.id==="cpu_xp") GEAR.xp+=p.value;
+        else if(p.id==="hdd_credit") GEAR.credit+=p.value;
+        else if(p.id==="mon_passive") GEAR.passive+=p.value;
+        else if(p.id==="gpu_crit") GEAR.crit+=p.value;
+        else if(p.id==="modem_succ") GEAR.success+=p.value;
+      }
+    }
+  }
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
@@ -724,6 +793,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       up:{hire:0,skill:0,u_tele:0,u_globe:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
+      materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
+      matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -732,7 +803,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
+    "materials","matPity","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -810,6 +882,15 @@ notify("#general", "10x-ing that shit 🔥");`,
         if(!Array.isArray(P.toolbox)) P.toolbox=[];
         if(typeof P.itemSeq!=="number") P.itemSeq=0;
         for(const s of SLOTS){ const it=P.equip[s.id]; if(it && it.id==null){ it.id=++P.itemSeq; it.rarity=it.rarity||"stock"; } }
+        // migration: crafting-update Phase 5 — items from before patches existed get an empty
+        // patches array and a maxPatches based on their ilvl, so they behave like freshly-rolled
+        // Stock items rather than crashing on undefined .patches.
+        const backfillPatches=it=>{ if(!it) return; if(!Array.isArray(it.patches)) it.patches=[]; if(typeof it.maxPatches!=="number") it.maxPatches=initialMaxPatches(it.ilvl); };
+        for(const s of SLOTS) backfillPatches(P.equip[s.id]);
+        for(const it of P.toolbox) backfillPatches(it);
+        backfillPatches(P.craftSlot);
+        if(!P.materials) P.materials={commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0};
+        if(!P.matPity) P.matPity={commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0};
         return true;
       }
     }catch(e){}
@@ -829,21 +910,23 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ derived multipliers ============ */
-  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0,offlineEff:0.5};
+  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0,offlineEff:0.5,resist:0};
   function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
   function recompute(){
+    recomputeGear();   // crafting update Phase 5 — sum equipped patches before folding into MULT
     const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
     const ram=itemPower("ram"), cpu=itemPower("cpu"), hdd=itemPower("harddrive"),
           mon=itemPower("monitor"), gpu=itemPower("gpu"), modem=itemPower("modem");
-    MULT.speed=(1+ram*0.02)*m.speed*md.speed;
+    MULT.speed=(1+ram*0.02+GEAR.speed)*m.speed*md.speed;
     const pres=1+P.equity*0.02;                        // permanent prestige bonus (+2% per Equity)
-    MULT.xp=(1+cpu*0.03)*m.mult*pres;
-    MULT.credit=(1+hdd*0.025)*m.mult*pres;
-    MULT.passive=mon*0.15*m.mult;
-    MULT.success=md.success+Math.min(0.10,modem*0.002);   // AI Model + Modem (Hardware slot) both help success
-    MULT.crit=Math.min(0.6,gpu*0.005);
+    MULT.xp=(1+cpu*0.03+GEAR.xp)*m.mult*pres;
+    MULT.credit=(1+hdd*0.025+GEAR.credit)*m.mult*pres;
+    MULT.passive=mon*0.15*m.mult*(1+GEAR.passive);
+    MULT.success=md.success+Math.min(0.10,modem*0.002)+GEAR.success;   // AI Model + Modem (Hardware slot) + patches all help success
+    MULT.crit=Math.min(0.6,gpu*0.005+GEAR.crit);
     MULT.regen=0.5+u.coffee*0.35;
-    MULT.hpBonus=u.coffee*15;
+    MULT.hpBonus=u.coffee*15+GEAR.sanity;
+    MULT.resist=Math.min(0.5,GEAR.resist);   // failure-damage reduction from gear (old Rizz effect, returned as a patch)
     MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
     MULT.workers=Math.min(8,1+u.hire);   // 1 = you (manual); each hire adds an auto agent
     MULT.offlineEff=Math.min(0.9,0.5+modem*0.005);   // Modem also improves offline-earning efficiency
@@ -899,7 +982,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(best) buy(best);
   }
   let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
-  let toolboxBuilt=false,slotEls={},rollEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
+  let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
   function buildShop(){
     const body=$("#paneUpgrades"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -942,14 +1025,25 @@ notify("#general", "10x-ing that shit 🔥");`,
       const btn=card.querySelector(".buy");
       btn.addEventListener("click",e=>{ e.stopPropagation();
         const it=P.equip[s.id]; if(!it) return;
-        if(it.id==null) it.id=++P.itemSeq; if(!it.rarity) it.rarity="stock";
+        if(it.id==null) it.id=++P.itemSeq;
         P.toolbox.push(it); enforceToolboxCap(); P.equip[s.id]=null; recompute();
         renderShop(); save();
       });
       slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
     }
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Crafting Materials"; body.appendChild(mh);
+    const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; body.appendChild(matsWrap);
+    matEls={};
+    for(const m of MATS){
+      const card=document.createElement("div"); card.className="card matCard";
+      card.innerHTML=`<span class="em">${m.em}</span><div class="mid"><div class="nm">${m.lbl} <span class="lv"></span></div>`+
+        `<div class="fx">${m.does}</div><div class="pity"><i></i></div></div>`;
+      matsWrap.appendChild(card);
+      matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
+    }
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 The IDE (crafting bench)"; body.appendChild(ih);
     const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; body.appendChild(ideCard);
+    const ideActions=document.createElement("div"); ideActions.id="ideActions"; ideActions.className="stashWrap"; body.appendChild(ideActions);
     const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; body.appendChild(rh);
     for(const s of SLOTS){
       const card=document.createElement("div"); card.className="card";
@@ -966,23 +1060,29 @@ notify("#general", "10x-ing that shit 🔥");`,
     const filters=document.createElement("div"); filters.className="toolFilters";
     filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
       SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
-      `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option></select>`;
+      `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option>`+
+      `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option></select>`;
     body.appendChild(filters);
     filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
     filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
     const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; body.appendChild(stash);
     toolboxBuilt=true; renderToolbox();
   }
+  function patchSummary(item){
+    if(!item.patches||!item.patches.length) return "no patches";
+    return item.patches.map(p=>PATCH_DEFS[p.id].fmt(p.value)).join(", ");
+  }
   function renderStashList(){
     const wrap=$("#stashList"); if(!wrap) return;
-    const items=P.toolbox.filter(it=>(toolFilter.slot==="all"||it.slot===toolFilter.slot) && (toolFilter.rarity==="all"||(it.rarity||"stock")===toolFilter.rarity));
+    const items=P.toolbox.filter(it=>(toolFilter.slot==="all"||it.slot===toolFilter.slot) && (toolFilter.rarity==="all"||rarityOf(it)===toolFilter.rarity));
     items.sort((a,b)=>b.ilvl-a.ilvl);
     if(!items.length){
       wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
       return;
     }
     wrap.innerHTML=items.map(it=>`<div class="card stashCard" data-id="${it.id}"><span class="em">${SLOT[it.slot].em}</span>`+
-      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${SLOT[it.slot].lbl} · ${it.rarity||"stock"}</div></div>`+
+      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
+      `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
       `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
     wrap.querySelectorAll(".stashCard").forEach(card=>{
       const id=Number(card.dataset.id);
@@ -992,17 +1092,42 @@ notify("#general", "10x-ing that shit 🔥");`,
     });
   }
   function renderIdeCard(){
-    const card=$("#ideCard"); if(!card) return;
+    const card=$("#ideCard"), actions=$("#ideActions"); if(!card||!actions) return;
     const it=P.craftSlot;
     if(it){
       card.innerHTML=`<span class="em">${SLOT[it.slot].em}</span><div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
-        `<div class="fx">${SLOT[it.slot].lbl} · being worked on — patches/crafting actions land in Phase 5</div></div>`+
+        `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
         `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button></div>`;
       card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
       card.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
+      const cost=craftCost(it);
+      const actionDefs=[
+        {act:"add",   lbl:"Commit (+patch)",       mat:"commit",  fn:craftAddPatch,   disabled:it.patches.length>=it.maxPatches},
+        {act:"hotfix",lbl:"Hotfix (reroll value)", mat:"hotfix",  fn:craftHotfix,     disabled:!it.patches.length},
+        {act:"refac", lbl:"Refactor (reroll type)",mat:"refactor",fn:craftRefactor,   disabled:!it.patches.length},
+        {act:"rewrite",lbl:"Full Rewrite (all)",   mat:"rewrite", fn:craftFullRewrite,disabled:!it.patches.length},
+        {act:"revert",lbl:"Revert (strip)",         mat:"revert",  fn:craftRevert,     disabled:!it.patches.length},
+        {act:"slot",  lbl:"Feature Branch Merge (+slot)",mat:"merge",fn:craftAddSlot, disabled:it.maxPatches>=4, costMult:2},
+      ];
+      actions.innerHTML=actionDefs.map(a=>{
+        const need=a.costMult?cost*a.costMult:cost, have=P.materials[a.mat]||0;
+        const afford=!a.disabled && have>=1 && P.credits>=need;
+        return `<div class="card craftCard"><span class="em">${MATS.find(m=>m.id===a.mat).em}</span>`+
+          `<div class="mid"><div class="nm">${a.lbl}</div><div class="fx">${have} ${a.mat} on hand · costs 1 + ${money(need)}</div></div>`+
+          `<button class="buy" data-act="${a.act}" ${afford?"":"disabled"}>Do</button></div>`;
+      }).join("");
+      actionDefs.forEach(a=>{ const btn=actions.querySelector(`[data-act="${a.act}"]`); if(btn) btn.addEventListener("click",e=>{e.stopPropagation();a.fn();}); });
     } else {
       card.innerHTML=`<span class="em">🛠</span><div class="mid"><div class="nm">Empty</div>`+
         `<div class="fx">Send an item here from the Toolbox stash below to stage it for crafting.</div></div>`;
+      actions.innerHTML="";
+    }
+  }
+  function renderMaterials(){
+    for(const m of MATS){
+      const el=matEls[m.id]; if(!el) continue;
+      el.lv.textContent=P.materials[m.id]||0;
+      el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
     }
   }
   function renderToolbox(){
@@ -1013,6 +1138,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name; el.btn.disabled=false; }
       else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
     }
+    renderMaterials();
     renderIdeCard();
     const c=rollCost();
     for(const s of SLOTS){
@@ -1307,12 +1433,13 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
     save(); renderShop();
   }
-  function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit refund
+  function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit + material refund
     const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
     const item=P.toolbox.splice(idx,1)[0], refund=salvageValue(item);
-    P.credits+=refund;
-    toast("♻️ Decommissioned",item.name+" (Lv "+item.ilvl+") → +"+money(refund),"#5b6b86");
-    termLine("t-dim","♻","decommissioned "+item.name+" for "+money(refund));
+    const matGain=Math.max(1,Math.round(item.ilvl/15));   // Phase 5 — Decommission also feeds the Commit material economy
+    P.credits+=refund; P.materials.commit=(P.materials.commit||0)+matGain;
+    toast("♻️ Decommissioned",item.name+" (Lv "+item.ilvl+") → +"+money(refund)+" · +"+matGain+" Commit"+(matGain>1?"s":""),"#5b6b86");
+    termLine("t-dim","♻","decommissioned "+item.name+" for "+money(refund)+" + "+matGain+" Commit"+(matGain>1?"s":""));
     save(); renderShop();
   }
   // crafting update Phase 4 — The IDE holds one item you're "working on," separate from the general
@@ -1351,6 +1478,111 @@ notify("#general", "10x-ing that shit 🔥");`,
       toast("🎲 Rolled Hardware","Bought "+did+"× "+SLOT[slotId].lbl+" roll"+(did>1?"s":""),"#c77dff");
       termLine("t-git","🎲","rolled "+did+"× "+SLOT[slotId].lbl);
     }
+    save(); renderShop();
+  }
+
+  /* ============ crafting materials (crafting update Phase 5) ============ */
+  const MATS=[
+    {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots"},
+    {id:"hotfix",  lbl:"Hotfix",                em:"🩹", does:"Reroll one patch's value (same mod, new number)"},
+    {id:"refactor",lbl:"Refactor Token",        em:"🔀", does:"Reroll one patch's type entirely"},
+    {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item"},
+    {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)"},
+    {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)"},
+  ];
+  // Soft pity: every qualifying attempt nudges a 0..1 bar by `chance`; a hit resets it. That keeps
+  // the average time-to-drop close to the naive probability while guaranteeing one once the bar
+  // fills, so a long unlucky streak is smoothed out instead of possible forever.
+  function materialAttempt(key,chance,sourceOk){
+    if(!sourceOk) return false;
+    P.matPity[key]=(P.matPity[key]||0)+chance;
+    const got=Math.random()<chance || P.matPity[key]>=1;
+    if(got){ P.materials[key]=(P.materials[key]||0)+1; P.matPity[key]=0; }
+    return got;
+  }
+  function grantMaterials(stat,locBefore){
+    materialAttempt("commit",0.35,true);                        // any task — common, no toast (too frequent)
+    materialAttempt("hotfix",0.5,stat==="debug");                // Debugging tasks
+    materialAttempt("refactor",0.5,stat==="systems");            // Systems tasks
+    if(materialAttempt("revert",0.03,true)){
+      toast("⏪ Found: Revert Commit","A rare material — strips an item back to Stock","#5b6b86");
+      termLine("t-git","⏪","found a Revert Commit");
+    }
+    if(materialAttempt("merge",0.02,P.level>=40)){               // late-game gate
+      toast("🔗 Found: Feature Branch Merge","A rare material — adds a patch slot (up to 4)","#39ff14");
+      termLine("t-git","🔗","found a Feature Branch Merge");
+    }
+    const milestone=1000;   // Full Rewrite is deterministic off P.loc crossing a milestone, not RNG+pity
+    if(Math.floor(P.loc/milestone)>Math.floor(locBefore/milestone)){
+      P.materials.rewrite=(P.materials.rewrite||0)+1;
+      toast("📦 Found: Full Rewrite","LOC milestone hit — rerolls every patch on an item","#ffb000");
+      termLine("t-git","📦","LOC milestone → found a Full Rewrite");
+    }
+  }
+  function craftCost(item){ return Math.round(5+item.ilvl*0.5); }
+  function craftAddPatch(){
+    const it=P.craftSlot; if(!it||it.patches.length>=it.maxPatches) return;
+    const cost=craftCost(it); if(P.materials.commit<1||P.credits<cost) return;
+    const ids=availablePatchIds(it); if(!ids.length) return;
+    const id=pick(ids);
+    it.patches.push(makePatch(id,it.ilvl));
+    P.materials.commit--; P.credits-=cost; recompute();
+    toast("📝 Commit applied",PATCH_DEFS[id].lbl+" added to "+it.name,"#39ff14");
+    termLine("t-git","📝","committed a patch onto "+it.name);
+    save(); renderShop();
+  }
+  function craftHotfix(){
+    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const cost=craftCost(it); if(P.materials.hotfix<1||P.credits<cost) return;
+    const p=pick(it.patches), def=PATCH_DEFS[p.id];
+    p.value=def.tiers[p.tier]*rand(0.9,1.1);
+    P.materials.hotfix--; P.credits-=cost; recompute();
+    toast("🩹 Hotfixed",def.lbl+" value rerolled","#00e5ff");
+    termLine("t-git","🩹","hotfixed a patch on "+it.name);
+    save(); renderShop();
+  }
+  function craftRefactor(){
+    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const cost=craftCost(it); if(P.materials.refactor<1||P.credits<cost) return;
+    const idx=(Math.random()*it.patches.length)|0;
+    const have=new Set(it.patches.filter((_,i)=>i!==idx).map(p=>p.id));
+    const ids=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===it.slot)&&!have.has(id); });
+    if(!ids.length) return;
+    it.patches[idx]=makePatch(pick(ids),it.ilvl);
+    P.materials.refactor--; P.credits-=cost; recompute();
+    toast("🔀 Refactored","Patch type rerolled on "+it.name,"#c77dff");
+    termLine("t-git","🔀","refactored a patch on "+it.name);
+    save(); renderShop();
+  }
+  function craftFullRewrite(){
+    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const cost=craftCost(it); if(P.materials.rewrite<1||P.credits<cost) return;
+    const n=it.patches.length, pool=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return d.slot===null||d.slot===it.slot; });
+    const chosen=[];
+    while(chosen.length<n && chosen.length<pool.length){ const id=pick(pool); if(!chosen.includes(id)) chosen.push(id); }
+    it.patches=chosen.map(id=>makePatch(id,it.ilvl));
+    P.materials.rewrite--; P.credits-=cost; recompute();
+    toast("📦 Full Rewrite","All patches rerolled on "+it.name,"#ffb000");
+    termLine("t-git","📦","fully rewrote "+it.name);
+    save(); renderShop();
+  }
+  function craftRevert(){
+    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const cost=craftCost(it); if(P.materials.revert<1||P.credits<cost) return;
+    it.patches=[];
+    P.materials.revert--; P.credits-=cost; recompute();
+    toast("⏪ Reverted",it.name+" stripped back to Stock","#5b6b86");
+    termLine("t-dim","⏪","reverted "+it.name+" to Stock");
+    save(); renderShop();
+  }
+  function craftAddSlot(){
+    const it=P.craftSlot; if(!it||it.maxPatches>=4) return;
+    const cost=craftCost(it)*2;   // adding a slot is more impactful than any single reroll — priced accordingly
+    if(P.materials.merge<1||P.credits<cost) return;
+    it.maxPatches++;
+    P.materials.merge--; P.credits-=cost;
+    toast("🔗 Feature Branch Merged",it.name+" now holds "+it.maxPatches+" patches","#39ff14");
+    termLine("t-git","🔗","merged a feature branch onto "+it.name);
     save(); renderShop();
   }
   function levelUp(){
@@ -1407,8 +1639,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     const pool=TASKS.filter(t=>P.unlockedStats.includes(t[1]));
     const [name,stat]=pick(pool.length?pool:TASKS);
     const diff=5+P.stage*1.35+rand(0,4);
-    const sv=P.stats[stat];
-    const speed=(1+sv/22+P.stats.focus/60)*MULT.speed;    // relevant stat + Focus + hardware → faster
+    const sv=P.stats[stat]+GEAR.stat[stat];   // patches (Phase 5) add flat stat bonus on top of the base value
+    const speed=(1+sv/22+(P.stats.focus+GEAR.stat.focus)/60)*MULT.speed;    // relevant stat + Focus + hardware → faster
     const dur=clamp((5.5+diff*0.35)/speed,1.1,16);
     w.task={name,stat,diff,dur}; w.elapsed=0; w.flashT=0;
     w.el.classList.remove("win","fail","crit");
@@ -1419,7 +1651,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-dim","→",w.a.name+" started ‹"+name+"›");
   }
   function resolveTask(w){
-    const {name,stat,diff}=w.task, sv=P.stats[stat], s=STAT[stat];
+    const {name,stat,diff}=w.task, sv=P.stats[stat]+GEAR.stat[stat], s=STAT[stat];
     const chance=(P.intro&&w.manual)?1:clamp(0.58+(sv-diff)*0.045+Math.min(0.15,P.streak*0.01)+MULT.success,0.15,0.98);
     if(Math.random()<chance){
       const crit=Math.random()<MULT.crit?3:1; if(crit>1)P.crits++;
@@ -1427,16 +1659,17 @@ notify("#general", "10x-ing that shit 🔥");`,
       const cr=Math.round((diff*0.6+4)*MULT.credit*crit);
       addXp(xp); P.credits+=cr; P.earned+=cr; statUp(stat,rand(0.4,1.0)); checkReveal();
       P.plot+=diff*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
-      P.tasksDone++; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
+      P.tasksDone++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
       if(stat==="debug")P.bugsFixed++;
       P.hp=clamp(P.hp+2,0,P.hpMax);
       w.el.classList.add(crit>1?"crit":"win"); w.flashT=0.6; spawnArc(crit>1?"#ffb000":"#39ff14");
       termLine("t-ok","✓",w.a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+xp+"xp  +"+money(cr));
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color);
       if(Math.random()<.16){ if(Math.random()<.7) dropHardware(); else addLoot(); }
+      grantMaterials(stat,locBefore);
       if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
     } else {
-      const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)));   // Rizz damage-reduction retired with Phase 1; returns as a gear patch in Phase 5
+      const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)*(1-MULT.resist)));   // Rizz damage-reduction retired with Phase 1; returned as MULT.resist (a gear patch, Phase 5)
       P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2*MULT.xp));
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); flashHp();
       termLine("t-bad","✗",w.a.name+" FAILED ‹"+name+"›  -"+dmg+" HP  (streak reset)");

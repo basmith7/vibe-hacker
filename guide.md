@@ -199,20 +199,52 @@ Debugging, etc.) — a small one-time stat bump with no equip slot of its own.
 Press the **🧰** tab at the top of the shop panel (next to **🛒**) to open the Toolbox — your
 hardware inventory, separate from the Upgrades list:
 
-- **🔧 Equipped Hardware** — the same 6 slots as before; **Unequip** now returns that item to
+- **🔧 Equipped Hardware** — the same 6 slots as before; **Unequip** returns that item to
   your stash instead of deleting it.
+- **📦 Crafting Materials** — six materials, each with a count and a thin progress bar
+  underneath. The bar is a soft-pity meter: every task that *could* drop that material nudges the
+  bar forward even when it doesn't, so a long unlucky streak is smoothed out instead of possible
+  forever — a full bar guarantees the next one.
 - **🛠 The IDE (crafting bench)** — a single dedicated staging slot for "the item you're
-  currently working on." Send a stash item here with **→ IDE**, then either **Equip** it or send
-  it **↩ Toolbox** back to the stash. There's nothing to craft on it yet — actual patches/rerolls
-  are a later update — but the slot is real and already saves with your game.
+  currently working on." Send a stash item here with **→ IDE**; while it's staged you can spend
+  materials + credits on it (see **Patches & crafting** below), then either **Equip** it or send
+  it **↩ Toolbox** back to the stash.
 - **🎲 Roll for Hardware** — gamble credits for a random item in a specific slot instead of
   waiting on a task drop. Cost scales with your level and rises the same for every slot. Roll
   once or **×10** at a time.
 - **Toolbox stash** — every item you haven't equipped or decommissioned, as a filterable card
-  list (by slot; by rarity, though everything is "stock" for now). Each card can **Equip**
-  (swapping whatever's currently in that slot back into the stash), send **→ IDE**, or
-  **Decommission** for a small credit refund. The stash holds 18 items — past that, the single
-  worst one auto-scraps for credits to make room.
+  list (by slot and by rarity — **Stock → Modded → Custom-Built**, based on how many patches it
+  has). Each card can **Equip** (swapping whatever's currently in that slot back into the stash),
+  send **→ IDE**, or **Decommission** for a small credit *and material* refund. The stash holds 18
+  items — past that, the single worst one auto-scraps for credits to make room.
+
+## Patches & crafting
+
+Once level 25+ items start dropping, Hardware can carry up to **4 patches** — small bonuses
+layered on top of the item's base ilvl effect. An item's **rarity** is just how many patches it
+has: **Stock** (0), **Modded** (1–2), **Custom-Built** (3–4). How many patch slots an item *can*
+hold depends on its ilvl when it dropped (2 below ilvl 25, 3 below ilvl 60, 4 above).
+
+Patches are either **slot-specific** (a bonus to that slot's own effect — e.g. RAM can roll extra
+task speed, GPU extra crit chance) or **generic** (flat +stat to any of the 5 stats, +Max Sanity,
+or reduced failure damage) and can roll on any slot. Better patch tiers are rarer and gated by the
+item's ilvl, same as the item itself.
+
+Patches are **never bought directly** — only earned as drops, then applied in **The IDE** using a
+material + a small amount of credits:
+
+| Material | Where it comes from | What it does in the IDE |
+|---|---|---|
+| 📝 Commit | any successful task (common) | Add a random patch to an open slot |
+| 🩹 Hotfix | Debugging tasks | Reroll one patch's *value* (same patch, new number) |
+| 🔀 Refactor Token | Systems tasks | Reroll one patch's *type* entirely |
+| 📦 Full Rewrite | rare — hit every 1,000 total lines of code | Reroll *every* patch on the item |
+| ⏪ Revert Commit | rare | Strip the item back to Stock (no patches) |
+| 🔗 Feature Branch Merge | rare, level 40+ | Add a patch slot beyond the item's current count (up to 4) |
+
+**Decommissioning** unwanted gear also refunds a Commit or two on top of the usual credits,
+scaled to the item's ilvl — so gear you don't want to keep still feeds the crafting economy
+instead of just disappearing.
 
 ## Themes (Upgrade OS)
 

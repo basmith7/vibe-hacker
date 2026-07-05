@@ -11,16 +11,15 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phases 1-4 are done.** Next up: **Phase 5 — Patches + crafting materials.** Phase 4 added a
-real 🧰 Toolbox (card-list stash, filterable by slot/rarity), gambling for random hardware
-(×1/×10), Decommission, and a dedicated 🛠 IDE staging slot — on branch `phase4-toolbox`, verified
-end-to-end, merged to `main`. It also changed Phase 3's auto-equip-if-better rule: a full slot now
-sends new drops to the Toolbox instead of silently comparing and discarding, since that's what
-makes "stockpile and choose" meaningful. Phase 5 is where the itemization actually gets interesting
-— patches/affixes, rarity tiers (the Toolbox's rarity filter has been sitting ready since Phase 4),
-and the crafting materials that make the IDE's staging slot do something. See the checklist in
-"Phased delivery" below for exact sub-step progress — that list is the source of truth for where to
-pick back up. Each phase works on its own branch, gets the full verify pass, updates
+**Phases 1-5 are done.** Next up: **Phase 6 — Missions.** Phase 5 made itemization real: patches
+(slot-specific + generic, tiered/ilvl-gated), derived rarity (Stock/Modded/Custom-Built off patch
+count), a materials economy (Commit/Hotfix/Refactor Token/Full Rewrite/Revert Commit/Feature
+Branch Merge) with soft-pity progress bars, and crafting actions spendable in The IDE — on branch
+`phase5-patches-materials`, verified end-to-end, merged to `main`. Phase 6 is where missions start
+directing that RNG instead of leaving material sourcing purely passive — a rotating contract
+board, craftable mission mods (Sprint Config), and item rewards. See the checklist in "Phased
+delivery" below for exact sub-step progress — that list is the source of truth for where to pick
+back up. Each phase works on its own branch, gets the full verify pass, updates
 `guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at the end
 of "Phased delivery").
 
@@ -347,12 +346,58 @@ staleness is treated as part of "done," not a follow-up.
       and sort sensibly (highest ilvl first).
 - [x] Update `guide.md`/`README.md`; commit + push
 
-### Phase 5 — Patches + crafting materials
-- [ ] Tiered, weighted patch tables (slot-specific + generic pools), gated by item level
-- [ ] Material-drop economy wired to task types, using `P.loc`/`P.deploys`/`P.bugsFixed`
-- [ ] Material progress meters (soft-pity bars)
-- [ ] Spend materials + credits on the item in the crafting slot (add/reroll actions)
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 5 — Patches + crafting materials ✅ DONE
+- [x] `PATCH_DEFS`: 6 slot-specific patches (one per Hardware slot, boosting that slot's own
+      effect) + 7 generic ones (flat +stat ×5, +Max Sanity, -failure damage) usable on any slot.
+      Each has 3 tiers gated by ilvl (`gate:[0,25,55]` or `[0,20,45]`) and weighted toward the
+      common tier (`rollPatchTier()`, weights 70/25/5) when more than one tier is unlocked.
+      Rolled value is the tier's number times a ±10% roll (`makePatch()`), so Hotfix has
+      something to actually change.
+- [x] `rarityOf(item)` is **derived**, not stored — Stock/Modded/Custom-Built map directly to 0 /
+      1-2 / 3-4 patches. (Phase 4's stored `rarity:"stock"` field is now dead/unread; left in old
+      saves harmlessly rather than migrated out.)
+- [x] `initialMaxPatches(ilvl)` sets how many patch slots a fresh drop has (2 below ilvl 25, 3
+      below 60, 4 above) — Feature Branch Merge can push past that up to the hard cap of 4.
+- [x] Material sourcing wired into `resolveTask()`'s success branch via `grantMaterials()`:
+      Commit (any task, common), Hotfix (Debugging tasks), Refactor Token (Systems tasks) all use
+      a **soft-pity accumulator** (`materialAttempt()` — nudges a 0..1 bar by the base chance
+      every attempt, hit-or-bar-full both award and reset it). Revert Commit and Feature Branch
+      Merge (level 40+ gated) are rare flat-chance drops through the same pity helper. Full
+      Rewrite is **deterministic** off crossing a 1,000-line `P.loc` milestone rather than pity —
+      closer to "any task, LOC milestones" from the original notes than another RNG roll.
+      Decommissioning also refunds 1+ Commits scaled to the scrapped item's ilvl.
+- [x] Material progress meters: a thin `<i>` bar per material card, width driven straight off
+      `P.matPity[id]` (clamped to 100%).
+- [x] Crafting actions, all operating on `P.craftSlot` only (never the general stash) and all
+      costing 1 material + `craftCost(item)` credits (`round(5+ilvl*0.5)`, doubled for Feature
+      Branch Merge since adding a slot is more impactful than any single reroll — an explicit
+      judgment call, not from the plan doc): **Commit** (add a random not-yet-rolled patch),
+      **Hotfix** (reroll one patch's value within its existing tier), **Refactor Token** (reroll
+      one patch to a new type/tier, no duplicate ids), **Full Rewrite** (reroll every patch, same
+      count), **Revert Commit** (clear to Stock), **Feature Branch Merge** (`maxPatches++`, capped
+      at 4). Buttons disable when the material or credits aren't there.
+- [x] Toolbox stash and IDE cards now show computed rarity + a plain-English patch summary
+      (`patchSummary()`); the stash's rarity filter dropdown gained Modded/Custom-Built options
+      (previously Stock-only since rarity tiers didn't exist yet).
+- [x] Migration: pre-Phase-5 items (equipped, stashed, or staged in the IDE) get `patches:[]` and
+      an ilvl-appropriate `maxPatches` backfilled on load; `materials`/`matPity` default via the
+      same "new PERSIST key absent from old saves keeps `defaults()`'s value" pattern used since
+      Phase 4 — no explicit migration code needed for those two.
+- [x] Verify end-to-end: headless-driver pass covering — materials rendering with live pity-bar
+      widths; sending a stash item to the IDE; Commit-ing 5 times against a 4-slot item (confirmed
+      hard-capped at 4, no 5th patch); Hotfix (confirmed same id+tier, new value); Refactor
+      (confirmed new id, old ones untouched); Full Rewrite (confirmed all-new ids, same count);
+      Revert (confirmed patches → `[]`); a **separate isolated save** (0 workers, 0 materials) to
+      prove all 6 craft buttons render `disabled` with insufficient materials/credits and that
+      clicking a disabled button is a true no-op (patches/credits unchanged); equip-from-IDE
+      (confirmed `craftSlot` clears and the slot updates); migration from a pre-Phase-5 save
+      (confirmed `patches`/`maxPatches` backfilled correctly across equip/toolbox/craftSlot, and
+      `materials`/`matPity` default cleanly). Note: background auto-agent task resolution during
+      these tests meant raw material *counts* moved on their own between assertions (materials are
+      earned continuously during normal play, not just via my scripted clicks) — this didn't
+      affect any of the correctness checks above, all of which compare shape/identity (ids, tiers,
+      counts, disabled state) rather than racing against a live counter. No console errors.
+- [x] Update `guide.md`/`README.md`; commit + push
 
 ### Phase 6 — Missions
 - [ ] Rotating contract board (3 active choices), board refresh on full completion

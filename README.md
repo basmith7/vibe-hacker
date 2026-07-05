@@ -25,8 +25,9 @@ progression is real and auto-saves.
   one-time **Machine** and **AI Model** tiers, more agents, and automation (offline earnings,
   auto-allocate, auto-buyer). **Hardware isn't bought** — RAM, CPU, Hard Drive, Monitor, GPU, and Modem
   are equip slots filled by drops (or gambled for with credits). Extras land in the **🧰 Toolbox**, a
-  filterable stash where you compare candidates, equip, or decommission for credits. Level-ups grant
-  **skill points** you spend on any stat via the `+` buttons.
+  filterable stash where you compare candidates, equip, or decommission for credits + materials.
+  Stage gear in **🛠 The IDE** to spend those materials on **patches** (Stock → Modded →
+  Custom-Built). Level-ups grant **skill points** you spend on any stat via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **22 achievements** that unlock as you play.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing
