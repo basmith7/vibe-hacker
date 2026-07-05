@@ -670,7 +670,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ canvas helpers ============ */
   function fitCanvas(cv){
     const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);
-    cv.width=Math.max(1,r.width*dpr); cv.height=Math.max(1,r.height*dpr);
+    const W=Math.max(1,Math.round(r.width*dpr)),H=Math.max(1,Math.round(r.height*dpr));
+    if(cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }   // only realloc on actual resize (cheaper on mobile)
     const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:r.width,h:r.height};
   }
 
@@ -779,18 +780,27 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ main loop ============ */
   let last=performance.now(),paused=false;
+  const loopErr={};
+  // isolate each subsystem: one throwing draw must not freeze typing/progression,
+  // and we surface the first error on-screen (terminal) for diagnosis.
+  function guard(name,fn){
+    try{ fn(); }
+    catch(e){ if(!loopErr[name]){ loopErr[name]=1; console.error("["+name+"]",e);
+      try{ termLine("t-bad","⚠","render '"+name+"' failed: "+((e&&e.message)||e)); }catch(_){}
+    } }
+  }
   function frame(now){
+    requestAnimationFrame(frame);                 // schedule FIRST so nothing can kill the loop
     let dt=(now-last)/1000;last=now;dt=Math.min(0.05,dt);if(reduce)dt*=0.5;
     surge+=(1-surge)*Math.min(1,dt*1.4);
-    // failure-rate EMA relaxes toward current ratio
     const total=P.tasksDone+P.tasksFailed; const inst=total?P.tasksFailed/total:0;
     failEMA+=(inst-failEMA)*Math.min(1,dt*0.5);
-    if(!paused){
-      drawMatrix(dt); tickGlobe(dt);
-      for(const w of WK) tickWorker(w,dt);
-      tickProgress(dt); tickCharts(dt);
-    }
-    requestAnimationFrame(frame);
+    if(paused) return;
+    guard("matrix",()=>drawMatrix(dt));
+    guard("globe",()=>tickGlobe(dt));
+    guard("agents",()=>{ for(const w of WK) tickWorker(w,dt); });
+    guard("progress",()=>tickProgress(dt));
+    guard("charts",()=>tickCharts(dt));
   }
 
   /* ============ interaction ============ */
