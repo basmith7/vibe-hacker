@@ -237,6 +237,8 @@
   .craftCard .nm{font-size:11.5px}
   .craftCard .fx{font-size:9.5px}
   .craftCard .buy{padding:6px 10px;font-size:10px}
+  .card.legendary{border-color:rgba(255,176,0,.6);background:linear-gradient(180deg,#1a1408,#0a1120);box-shadow:0 0 10px rgba(255,176,0,.15) inset}
+  .card.legendary .nm{color:var(--amber)}
   .shopCat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:9px 2px 1px}
   .card{border:1px solid var(--edge);border-radius:9px;background:#0a1120;padding:9px 11px;display:flex;gap:10px;align-items:center}
   .card.hot{border-color:rgba(57,255,20,.4)}
@@ -629,8 +631,16 @@
     {id:"monitor",   lbl:"Monitor",    em:"🖥️"},
     {id:"gpu",       lbl:"GPU",        em:"🎮"},
     {id:"modem",     lbl:"Modem",      em:"📡"},
+    {id:"cooling",   lbl:"Cooling",    em:"❄️"},
+    {id:"neural",    lbl:"Neural Interface", em:"🔮"},
   ];
   const SLOT=Object.fromEntries(SLOTS.map(s=>[s.id,s]));
+  // crafting update Phase 7 — endgame slots gated behind a milestone rather than always-on. This
+  // game has no boss-fight mechanic to gate behind, so "milestone" here means level/OS progression
+  // — the closest equivalent already in the game.
+  const SLOT_UNLOCK={ cooling:()=>P.level>=60, neural:()=>P.up.os>=OS_TIERS.length-1 };
+  function slotUnlocked(slotId){ const fn=SLOT_UNLOCK[slotId]; return fn?fn():true; }
+  function slotUnlockHint(slotId){ return slotId==="cooling"?"unlocks at level 60":slotId==="neural"?"unlocks on STARSHIP OS":""; }
   // Retro base-item flavor, indexed the same as OS_TIERS/P.up.os so your gear ages with your rig.
   const RETRO_NAMES=[
     ["Orange II","Trash-80","IBM PC/XT Clone","Turbo XT Card"],
@@ -660,7 +670,29 @@
     gen_algo:   {slot:null, statId:"algo",    lbl:"Algorithms", tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Algorithms"},
     gen_sanity: {slot:null, kind:"sanity", lbl:"Ergonomic", tiers:[10,20,35],       gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Max Sanity"},
     gen_resist: {slot:null, kind:"resist", lbl:"Defensive", tiers:[0.10,0.20,0.35],gate:[0,20,45], fmt:v=>"-"+Math.round(v*100)+"% failure damage"},
+    cooling_regen:{slot:"cooling",lbl:"Liquid-Cooled Loop",tiers:[0.10,0.20,0.35], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% sanity regen"},
+    neural_succ:{slot:"neural",   lbl:"Synaptic Boost",    tiers:[0.02,0.04,0.07], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% success chance"},
   };
+  // crafting update Phase 7 — Legendary Build: named, fixed-patch items (PoE's "unique" analogue).
+  // Extremely rare, rolled instead of a normal item (see rollItem()) rather than layered on top.
+  const LEGENDARIES={
+    ram:      {name:"Vim's Blessing",              patches:[{id:"ram_speed",tier:2,value:0.10},{id:"gen_focus",tier:2,value:4}]},
+    cpu:      {name:"The ThinkPad X1 of Legend",   patches:[{id:"cpu_xp",tier:2,value:0.14},{id:"gen_coding",tier:2,value:4}]},
+    harddrive:{name:"RAID 0 of No Regrets",        patches:[{id:"hdd_credit",tier:2,value:0.14},{id:"gen_systems",tier:2,value:4}]},
+    monitor:  {name:"The Ultrawide Prophecy",      patches:[{id:"mon_passive",tier:2,value:0.18},{id:"gen_sanity",tier:2,value:35}]},
+    gpu:      {name:"Crimson Ray-Traced Fury",     patches:[{id:"gpu_crit",tier:2,value:0.07},{id:"gen_algo",tier:2,value:4}]},
+    modem:    {name:"Zero-Latency Manifesto",      patches:[{id:"modem_succ",tier:2,value:0.06},{id:"gen_resist",tier:2,value:0.35}]},
+    cooling:  {name:"Absolute Zero Cooling Loop",  patches:[{id:"cooling_regen",tier:2,value:0.35},{id:"gen_sanity",tier:2,value:35}]},
+    neural:   {name:"Ghost in the Shell.exe",      patches:[{id:"neural_succ",tier:2,value:0.07},{id:"gen_focus",tier:2,value:4}]},
+  };
+  function rollLegendary(slotId){
+    const def=LEGENDARIES[slotId]; if(!def) return null;
+    return {id:++P.itemSeq, slot:slotId, name:def.name, ilvl:Math.max(1,P.level),
+      patches:def.patches.map(p=>({...p})), maxPatches:4, legendary:true};
+  }
+  // crafting update Phase 7 — item level ceiling tied to your OS tier, so upgrading your rig raises
+  // the cap on how good gear you can even find, not just its own flat multiplier.
+  const ILVL_CAP=[40,80,140,220,340,520];
   function initialMaxPatches(ilvl){ return ilvl>=60?4:ilvl>=25?3:2; }   // higher-ilvl drops have more room to patch
   function rollPatchTier(def,ilvl){
     const weights=[70,25,5], avail=[];
@@ -679,18 +711,25 @@
     return Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===item.slot) && !have.has(id); });
   }
   function rarityOf(item){   // derived, not stored — Stock/Modded/Custom-Built map to PoE's Normal/Magic/Rare
+    if(item.legendary) return "legendary";
     const n=(item.patches||[]).length; return n>=3?"custom-built":n>=1?"modded":"stock";
   }
   function rollItem(slotId){
+    if(LEGENDARIES[slotId] && Math.random()<0.01){ const leg=rollLegendary(slotId); if(leg) return leg; }   // 1% Legendary Build chance
     const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
-    const ilvl=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
+    const cap=ILVL_CAP[clamp(P.up.os,0,ILVL_CAP.length-1)];
+    const ilvl=Math.min(cap,Math.max(1,Math.round(P.level*rand(0.8,1.2))));
     return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
   }
   function itemPower(slotId){ return P.equip[slotId]?P.equip[slotId].ilvl:0; }   // 0 if Stock/empty
   // crafting update Phase 5 — sum of all equipped patches, folded into MULT/stats each recompute()
-  const GEAR={speed:0,xp:0,credit:0,passive:0,crit:0,success:0,sanity:0,resist:0,stat:{coding:0,focus:0,debug:0,systems:0,algo:0}};
+  const GEAR={speed:0,xp:0,credit:0,passive:0,crit:0,success:0,sanity:0,resist:0,coolingRegen:0,setBonus:1,
+    stat:{coding:0,focus:0,debug:0,systems:0,algo:0}};
+  function countCustomBuiltPlus(){   // crafting update Phase 7 — set bonus counts Custom-Built and Legendary alike
+    let n=0; for(const s of SLOTS){ const it=P.equip[s.id]; if(it && rarityOf(it)!=="stock" && rarityOf(it)!=="modded") n++; } return n;
+  }
   function recomputeGear(){
-    GEAR.speed=0; GEAR.xp=0; GEAR.credit=0; GEAR.passive=0; GEAR.crit=0; GEAR.success=0; GEAR.sanity=0; GEAR.resist=0;
+    GEAR.speed=0; GEAR.xp=0; GEAR.credit=0; GEAR.passive=0; GEAR.crit=0; GEAR.success=0; GEAR.sanity=0; GEAR.resist=0; GEAR.coolingRegen=0;
     for(const id of STAT_IDS) GEAR.stat[id]=0;
     for(const s of SLOTS){
       const it=P.equip[s.id]; if(!it||!it.patches) continue;
@@ -705,8 +744,18 @@
         else if(p.id==="mon_passive") GEAR.passive+=p.value;
         else if(p.id==="gpu_crit") GEAR.crit+=p.value;
         else if(p.id==="modem_succ") GEAR.success+=p.value;
+        else if(p.id==="cooling_regen") GEAR.coolingRegen+=p.value;
+        else if(p.id==="neural_succ") GEAR.success+=p.value;
       }
     }
+    // Neural Interface's base (non-patch) effect: a "multi-stat pool" bonus to all 5 stats at once,
+    // distinct from every other slot which only ever affects its own single specific multiplier.
+    const neuralPower=itemPower("neural");
+    for(const id of STAT_IDS) GEAR.stat[id]+=neuralPower*0.05;
+    GEAR.coolingRegen+=itemPower("cooling")*0.01;
+    // crafting update Phase 7 — set bonus: every 2 equipped Modded-or-better items adds +5%,
+    // stacking (absorbs the "stat synergies / set bonuses" backlog item)
+    GEAR.setBonus=1+Math.floor(countCustomBuiltPlus()/2)*0.05;
   }
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
@@ -920,14 +969,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
     const ram=itemPower("ram"), cpu=itemPower("cpu"), hdd=itemPower("harddrive"),
           mon=itemPower("monitor"), gpu=itemPower("gpu"), modem=itemPower("modem");
-    MULT.speed=(1+ram*0.02+GEAR.speed)*m.speed*md.speed;
+    MULT.speed=(1+ram*0.02+GEAR.speed)*m.speed*md.speed*GEAR.setBonus;
     const pres=1+P.equity*0.02;                        // permanent prestige bonus (+2% per Equity)
-    MULT.xp=(1+cpu*0.03+GEAR.xp)*m.mult*pres;
-    MULT.credit=(1+hdd*0.025+GEAR.credit)*m.mult*pres;
+    MULT.xp=(1+cpu*0.03+GEAR.xp)*m.mult*pres*GEAR.setBonus;
+    MULT.credit=(1+hdd*0.025+GEAR.credit)*m.mult*pres*GEAR.setBonus;
     MULT.passive=mon*0.15*m.mult*(1+GEAR.passive);
     MULT.success=md.success+Math.min(0.10,modem*0.002)+GEAR.success;   // AI Model + Modem (Hardware slot) + patches all help success
     MULT.crit=Math.min(0.6,gpu*0.005+GEAR.crit);
-    MULT.regen=0.5+u.coffee*0.35;
+    MULT.regen=0.5+u.coffee*0.35+GEAR.coolingRegen;   // Cooling slot (Phase 7) also boosts sanity regen
     MULT.hpBonus=u.coffee*15+GEAR.sanity;
     MULT.resist=Math.min(0.5,GEAR.resist);   // failure-damage reduction from gear (old Rizz effect, returned as a patch)
     MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
@@ -1020,7 +1069,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
   function buildToolbox(){
     const body=$("#paneToolbox"); body.innerHTML=""; slotEls={}; rollEls={};
-    const eh=document.createElement("div"); eh.className="shopCat"; eh.textContent="🔧 Equipped Hardware"; body.appendChild(eh);
+    const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; body.appendChild(eh);
     for(const s of SLOTS){
       const card=document.createElement("div"); card.className="card slotCard";
       card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
@@ -1071,7 +1120,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
       SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
       `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option>`+
-      `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option></select>`;
+      `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option><option value="legendary">Legendary</option></select>`;
     body.appendChild(filters);
     filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
     filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
@@ -1090,7 +1139,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
       return;
     }
-    wrap.innerHTML=items.map(it=>`<div class="card stashCard" data-id="${it.id}"><span class="em">${SLOT[it.slot].em}</span>`+
+    wrap.innerHTML=items.map(it=>`<div class="card stashCard${it.legendary?" legendary":""}" data-id="${it.id}"><span class="em">${SLOT[it.slot].em}</span>`+
       `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
       `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
       `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
@@ -1104,6 +1153,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function renderIdeCard(){
     const card=$("#ideCard"), actions=$("#ideActions"); if(!card||!actions) return;
     const it=P.craftSlot;
+    card.classList.toggle("legendary",!!(it&&it.legendary));
     if(it){
       card.innerHTML=`<span class="em">${SLOT[it.slot].em}</span><div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
         `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
@@ -1166,10 +1216,14 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function renderToolbox(){
     if(!toolboxBuilt) return;
+    const equipCat=$("#equipCat");
+    if(equipCat) equipCat.textContent="🔧 Equipped Hardware"+(GEAR.setBonus>1?" — Set Bonus ×"+GEAR.setBonus.toFixed(2):"");
     for(const s of SLOTS){
       const el=slotEls[s.id]; if(!el) continue;
-      const item=P.equip[s.id];
-      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name; el.btn.disabled=false; }
+      const item=P.equip[s.id], unlocked=slotUnlocked(s.id);
+      el.card.classList.toggle("legendary",!!(item&&item.legendary));
+      if(!unlocked){ el.lv.textContent=""; el.fx.textContent="🔒 Locked — "+slotUnlockHint(s.id); el.btn.disabled=true; }
+      else if(item){ el.lv.textContent="Lv "+item.ilvl+(item.legendary?" ★":""); el.fx.textContent=item.name; el.btn.disabled=false; }
       else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
     }
     renderMaterials();
@@ -1178,8 +1232,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     const c=rollCost();
     for(const s of SLOTS){
       const r=rollEls[s.id]; if(!r) continue;
-      r.btn1.textContent=money(c); r.btn1.disabled=P.credits<c;
-      r.btn10.textContent="×10 "+money(c*10); r.btn10.disabled=P.credits<c*10;
+      const unlocked=slotUnlocked(s.id);
+      if(!unlocked){ r.btn1.textContent="🔒"; r.btn10.textContent=slotUnlockHint(s.id); r.btn1.disabled=true; r.btn10.disabled=true; }
+      else{ r.btn1.textContent=money(c); r.btn1.disabled=P.credits<c; r.btn10.textContent="×10 "+money(c*10); r.btn10.disabled=P.credits<c*10; }
     }
     renderStashList();
   }
@@ -1450,7 +1505,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function dropHardware(){   // real gear — see addHardwareItem() for the equip-or-stash rule
-    const slotId=pick(SLOTS).id, item=rollItem(slotId);
+    const slotId=pick(SLOTS.filter(s=>slotUnlocked(s.id))).id, item=rollItem(slotId);
     if(addHardwareItem(item)==="equipped"){
       toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")","#4d8cff");
       termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[slotId].lbl+" (Lv "+item.ilvl+")");
@@ -1504,6 +1559,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function rollCost(){ return Math.round(15+P.level*3); }   // Toolbox "Roll for Hardware" gamble cost
   function rollForSlot(slotId,count){
+    if(!slotUnlocked(slotId)) return;
     let did=0;
     for(let i=0;i<count;i++){
       const c=rollCost(); if(P.credits<c) break;

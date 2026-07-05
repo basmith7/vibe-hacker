@@ -23,8 +23,9 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 - [ ] Seasonal / time-of-day palettes.
 
 ## Gameplay depth
-*(Stat synergies/set bonuses and milestone bosses moved to [crafting update.md](crafting%20update.md)
-— they're now Phase 7 items there instead of tracked separately here.)*
+*(Stat synergies/set bonuses and milestone bosses were absorbed into [crafting update.md](crafting%20update.md)
+Phase 7 — done: a stacking set bonus for 2+ Custom-Built+ equipped items, and level/OS-tier gates
+on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [x] **Progressive onboarding** — start as one manual terminal + one stat; unlock agents, panels, and
   skills step by step (ghosted panels show the potential). Old saves migrate to fully-unlocked.
 - [x] **Intro funnel** — fresh start is a full-screen terminal that only advances on keypress/tap
