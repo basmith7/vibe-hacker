@@ -592,18 +592,39 @@
     {id:"neon",    name:"NEON//OS v6",  cost:850000},
     {id:"spaceage",name:"STARSHIP OS",  cost:9500000},
   ];
+
+  /* ============ Hardware slots (crafting update Phase 3 — structural only, no patches yet) ============ */
+  const SLOTS=[
+    {id:"ram",       lbl:"RAM",        em:"🧠"},
+    {id:"cpu",       lbl:"CPU",        em:"⚙️"},
+    {id:"harddrive", lbl:"Hard Drive", em:"💾"},
+    {id:"monitor",   lbl:"Monitor",    em:"🖥️"},
+    {id:"gpu",       lbl:"GPU",        em:"🎮"},
+    {id:"modem",     lbl:"Modem",      em:"📡"},
+  ];
+  const SLOT=Object.fromEntries(SLOTS.map(s=>[s.id,s]));
+  // Retro base-item flavor, indexed the same as OS_TIERS/P.up.os so your gear ages with your rig.
+  const RETRO_NAMES=[
+    ["Orange II","Trash-80","IBM PC/XT Clone","Turbo XT Card"],
+    ["386SX Turbo","Packard Smell","VESA Local Bus"],
+    ["Pentium Overdrive","SoundBlaster-Compatible","ATI Rage"],
+    ["ThinkPad-Alike","GeForce (Bootleg)","Athlon XP"],
+    ["Quantum Flux Core","Photonic Array","Neuro-Cache"],
+    ["Singularity Core","Graviton Lattice","Zero-Point Module"],
+  ];
+  function rollItem(slotId){
+    const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
+    const ilvl=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
+    return {slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl};
+  }
+  function itemPower(slotId){ return P.equip[slotId]?P.equip[slotId].ilvl:0; }   // 0 if Stock/empty
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
     {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", cat:"Getting Started", fx:()=>"reveal the live charts panel"},
     {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
     {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
-    {id:"ram",     kind:"repeat",emoji:"🧠",name:"RAM Upgrade",     base:40, growth:1.18, cat:"Hardware", fx:l=>"task speed ×"+Math.pow(1.08,l).toFixed(2)+" (+8%/lvl)"},
-    {id:"cpu",     kind:"repeat",emoji:"⚙️",name:"CPU Cores",       base:55, growth:1.19, cat:"Hardware", fx:l=>"XP ×"+Math.pow(1.12,l).toFixed(2)+" (+12%/lvl)"},
-    {id:"ssd",     kind:"repeat",emoji:"💾",name:"SSD Array",       base:50, growth:1.18, cat:"Hardware", fx:l=>"credits ×"+Math.pow(1.10,l).toFixed(2)+" (+10%/lvl)"},
-    {id:"monitors",kind:"repeat",emoji:"🖥️",name:"Extra Monitor",   base:120,growth:1.26, cat:"Hardware", fx:l=>"+"+(l*0.8).toFixed(1)+" passive $/s (×machine)"},
     {id:"coffee",  kind:"repeat",emoji:"☕",name:"Espresso Machine",base:90, growth:1.22, cat:"Hardware", fx:l=>"+"+(l*15)+" max sanity, +regen"},
-    {id:"gpu",     kind:"repeat",emoji:"🎮",name:"Overclocked GPU", base:300,growth:1.34, max:20, cat:"Hardware", fx:l=>(l*3)+"% crit chance (3× rewards)"},
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
     {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
     {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",       cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name:" (final look)")},
@@ -681,6 +702,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
       up:{hire:0,skill:0,u_tele:0,u_globe:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -689,7 +711,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -748,6 +770,19 @@ notify("#general", "10x-ing that shit 🔥");`,
           P.up.os=tier; P.themeChoice=OS_TIERS[tier].id; }
         const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
         if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
+        // migration: crafting-update Phase 3 — the old repeatable RAM/CPU/SSD/Monitor/GPU purchases
+        // become starter equipped items, so existing investment converts into gear instead of vanishing.
+        if(!("equip" in d)){
+          const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
+          const starter=(oldLvl,slotId,mult)=>oldLvl>0?{slot:slotId,name:pick(era)+" "+SLOT[slotId].lbl,ilvl:Math.round(oldLvl*mult)}:null;
+          P.equip={
+            ram:starter(P.up.ram,"ram",6), cpu:starter(P.up.cpu,"cpu",6),
+            harddrive:starter(P.up.ssd,"harddrive",6), monitor:starter(P.up.monitors,"monitor",5),
+            gpu:starter(P.up.gpu,"gpu",6), modem:null,
+          };
+        }
+        if(!P.equip) P.equip={ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null};
+        for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
         return true;
       }
     }catch(e){}
@@ -767,21 +802,24 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ derived multipliers ============ */
-  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0};
+  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0,offlineEff:0.5};
   function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
   function recompute(){
     const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
-    MULT.speed=Math.pow(1.08,u.ram)*m.speed*md.speed;
+    const ram=itemPower("ram"), cpu=itemPower("cpu"), hdd=itemPower("harddrive"),
+          mon=itemPower("monitor"), gpu=itemPower("gpu"), modem=itemPower("modem");
+    MULT.speed=(1+ram*0.02)*m.speed*md.speed;
     const pres=1+P.equity*0.02;                        // permanent prestige bonus (+2% per Equity)
-    MULT.xp=Math.pow(1.12,u.cpu)*m.mult*pres;
-    MULT.credit=Math.pow(1.10,u.ssd)*m.mult*pres;
-    MULT.passive=u.monitors*0.8*m.mult;
-    MULT.success=md.success;
-    MULT.crit=Math.min(0.6,u.gpu*0.03);
+    MULT.xp=(1+cpu*0.03)*m.mult*pres;
+    MULT.credit=(1+hdd*0.025)*m.mult*pres;
+    MULT.passive=mon*0.15*m.mult;
+    MULT.success=md.success+Math.min(0.10,modem*0.002);   // AI Model + Modem (Hardware slot) both help success
+    MULT.crit=Math.min(0.6,gpu*0.005);
     MULT.regen=0.5+u.coffee*0.35;
     MULT.hpBonus=u.coffee*15;
     MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
     MULT.workers=Math.min(8,1+u.hire);   // 1 = you (manual); each hire adds an auto agent
+    MULT.offlineEff=Math.min(0.9,0.5+modem*0.005);   // Modem also improves offline-earning efficiency
     updateHpMax();
   }
 
@@ -833,7 +871,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
-  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
+  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={},slotEls={};
   function buildShop(){
     const body=$("#shopBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -844,6 +882,16 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(!canPrestige()) return;
       if(confirm("Cash out now?\n\nResets your level, stats, credits, and all upgrades — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
     });
+    // equipped hardware slots — dropped from tasks, not bought; click Unequip to clear a slot
+    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🔧 Equipped Hardware"; body.appendChild(sh);
+    for(const s of SLOTS){
+      const card=document.createElement("div"); card.className="card slotCard";
+      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
+      body.appendChild(card);
+      const btn=card.querySelector(".buy");
+      btn.addEventListener("click",e=>{ e.stopPropagation(); if(P.equip[s.id]){ P.equip[s.id]=null; recompute(); renderShop(); save(); } });
+      slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
+    }
     // upgrades
     for(const u of UPG){
       if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); catHeaderEls[cat]=h; }
@@ -870,6 +918,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       eqLv.textContent=P.equity?("· "+P.equity+" Equity (+"+(P.equity*2)+"%)"):"";
       eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at Lv 10 (worth +"+g+" now)");
       eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 Lv 10"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
+    }
+    for(const s of SLOTS){
+      const el=slotEls[s.id]; if(!el) continue;
+      const item=P.equip[s.id];
+      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name; el.btn.disabled=false; }
+      else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
     }
     const catVisible={};
     for(const s of shopCards){
@@ -1092,10 +1146,23 @@ notify("#general", "10x-ing that shit 🔥");`,
   function closeThemeMenu(){ toggleThemeMenu(false); }
   function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
   function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
-  function addLoot(){
+  function addLoot(){   // pure flavor/junk — no equip value, just a small stat bump (see LOOT array)
     const item=pick(LOOT); P.loot++; const sid=pick(STAT_IDS); statUp(sid,rand(0.6,1.6));
     toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color);
     termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
+  }
+  function dropHardware(){   // real gear — auto-equips if better than what's in that slot, else salvaged for credits
+    const slotId=pick(SLOTS).id, item=rollItem(slotId), current=P.equip[slotId];
+    if(!current || item.ilvl>current.ilvl){
+      P.equip[slotId]=item; recompute();
+      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")"+(current?" — replaced "+current.name:""),"#4d8cff");
+      termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[slotId].lbl+" (Lv "+item.ilvl+")");
+    } else {
+      const salvage=Math.round(item.ilvl*2)+1;
+      P.credits+=salvage;
+      toast("♻️ Salvaged",item.name+" (Lv "+item.ilvl+", worse than equipped) → +"+money(salvage),"#5b6b86");
+      termLine("t-dim","♻","salvaged "+item.name+" for "+money(salvage));
+    }
   }
   function levelUp(){
     const before=titleFor();
@@ -1177,7 +1244,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       w.el.classList.add(crit>1?"crit":"win"); w.flashT=0.6; spawnArc(crit>1?"#ffb000":"#39ff14");
       termLine("t-ok","✓",w.a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+xp+"xp  +"+money(cr));
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color);
-      if(Math.random()<.16) addLoot();
+      if(Math.random()<.16){ if(Math.random()<.7) dropHardware(); else addLoot(); }
       if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
     } else {
       const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)));   // Rizz damage-reduction retired with Phase 1; returns as a gear patch in Phase 5
@@ -1456,7 +1523,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
     if(el<30) return;
     const perSec=MULT.passive + MULT.workers*MULT.credit*0.8;   // rough idle rate
-    const gain=Math.floor(perSec*el*0.5);                        // 50% efficiency while away
+    const gain=Math.floor(perSec*el*MULT.offlineEff);            // efficiency while away (Modem improves this)
     if(gain>0){ P.credits+=gain;
       toast("🌙 Welcome back","Earned "+money(gain)+" while away ("+Math.round(el/60)+" min)","#4d8cff");
       termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)"); }
