@@ -224,6 +224,15 @@
   .ach .nm{font-weight:700;font-size:12px;color:#eafff0}
   .ach .fx{font-size:10px;color:var(--dim);line-height:1.25}
   .ach .chk{font-size:14px}
+  /* locked panels + manual worker */
+  .lockmask{position:absolute;inset:26px 0 0 0;z-index:6;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    background:rgba(5,7,13,.8);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);text-align:center;padding:14px}
+  .panel.locked .lockmask{display:flex}
+  .lockmask .lk{font-size:16px;letter-spacing:2px;color:var(--dim)}
+  .lockmask .lk b{color:var(--amber)}
+  .lockmask .hint{font-size:11px;color:var(--dim);max-width:82%;line-height:1.4}
+  .agent.manual{border-color:rgba(0,229,255,.4);box-shadow:0 0 14px rgba(0,229,255,.12) inset}
+  .agent.manual .nm{color:#eafff0!important}
 
   /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
   @media (max-width:820px){
@@ -364,6 +373,7 @@
       <div class="head"><span class="dot"></span> GLOBAL DEPLOY MESH <span class="spacer"></span><span class="tag" id="globeRegion">us-east-1 ⇄ ap-south-1</span></div>
       <div id="globeWrap"><canvas id="globe"></canvas></div>
       <div class="globe-readout">stage <b id="g_stage">1</b>/<span id="g_stages">28</span> · in-flight <b id="g_arcs">0</b> · streak <b id="g_streak">0</b></div>
+      <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “🌐 Go Global” in the shop to bring the deploy mesh online.</div></div>
     </section>
 
     <section class="panel" id="agentsPanel">
@@ -379,6 +389,7 @@
         <div class="chart"><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
         <div class="chart"><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
       </div>
+      <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “📊 Install Telemetry” in the shop to reveal live charts.</div></div>
     </section>
 
     <section class="panel" id="terminalPanel">
@@ -430,6 +441,7 @@
 
   /* ============ stats ============ */
   const STATS=[
+    {id:"coding",  lbl:"Coding",     em:"⌨️", color:"#eafff0"},
     {id:"gitfu",   lbl:"Git-Fu",     em:"⚡", color:"#ff2bd6"},
     {id:"focus",   lbl:"Focus",      em:"🧠", color:"#00e5ff"},
     {id:"debug",   lbl:"Debugging",  em:"🐛", color:"#39ff14"},
@@ -444,6 +456,10 @@
 
   /* ============ tasks (name, statId) ============ */
   const TASKS=[
+    ["Write your first function","coding"],["Fix a typo in prod","coding"],["Center a div","coding"],
+    ["Print 'hello world'","coding"],["Add a semicolon","coding"],["Rename a variable","coding"],
+    ["Write a for-loop","coding"],["Comment out the bug","coding"],["Google the error message","coding"],
+    ["Copy-paste from StackOverflow","coding"],["Make it compile","coding"],["Ship the MVP","coding"],
     ["Rebase 47 commits without conflicts","gitfu"],["Resolve the merge from hell","gitfu"],["Cherry-pick across 3 branches","gitfu"],
     ["Force-push and pray","gitfu"],["Bisect the sneaky regression","gitfu"],["Squash 200 commits into one","gitfu"],
     ["Recover from a detached HEAD","gitfu"],["Write a coherent commit message","gitfu"],
@@ -509,11 +525,16 @@
     {name:"Claude Opus 4.8",success:.12,speed:1.32,cost:750000},
     {name:"AGI (do not release)",success:.16,speed:1.55,cost:9e6},
   ];
-  const HIRE=[   // extra agents (worker count = 4 + index)
-    {name:"—",cost:0},{name:"5th agent",cost:1500},{name:"6th agent",cost:16000},
-    {name:"7th agent",cost:180000},{name:"8th agent",cost:2e6},
+  const HIRE=[   // hired auto-agents (total workers = 1 "you" + index)
+    {name:"just you",cost:0},{name:"1st agent",cost:60},{name:"2nd agent",cost:650},
+    {name:"3rd agent",cost:5500},{name:"4th agent",cost:42000},{name:"5th agent",cost:350000},
+    {name:"6th agent",cost:3e6},{name:"7th agent",cost:2.6e7},
   ];
   const UPG=[
+    {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
+    {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
+    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", cat:"Getting Started", fx:()=>"reveal the live charts panel"},
+    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
     {id:"ram",     kind:"repeat",emoji:"🧠",name:"RAM Upgrade",     base:40, growth:1.18, cat:"Hardware", fx:l=>"task speed ×"+Math.pow(1.08,l).toFixed(2)+" (+8%/lvl)"},
     {id:"cpu",     kind:"repeat",emoji:"⚙️",name:"CPU Cores",       base:55, growth:1.19, cat:"Hardware", fx:l=>"XP ×"+Math.pow(1.12,l).toFixed(2)+" (+12%/lvl)"},
     {id:"ssd",     kind:"repeat",emoji:"💾",name:"SSD Array",       base:50, growth:1.18, cat:"Hardware", fx:l=>"credits ×"+Math.pow(1.10,l).toFixed(2)+" (+10%/lvl)"},
@@ -522,7 +543,6 @@
     {id:"gpu",     kind:"repeat",emoji:"🎮",name:"Overclocked GPU", base:300,growth:1.34, max:20, cat:"Hardware", fx:l=>(l*3)+"% crit chance (3× rewards)"},
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
     {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
-    {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire Agent",       cat:"Team", tiers:HIRE, fx:i=>(4+i)+" agents working in parallel"},
     {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
     {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
     {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
@@ -596,13 +616,15 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,hire:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,offline:0,autoAlloc:0,autoBuy:0},
+      unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       achv:{},seenTips:{shop:false,sp:false}};
   }
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","sp","earned","lastReal","equity","ipos","up","achv","seenTips"];
+    "credits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","achv","seenTips"];
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -619,6 +641,10 @@ notify("#general", "10x-ing that shit 🔥");`,
         const du=defaults().up; for(const k in du) if(!(k in P.up)) P.up[k]=du[k];
         if(!P.achv||typeof P.achv!=="object") P.achv={};
         if(!P.seenTips) P.seenTips={shop:false,sp:false};
+        // migration: a save from before the progressive-unlock system had everything visible → keep it that way
+        if(!("unlocked" in d) || !("unlockedStats" in d)) unlockAll();
+        if(!P.unlocked) P.unlocked={telemetry:false,globe:false};
+        if(!Array.isArray(P.unlockedStats)||!P.unlockedStats.length) P.unlockedStats=["coding"];
         return true;
       }
     }catch(e){}
@@ -652,23 +678,37 @@ notify("#general", "10x-ing that shit 🔥");`,
     MULT.crit=Math.min(0.6,u.gpu*0.03);
     MULT.regen=0.5+u.coffee*0.35;
     MULT.hpBonus=u.coffee*15;
-    MULT.workers=Math.min(8,4+u.hire);
+    MULT.workers=Math.min(8,1+u.hire);   // 1 = you (manual); each hire adds an auto agent
     updateHpMax();
   }
 
   /* ============ shop / upgrades ============ */
   function upCost(u){
     if(u.kind==="repeat"){ if(u.max&&P.up[u.id]>=u.max) return null; return Math.floor(u.base*Math.pow(u.growth,P.up[u.id])); }
-    const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;
+    if(u.kind==="unlock"){ return P.up[u.id]>=1?null:u.cost; }
+    if(u.kind==="skill"){ const n=P.unlockedStats.length; if(n>=STATS.length) return null; return Math.floor(u.base*Math.pow(u.growth,n-1)); }
+    const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
   function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c) return true; } return false; }
   function buy(u){
     const c=upCost(u); if(c==null||P.credits<c) return;
-    P.credits-=c; P.up[u.id]++; const lvl=P.up[u.id];
-    if(u.id==="hire"){ recompute(); buildWorkers(); } else recompute();
-    const label=u.kind==="tier"?(u.tiers[lvl].name||u.name):(u.name+" Lv"+lvl);
-    termLine("t-git","$","bought "+label+" — "+money(c));
-    toast("🛠 "+u.emoji+" "+u.name, u.kind==="tier"?("→ "+(u.tiers[lvl].name||"")):("now level "+lvl), "#ffb000");
+    P.credits-=c;
+    if(u.kind==="unlock"){
+      P.up[u.id]=1; P.unlocked[u.unlocks]=true; applyUnlocks();
+      toast("🔓 Unlocked — "+u.name, u.fx(), "#39ff14"); termLine("t-git","🔓","unlocked: "+u.name);
+      flyMeme((u.unlocks==="globe"?"GLOBAL DEPLOY":"TELEMETRY")+" ONLINE");
+    } else if(u.kind==="skill"){
+      const next=STATS[P.unlockedStats.length];
+      if(next){ P.unlockedStats.push(next.id); P.up.skill++; applyUnlocks(); recompute();
+        toast("🧠 New skill — "+next.lbl, next.em+" now in the task pool · spend SP on it", next.color);
+        termLine("t-git","🧠","learned a new skill: "+next.lbl); }
+    } else {
+      P.up[u.id]++; const lvl=P.up[u.id];
+      if(u.id==="hire"){ recompute(); buildWorkers(); } else recompute();
+      const label=u.kind==="tier"?(u.tiers[lvl].name||u.name):(u.name+" Lv"+lvl);
+      termLine("t-git","$","bought "+label+" — "+money(c));
+      toast("🛠 "+u.emoji+" "+u.name, u.kind==="tier"?("→ "+(u.tiers[lvl].name||"")):("now level "+lvl), "#ffb000");
+    }
     renderShop(); save();
   }
   function autoBuyCheapest(){ let best=null,bc=Infinity;
@@ -716,9 +756,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const s of shopCards){
       const u=s.u, lvl=P.up[u.id], c=upCost(u);
       if(u.kind==="repeat"){ s.lv.textContent="Lv "+lvl; }
+      else if(u.kind==="skill"){ s.lv.textContent=(P.unlockedStats.length)+"/"+STATS.length; }
+      else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
       else { s.lv.textContent=lvl?("· "+(u.tiers[lvl].name||("T"+lvl))):""; }
       s.fx.textContent=u.fx(lvl);
-      if(c==null){ s.btn.textContent=u.kind==="repeat"?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
+      if(c==null){ s.btn.textContent=(u.kind==="repeat"||u.kind==="skill")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
     renderAch();
@@ -769,7 +811,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"loot25", em:"🎁",name:"Packrat",             desc:"Collect 25 loot",              chk:()=>P.loot>=25},
     {id:"rig",    em:"💻",name:"Quantum Leap",        desc:"Own the Quantum Rig",          chk:()=>P.up.computer>=5},
     {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5},
-    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=4},
+    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7},
     {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6},
     {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.level>=8},
     {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.level>=22},
@@ -862,6 +904,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     HUD.title.textContent=titleFor();
     $("#g_stages").textContent=STAGES.length;
   }
+  function applyUnlocks(){
+    const gp=$("#globePanel"), cp=$("#chartsPanel");
+    if(gp) gp.classList.toggle("locked",!P.unlocked.globe);
+    if(cp) cp.classList.toggle("locked",!P.unlocked.telemetry);
+    if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
+  }
   function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
 
   /* ============ era themes (evolve with level) ============ */
@@ -934,20 +982,24 @@ notify("#general", "10x-ing that shit 🔥");`,
   function buildWorkers(){
     const list=$("#agentList"); list.innerHTML=""; WK.length=0;
     const n=MULT.workers; list.style.gridTemplateRows=`repeat(${n},1fr)`;
-    AGENTS.slice().sort(()=>Math.random()-.5).slice(0,n).forEach(a=>{
-      const el=document.createElement("div"); el.className="agent";
+    const autos=AGENTS.slice().sort(()=>Math.random()-.5);
+    for(let i=0;i<n;i++){
+      const manual=(i===0);
+      const a=manual?{name:"you",color:"#eafff0"}:autos[(i-1)%autos.length];
+      const el=document.createElement("div"); el.className="agent"+(manual?" manual":"");
       el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
         <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
         <div class="code"></div><div class="prog"><i></i></div>`;
       list.appendChild(el);
-      const w={a,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
+      const w={a,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
         dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
         task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
-      w.nm.textContent=a.name; WK.push(w);
-    });
+      w.nm.textContent=manual?"you ⌨️":a.name; WK.push(w);
+    }
   }
   function assignTask(w){
-    const [name,stat]=pick(TASKS);
+    const pool=TASKS.filter(t=>P.unlockedStats.includes(t[1]));
+    const [name,stat]=pick(pool.length?pool:TASKS);
     const diff=5+P.stage*1.35+rand(0,4);
     const sv=P.stats[stat];
     const speed=(1+sv/22+P.stats.focus/60)*MULT.speed;    // relevant stat + Focus + hardware → faster
@@ -1002,9 +1054,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(w.cooldown<=0) assignTask(w);
       return;
     }
-    w.elapsed+=dt*(1+surge*1.1);
+    if(!w.manual) w.elapsed+=dt*(1+surge*1.1);   // auto agents advance themselves; "you" advances by typing
     w.prog.style.width=clamp(w.elapsed/w.task.dur*100,0,100)+"%";
     if(w.elapsed>=w.task.dur) resolveTask(w);
+  }
+  function mashCode(){   // typing/tapping drives your manual worker(s)
+    for(const w of WK){ if(w.manual && w.task){ w.elapsed+=w.task.dur*0.09; if(w.elapsed>=w.task.dur) resolveTask(w); } }
   }
 
   /* ============ counters + HUD update ============ */
@@ -1123,9 +1178,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function drawBar(){
     const cv=$("#cBar");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
-    const vals=STATS.map(s=>P.stats[s.id]);const max=Math.max(1,...vals);
-    const n=STATS.length,pad=8,gap=(w-pad*2)/n,bw=gap*0.62;
-    STATS.forEach((s,i)=>{const bh=(P.stats[s.id]/max)*(h-16);const x=pad+i*gap+(gap-bw)/2,y=h-bh-4;
+    const shown=STATS.filter(s=>P.unlockedStats.includes(s.id));
+    const vals=shown.map(s=>P.stats[s.id]);const max=Math.max(1,...vals);
+    const n=shown.length,pad=8,gap=(w-pad*2)/n,bw=Math.min(gap*0.62,26);
+    shown.forEach((s,i)=>{const bh=(P.stats[s.id]/max)*(h-16);const x=pad+i*gap+(gap-bw)/2,y=h-bh-4;
       ctx.fillStyle=s.color;ctx.shadowColor=s.color;ctx.shadowBlur=6;ctx.fillRect(x,y,bw,bh);ctx.shadowBlur=0;});
   }
   function drawSpark(){
@@ -1211,11 +1267,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(bossOn) return;
     if(e.key==="u"||e.key==="U"){ toggleShop(); fadeHint(); return; }
     if(e.key==="t"||e.key==="T"){ cycleTheme(); fadeHint(); return; }
-    bumpSurge(0.9); addXp(2); P.plot+=0.5; for(const w of WK) if(w.task) w.elapsed+=0.05;
+    bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn||shopOpen) return; bumpSurge(1.2); addXp(2); P.plot+=0.5; for(const w of WK) if(w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn||shopOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",initMatrix);
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -1242,9 +1298,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   recompute();
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
   applyTheme(false);
+  applyUnlocks();
   initAch();
   if(restored) offlineEarnings();
-  WK.forEach(w=>{ assignTask(w); w.elapsed=rand(0,w.task.dur*0.6); });
+  WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
   updateSPui();
   if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")+" · "+money(P.credits)); }

@@ -11,8 +11,12 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 - [ ] Seasonal / time-of-day palettes.
 
 ## Gameplay depth
+- [x] **Progressive onboarding** — start as one manual terminal + one stat; unlock agents, panels, and
+  skills step by step (ghosted panels show the potential). Old saves migrate to fully-unlocked.
 - [x] **Prestige layer** — "IPO / Cash Out" banks **Equity** for a permanent +2%/pt XP & credit multiplier.
 - [x] **Achievements** — 21 achievements with live unlock toasts + completion % in the shop.
+- [ ] **Phase 2 unlock polish** — reveal animations, "next unlock" progress hint, gate more stats/panels,
+  retune early credit pacing.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
 - [ ] Stat **synergies / set bonuses** (e.g. high Focus + high Caffeine → "flow state" buff).

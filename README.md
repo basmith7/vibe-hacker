@@ -10,6 +10,10 @@ progression is real and auto-saves.
 
 ## The game
 
+- **Starts tiny, grows wild.** You begin as a single terminal with one stat (**Coding**) — mash/tap to
+  write code by hand and earn your first credits, hackertyper-style. Then the shop lets you **hire your
+  first agent** (automation kicks in), **learn new skills** (more stats), and unlock the ghosted panels
+  (**Install Telemetry**, **Go Global**) one by one until the full cockpit roars to life.
 - **8 stats** (Git-Fu, Focus, Debugging, Architecture, DevOps, Algorithms, Rizz, Caffeine) that level up.
 - **~64 tasks**, each tied to a stat. Your stat vs. the task's difficulty sets success chance and speed;
   clearing a task levels its stat. Fail a roll and you take **Sanity (HP)** damage — hit 0 and you **burn out**.
