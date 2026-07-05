@@ -9,6 +9,13 @@ This replaces the current repeatable Hardware upgrades (RAM/CPU/SSD/Monitor/Coff
 random-flavor Loot system. **Rigs** (Machine/Model/OS tiers) and **Automation** stay exactly as
 they are — this only touches the Hardware layer.
 
+## Status
+
+**Currently on: Phase 1 — Stat consolidation.** See the checklist in "Phased delivery" below for
+exact sub-step progress — that list is the source of truth for where to pick back up. Each phase
+works on its own branch, gets the full verify pass, updates `guide.md`/`todo.md`, then merges to
+`main` before the next phase starts (see the note at the end of "Phased delivery").
+
 ## Stats: 9 → 5
 
 Trimmed by merging related pairs, not by deleting flavor:
@@ -204,23 +211,71 @@ A real inventory, not just instant-equip-on-drop:
 
 ## Phased delivery
 
-1. **Stat consolidation** — merge Coding+Git-Fu and Architect+DevOps, retire Rizz/Caffeine as
-   active stats, rewrite the task pool to 5 stats, migrate existing saves. Foundational — every
-   later phase assumes the final 5-stat list.
-2. **Level 1–100 rework** — retune XP curve, re-space the 20 titles across the full range.
-3. **Hardware slots (structural only)** — replace the repeatable Hardware upgrades with empty
-   equip slots (RAM/CPU/Hard Drive/Monitor/GPU/Modem); items drop with a base type + ilvl (a
-   first pass of retro naming), no patches yet; equip/unequip UI.
-4. **Toolbox & crafting slot** — the card-list inventory, buying/gambling multiple base items,
-   Decommission, the dedicated in-progress crafting slot in The IDE.
-5. **Patches + crafting materials** — tiered weighted patch tables, the material-drop economy +
-   progress meters, spending materials + credits on the item sitting in the crafting slot.
-6. **Missions** — the rotating contract board, craftable mission mods (Sprint Config), scaling
-   reroll cost, item rewards.
-7. **Depth & polish** — milestone-boss slot/ilvl gates, optional set bonuses, Legendary Build
-   uniques, the endgame Neural Interface slot.
+This is the resumable checklist — if work stops mid-phase, this section says exactly what's done
+and what's next. Check items off as they land. Each phase's **last two sub-steps are always the
+same**: verify end-to-end, then update `guide.md`/`todo.md` before moving on — documentation
+staleness is treated as part of "done," not a follow-up.
 
-Each phase is independently shippable and testable before starting the next.
+### Phase 1 — Stat consolidation *(foundational; every later phase assumes the final 5-stat list)*
+- [ ] Merge Coding+Git-Fu → **Coding**; merge Architect+DevOps → **Systems**; retire **Rizz** and
+      **Caffeine** as active stats (no task pool/skill point/HUD chip)
+- [ ] Rewrite the `TASKS` pool onto the 5 surviving stats
+- [ ] Rewire HUD stat chips, the stat-sheet chart, achievements referencing old stat ids, and the
+      "Learn a New Skill" unlock funnel (now 5 skills to unlock, not 9 — retune its cost curve)
+- [ ] Migration: old saves' Coding+Git-Fu and Architect+DevOps values sum/scale into the merged
+      stat; old Rizz/Caffeine values convert into starter patches (placeholder effect until
+      Phase 5's real patch system exists, since patches don't exist yet at this point)
+- [ ] Verify end-to-end (fresh start, migration from a pre-merge save, achievements, charts) —
+      headless-driver pass, no console errors
+- [ ] Update `guide.md` (stats section) and `todo.md`; commit + push
+
+### Phase 2 — Level 1–100 rework
+- [ ] Retune XP-curve constants so level 100 is a real, hard-fought milestone
+- [ ] Re-space the existing 20 titles across 1–100 (every 5 levels instead of every 3)
+- [ ] Confirm OS eras / Prestige still behave correctly against the new curve (both are
+      purchase-gated already, so this should be a non-event, but verify anyway)
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+### Phase 3 — Hardware slots (structural only, no patches yet)
+- [ ] Replace the repeatable Hardware upgrades (RAM/CPU/SSD/Monitor/Coffee/GPU) with empty equip
+      slots: RAM, CPU, Hard Drive, Monitor, GPU, Modem
+- [ ] Items drop with a base type + item level (first pass of retro naming — a handful of names
+      per era is enough, doesn't need to be exhaustive yet)
+- [ ] Equip/unequip UI; minimum player level to equip
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+### Phase 4 — Toolbox & crafting slot
+- [ ] Card-list inventory (Toolbox) — filterable by slot and rarity
+- [ ] Buying/gambling multiple base-item rolls (absorbs the Bulk-buy backlog idea)
+- [ ] Decommission (disenchant) action
+- [ ] Dedicated in-progress crafting slot in The IDE
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+### Phase 5 — Patches + crafting materials
+- [ ] Tiered, weighted patch tables (slot-specific + generic pools), gated by item level
+- [ ] Material-drop economy wired to task types, using `P.loc`/`P.deploys`/`P.bugsFixed`
+- [ ] Material progress meters (soft-pity bars)
+- [ ] Spend materials + credits on the item in the crafting slot (add/reroll actions)
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+### Phase 6 — Missions
+- [ ] Rotating contract board (3 active choices), board refresh on full completion
+- [ ] Scaling reroll cost (uncompleted-mission count × mission level)
+- [ ] Craftable mission mods (Sprint Config currency)
+- [ ] Mission item rewards
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+### Phase 7 — Depth & polish
+- [ ] Milestone-boss gates for new slots (Modem/Cooling/Neural Interface) and max item level
+- [ ] Optional set bonuses (2+ Custom-Built+ slots)
+- [ ] Legendary Build uniques
+- [ ] Endgame Neural Interface slot (gated to STARSHIP OS era)
+- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+
+**Workflow per phase:** branch off `main`, work the sub-steps above, run the full verify pass,
+update docs, then merge to `main` (which auto-deploys via GitHub Pages) only once the phase is
+complete — never mid-phase. This keeps the live site always on a *finished* phase, never a
+half-built one.
 
 ## Open questions still to settle
 

@@ -23,6 +23,8 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 - [ ] Seasonal / time-of-day palettes.
 
 ## Gameplay depth
+*(Stat synergies/set bonuses and milestone bosses moved to [crafting update.md](crafting%20update.md)
+— they're now Phase 7 items there instead of tracked separately here.)*
 - [x] **Progressive onboarding** — start as one manual terminal + one stat; unlock agents, panels, and
   skills step by step (ghosted panels show the potential). Old saves migrate to fully-unlocked.
 - [x] **Intro funnel** — fresh start is a full-screen terminal that only advances on keypress/tap
@@ -46,16 +48,15 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
   toward buying it first; decide whether achievements/lifetime stats persist independently of this gate.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
-- [ ] Stat **synergies / set bonuses** (e.g. high Focus + high Caffeine → "flow state" buff).
-- [ ] **Milestone bosses** per stage (a big timed task that gates progression).
 - [ ] Agent **personalities / specializations** (each agent better at certain stats).
 - [ ] **Buffs/debuffs** with durations (crunch mode, weekend, coffee crash).
 - [ ] Difficulty / challenge modes (ironman: no burnout recovery).
 
 ## Economy / math
+*(Networking is now the Modem hardware slot, and Bulk-buy is now part of the Toolbox — both in
+[crafting update.md](crafting%20update.md) Phase 3/4 — instead of tracked separately here.)*
 - [ ] Rebalance curves once there's playtest data; add a "credits/sec" and "XP/sec" readout.
-- [ ] More upgrade branches (networking, second office, cloud credits, interns).
-- [ ] **Bulk-buy** (x1 / x10 / max) in the shop.
+- [ ] More upgrade branches (second office, cloud credits, interns).
 - [ ] Soft/hard caps + prestige resets so numbers stay meaningful.
 - [ ] Offline progress summary screen (what happened while away).
 
@@ -72,9 +73,11 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
       Revisit ~2,500–3,000 lines, or when we want tests/reuse. Do CSS-dedup + chart-helper below then.
 - [ ] **DRY the theme CSS** — the win31/win95 (and other) `:root[data-theme=...]` surface-selector lists
       repeat heavily. Clean once there's a preprocessor/build (risky to hand-refactor: specificity).
-- [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge share fit/clear/grid boilerplate.
-- [ ] **Wire up or drop write-only state** — `P.loc`, `P.deploys`, `P.bugsFixed` are tracked but unused;
-      turn them into achievements ("deploy 100×", "squash 500 bugs", "1M LOC shipped") or remove.
+- [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge share fit/clear/grid
+      boilerplate. Bundle into crafting-update Phase 1, since that phase touches the charts anyway
+      for the 9→5 stat change — near-zero marginal cost to clean up at the same time.
+- [x] ~~Wire up or drop write-only state~~ — `P.loc`/`P.deploys`/`P.bugsFixed` become crafting
+      material sources in [crafting update.md](crafting%20update.md) (Phase 5), no longer dead trackers.
 - [ ] Move save to IndexedDB (bigger, structured) while keeping the cookie/localStorage fallback.
 - [ ] Real offline via a service worker (installable PWA).
 - [ ] Unit tests for the economy math (success/credit/cost formulas).
