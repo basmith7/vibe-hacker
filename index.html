@@ -58,9 +58,19 @@
   /* status bar */
   #statusbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;border:1px solid var(--edge);
     background:linear-gradient(180deg,#0c1526,#070b14);border-radius:8px;padding:6px 8px;box-shadow:0 0 24px rgba(0,229,255,.06) inset}
-  .brand{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--edge);margin-right:2px}
+  .brand{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--edge);margin-right:2px;position:relative}
   .brand .logo{color:var(--magenta);font-weight:700;letter-spacing:.5px;text-shadow:0 0 10px var(--magenta)}
-  .brand .sub{color:var(--dim);font-size:11px}
+  .brand .sub{color:var(--dim);font-size:11px;cursor:pointer;border-bottom:1px dotted var(--dim);padding-bottom:1px}
+  .brand .sub:hover{color:var(--cyan);border-color:var(--cyan)}
+  .brand .sub::after{content:" ▾";font-size:8px;vertical-align:middle}
+  #themeMenu{position:absolute;top:100%;left:0;margin-top:8px;min-width:200px;z-index:50;
+    background:linear-gradient(180deg,#0c1526,#070b14);border:1px solid var(--edge);border-radius:8px;
+    box-shadow:0 12px 30px rgba(0,0,0,.6);padding:5px;display:none;flex-direction:column;gap:2px}
+  #themeMenu.open{display:flex}
+  #themeMenu .theme-opt{font-size:11.5px;color:var(--txt);padding:6px 9px;border-radius:5px;cursor:pointer;white-space:nowrap}
+  #themeMenu .theme-opt:hover{background:rgba(0,229,255,.12)}
+  #themeMenu .theme-opt.active{color:var(--green);font-weight:700}
+  #themeMenu .theme-hint{font-size:9.5px;color:var(--dim);padding:6px 9px 3px;border-top:1px solid var(--edge);margin-top:2px;white-space:normal;max-width:210px;line-height:1.4}
   .stat{display:flex;flex-direction:column;justify-content:center;padding:0 9px;min-width:78px;border-right:1px solid rgba(22,35,61,.6)}
   .stat .k{font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
   .stat .v{font-size:15px;font-weight:700;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5)}
@@ -308,7 +318,8 @@
   :root[data-theme="dos"] #statusbar,:root[data-theme="dos"] .panel,:root[data-theme="dos"] #hud,
   :root[data-theme="dos"] .agent,:root[data-theme="dos"] .card,:root[data-theme="dos"] .chart,
   :root[data-theme="dos"] #shop,:root[data-theme="dos"] .toast,:root[data-theme="dos"] .stat,
-  :root[data-theme="dos"] .hbar,:root[data-theme="dos"] .hpbar,:root[data-theme="dos"] .vibebar{
+  :root[data-theme="dos"] .hbar,:root[data-theme="dos"] .hpbar,:root[data-theme="dos"] .vibebar,
+  :root[data-theme="dos"] #themeMenu{
     border-radius:0!important;box-shadow:none!important;background:#000!important;border-color:#1c5a1c!important}
   :root[data-theme="dos"] .panel>.head,:root[data-theme="dos"] #shopHead{background:#001800!important;color:#39ff66!important}
   :root[data-theme="dos"] .logo,:root[data-theme="dos"] .stat .v,:root[data-theme="dos"] .hl .lv,
@@ -324,9 +335,11 @@
   :root[data-theme="win31"] #statusbar,:root[data-theme="win31"] .panel,:root[data-theme="win31"] #hud,
   :root[data-theme="win31"] .agent,:root[data-theme="win31"] .card,:root[data-theme="win31"] .chart,
   :root[data-theme="win31"] #shop,:root[data-theme="win31"] .toast,:root[data-theme="win31"] .stat,
+  :root[data-theme="win31"] #themeMenu,
   :root[data-theme="win95"] #statusbar,:root[data-theme="win95"] .panel,:root[data-theme="win95"] #hud,
   :root[data-theme="win95"] .agent,:root[data-theme="win95"] .card,:root[data-theme="win95"] .chart,
-  :root[data-theme="win95"] #shop,:root[data-theme="win95"] .toast,:root[data-theme="win95"] .stat{
+  :root[data-theme="win95"] #shop,:root[data-theme="win95"] .toast,:root[data-theme="win95"] .stat,
+  :root[data-theme="win95"] #themeMenu{
     background:#c3c3c3!important;color:#000!important;border-radius:0!important;box-shadow:none!important;
     border:2px solid!important;border-color:#fff #808080 #808080 #fff!important}
   :root[data-theme="win31"] .stat .v,:root[data-theme="win31"] .logo,:root[data-theme="win31"] .hl .lv,
@@ -350,7 +363,8 @@
   :root[data-theme="win10"] body{font-family:"Segoe UI",system-ui,Arial,sans-serif;text-shadow:none!important;cursor:default;background:#e9eef4}
   :root[data-theme="win10"] #statusbar,:root[data-theme="win10"] .panel,:root[data-theme="win10"] #hud,
   :root[data-theme="win10"] .agent,:root[data-theme="win10"] .card,:root[data-theme="win10"] .chart,
-  :root[data-theme="win10"] #shop,:root[data-theme="win10"] .toast,:root[data-theme="win10"] .stat{
+  :root[data-theme="win10"] #shop,:root[data-theme="win10"] .toast,:root[data-theme="win10"] .stat,
+  :root[data-theme="win10"] #themeMenu{
     background:#fff!important;color:#1b2733!important;border-radius:4px!important;border:1px solid #d5dee8!important;box-shadow:0 1px 3px rgba(0,0,0,.08)!important}
   :root[data-theme="win10"] .stat .v,:root[data-theme="win10"] .logo,:root[data-theme="win10"] .hl .lv,
   :root[data-theme="win10"] .hl .title,:root[data-theme="win10"] .card .nm,:root[data-theme="win10"] .toast .tt{color:#1b2733!important;text-shadow:none!important}
@@ -374,7 +388,11 @@
 
 <div id="cockpit">
   <header id="statusbar">
-    <div class="brand"><span class="logo">◈ VIBE//HACKER</span><span class="sub">career sim v6.0.0</span></div>
+    <div class="brand">
+      <span class="logo">◈ VIBE//HACKER</span>
+      <span class="sub" id="themeLabel" title="click to change look" tabindex="0">career sim v6.0.0</span>
+      <div id="themeMenu"></div>
+    </div>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
     <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
@@ -564,6 +582,14 @@
     {name:"3rd agent",cost:5500},{name:"4th agent",cost:42000},{name:"5th agent",cost:350000},
     {name:"6th agent",cost:3e6},{name:"7th agent",cost:2.6e7},
   ];
+  const OS_TIERS=[   // cockpit look tiers; buying advances + auto-switches, but any owned look can be picked later
+    {id:"dos",     name:"MS-DOS 6.22",  cost:0},
+    {id:"win31",   name:"Windows 3.1",  cost:650},
+    {id:"win95",   name:"Windows 95",   cost:7500},
+    {id:"win10",   name:"Windows 10",   cost:80000},
+    {id:"neon",    name:"NEON//OS v6",  cost:850000},
+    {id:"spaceage",name:"STARSHIP OS",  cost:9500000},
+  ];
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
@@ -577,6 +603,7 @@
     {id:"gpu",     kind:"repeat",emoji:"🎮",name:"Overclocked GPU", base:300,growth:1.34, max:20, cat:"Hardware", fx:l=>(l*3)+"% crit chance (3× rewards)"},
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
     {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
+    {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",       cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name:" (final look)")},
     {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
     {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
     {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
@@ -650,7 +677,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
       achv:{},seenTips:{shop:false,sp:false}};
@@ -658,7 +686,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let P=defaults();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -671,6 +699,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     try{
       const d=JSON.parse(raw);
       if(d && d.ver===SAVE_VER){
+        const hadOs=!!(d.up && ("os" in d.up));
         for(const k of PERSIST) if(k in d) P[k]=d[k];
         for(const id of STAT_IDS) if(!(id in P.stats)) P.stats[id]=rand(6,12);
         const du=defaults().up; for(const k in du) if(!(k in P.up)) P.up[k]=du[k];
@@ -685,6 +714,12 @@ notify("#general", "10x-ing that shit 🔥");`,
         if(!P.reveal) P.reveal={credits:false,shop:false};
         // migration: backfill maxCredits from saves predating the shop-reveal-at-50%-saved system
         if(typeof P.maxCredits!=="number") P.maxCredits=P.credits||0;
+        // migration: OS used to auto-advance with level; grandfather that era in as "purchased" so nobody regresses
+        if(!hadOs){ const LEGACY_MINS=[1,4,8,14,22,34]; let tier=0;
+          for(let i=0;i<LEGACY_MINS.length;i++) if(P.level>=LEGACY_MINS[i]) tier=i;
+          P.up.os=tier; P.themeChoice=OS_TIERS[tier].id; }
+        const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
+        if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
         return true;
       }
     }catch(e){}
@@ -750,6 +785,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(next){ P.unlockedStats.push(next.id); P.up.skill++; applyUnlocks(); recompute();
         toast("🧠 New skill — "+next.lbl, next.em+" now in the task pool · spend SP on it", next.color);
         termLine("t-git","🧠","learned a new skill: "+next.lbl); }
+    } else if(u.id==="os"){
+      P.up.os++; const t=OS_TIERS[P.up.os];
+      pickTheme(t.id);   // new tier auto-switches to it; player can still pick an older unlocked look afterward
+      celebrate("🖥 SYSTEM UPGRADE","#00e5ff"); flyMeme(t.name.toUpperCase());
+      toast("🖥 New OS installed — "+t.name, "click the OS name (top-left) to switch looks anytime", "#00e5ff");
+      termLine("t-git","🖥","upgraded OS → "+t.name);
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
       if(u.id==="hire"){ recompute(); buildWorkers(); } else recompute();
@@ -824,7 +865,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(shopOpen && !shopBuilt) buildShop();
     $("#shop").classList.toggle("on",shopOpen);
     $("#shopScrim").classList.toggle("on",shopOpen);
-    if(shopOpen) renderShop();
+    if(shopOpen){ renderShop(); closeThemeMenu(); }
   }
   function allocate(id){ if(P.sp<=0) return; P.sp--; statUp(id,1); updateSPui(); save(); }
   function updateSPui(){
@@ -843,7 +884,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       burnouts:P.burnouts, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
     P=Object.assign(defaults(),keep);
     recompute(); buildWorkers(); WK.forEach(w=>assignTask(w));
-    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme(false); updateSPui();
+    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme(); updateSPui();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
     toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% XP & credits","#39ff14");
     termLine("t-git","💰","IPO #"+P.ipos+" — banked "+g+" Equity (total "+P.equity+" · +"+(P.equity*2)+"%)");
@@ -985,35 +1026,35 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
 
-  /* ============ era themes (evolve with level) ============ */
-  const THEMES=[
-    {id:"dos",     name:"MS-DOS 6.22",  min:1},
-    {id:"win31",   name:"Windows 3.1",  min:4},
-    {id:"win95",   name:"Windows 95",   min:8},
-    {id:"win10",   name:"Windows 10",   min:14},
-    {id:"neon",    name:"NEON//OS v6",  min:22},
-    {id:"spaceage",name:"STARSHIP OS",  min:34},
-  ];
-  let curTheme=null, themeManual=false;
-  function themeForLevel(){ let t=THEMES[0]; for(const th of THEMES) if(P.level>=th.min) t=th; return t; }
+  /* ============ era themes — unlocked by buying "Upgrade OS", pick any unlocked one by clicking the label ============ */
+  function unlockedThemes(){ return OS_TIERS.slice(0,P.up.os+1); }
   function setTheme(id){ document.documentElement.dataset.theme=id; bodyFont=getComputedStyle(document.body).fontFamily; }
-  function applyTheme(announce){
-    const t=themeForLevel();
-    setTheme(t.id);
-    const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name;
-    if(announce && curTheme && curTheme!==t.id){
-      celebrate("🖥 SYSTEM UPGRADE","#00e5ff"); flyMeme(t.name.toUpperCase());
-      toast("🖥 New OS unlocked", t.name, "#00e5ff"); termLine("t-info","🖥","system upgraded → "+t.name);
-    }
-    curTheme=t.id; themeManual=false;
+  function themeLabel(){ return (OS_TIERS.find(t=>t.id===P.themeChoice)||OS_TIERS[0]).name; }
+  function updateThemeLabel(){ if(UI.themeLabel) UI.themeLabel.textContent=themeLabel(); }
+  function applyTheme(){ setTheme(P.themeChoice); updateThemeLabel(); }   // boot/load only — purchases & picks switch live
+  function pickTheme(id){
+    if(!unlockedThemes().some(t=>t.id===id)) return;
+    P.themeChoice=id; setTheme(id); updateThemeLabel(); closeThemeMenu(); save();
   }
-  function cycleTheme(){   // manual preview toggle (key: T)
-    const i=THEMES.findIndex(t=>t.id===document.documentElement.dataset.theme);
-    const t=THEMES[(i+1)%THEMES.length];
-    setTheme(t.id);
-    const sub=document.querySelector(".brand .sub"); if(sub) sub.textContent=t.name+" (preview)";
-    themeManual=true; toast("🎨 Theme preview", t.name, "#c77dff");
+  function cycleTheme(){   // convenience shortcut (key: T) — cycles only through unlocked looks
+    const un=unlockedThemes(); if(un.length<2) return;
+    const i=un.findIndex(t=>t.id===P.themeChoice);
+    const t=un[(i+1)%un.length];
+    pickTheme(t.id); toast("🎨 Switched look", t.name, "#c77dff");
   }
+  let themeMenuOpen=false;
+  function renderThemeMenu(){
+    const m=UI.themeMenu; if(!m) return;
+    const un=unlockedThemes();
+    m.innerHTML=un.map(t=>`<div class="theme-opt${t.id===P.themeChoice?" active":""}" data-id="${t.id}">${t.id===P.themeChoice?"✓ ":""}${t.name}</div>`).join("")
+      + (un.length<OS_TIERS.length?`<div class="theme-hint">🖥️ Buy “Upgrade OS” in the shop for more looks</div>`:"");
+    m.querySelectorAll(".theme-opt").forEach(el=>el.addEventListener("click",e=>{ e.stopPropagation(); pickTheme(el.dataset.id); }));
+  }
+  function toggleThemeMenu(force){
+    themeMenuOpen=force!==undefined?force:!themeMenuOpen;
+    if(UI.themeMenu){ if(themeMenuOpen) renderThemeMenu(); UI.themeMenu.classList.toggle("open",themeMenuOpen); }
+  }
+  function closeThemeMenu(){ toggleThemeMenu(false); }
   function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
   function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
   function addLoot(){
@@ -1030,7 +1071,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");   // big banner only on rank-up, not every level
     toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000");
     termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
-    HUD.title.textContent=nt; updateSPui(); applyTheme(true); save();
+    HUD.title.textContent=nt; updateSPui(); save();
   }
   function stageAdvance(){
     P.plot-=P.plotNeed; P.stage++; P.plotNeed=Math.round(P.plotNeed*1.16+45);
@@ -1181,7 +1222,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
   function cacheUI(){   // cache per-frame DOM refs once (avoids ~13 querySelector calls per frame)
-    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","shopBtn","spStat"]) UI[id]=$("#"+id);
+    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","shopBtn","spStat","themeLabel","themeMenu"]) UI[id]=$("#"+id);
   }
 
   /* ============ canvas helpers ============ */
@@ -1340,7 +1381,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let hintFaded=false;
   function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
   addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ e.preventDefault(); if(shopOpen){ toggleShop(false); return; } toggleBoss(); return; }
+    if(e.key==="Escape"){ e.preventDefault(); if(themeMenuOpen){ closeThemeMenu(); return; } if(shopOpen){ toggleShop(false); return; } toggleBoss(); return; }
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
     if(bossOn) return;
     if(!P.intro){   // shop/theme shortcuts only apply once the intro terminal has graduated
@@ -1360,6 +1401,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#shopClose").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
   $("#shopScrim").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
   $("#shop").addEventListener("click",e=>{ e.stopPropagation(); });   // don't grind while shopping
+  $("#themeLabel").addEventListener("click",e=>{ e.stopPropagation(); toggleThemeMenu(); fadeHint(); });
+  $("#themeMenu").addEventListener("click",e=>{ e.stopPropagation(); });
+  document.addEventListener("click",e=>{
+    if(themeMenuOpen && UI.themeMenu && !UI.themeMenu.contains(e.target) && e.target!==UI.themeLabel) closeThemeMenu();
+  });
 
   /* ============ offline earnings ============ */
   function offlineEarnings(){
@@ -1378,7 +1424,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   recompute();
   cacheUI();
   buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
-  applyTheme(false);
+  applyTheme();
   applyUnlocks();
   applyReveal();
   initAch();

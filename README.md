@@ -26,15 +26,18 @@ progression is real and auto-saves.
   on any stat via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **21 achievements** that unlock as you play.
-- **Evolving UI** — the whole interface ages up with your level: **MS-DOS → Windows 3.1 → Windows 95 →
-  Windows 10 → NEON//OS → STARSHIP OS**.
+- **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing
+  history: **MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS**. Each purchase
+  switches your look immediately — but click the OS name (top-left) anytime to switch back to any look
+  you've already unlocked.
 
 See [todo.md](todo.md) for the future-ideas backlog.
 
 ## Controls
 
 - **Mash any key / tap** — grind faster
-- **`U`** — open the upgrade shop · **`T`** — preview themes
+- **Click the OS name** (top-left) — switch to any look you've unlocked
+- **`U`** — open the upgrade shop · **`T`** — cycle your unlocked looks
 - **`F11`** — fullscreen (browser native)
 - **`Esc`** / **`` ` ``** — boss key (hide behind a fake spreadsheet)
 - **`⟲ reset`** (top-right) — wipe your save

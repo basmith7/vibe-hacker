@@ -3,8 +3,10 @@
 A backlog of things that would make it deeper / weirder / more fun. Not committed to any of these.
 
 ## Themes & vibe
-- [x] **Era themes that evolve with level** — MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS.
-- [ ] Manual theme picker (not just auto), remember choice.
+- [x] **Era themes, bought not leveled** — "Upgrade OS" is a Rigs-tier shop item (like New Machine/AI
+  Model); buying it auto-switches your look. Click the OS name (top-left) to pick any *already-owned*
+  look, independent of your max tier — persisted as `themeChoice`. Old saves grandfather in whatever
+  era their level used to imply, so nobody regresses. Resets to DOS on prestige, like the rest of the rig.
 - [ ] Per-era **sound**: DOS beeps, the Windows 95 startup chime, modern UI blips (mute toggle).
 - [ ] Era-appropriate fonts embedded (currently system fonts).
 - [ ] CRT curvature / boot sequence animation when the OS "upgrades".
