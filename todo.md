@@ -39,8 +39,9 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [x] **Shop items reveal at 50%-saved** — Hardware/Rigs/Automation cards (and their category headers)
   stay hidden until your peak-ever credits reach half the price; owned items always stay visible; peak
   resets on prestige. "Getting Started" items and the IPO card are exempt (always the visible roadmap).
-- [ ] **Onboarding polish** — reveal animations beyond the fade-in, a "next unlock" progress hint once
-  past the intro, gate more stats/panels, retune early credit pacing once there's playtest data.
+- [ ] **Onboarding polish** — retune early credit pacing once there's playtest data. (Reveal
+  animations / gating more panels progressively is now [window manager.md](window%20manager.md)
+  Phase 4, since the windowing system solves that architecturally instead of cosmetically.)
 - [ ] **Make saving itself an early upgrade** — a cheap "Getting Started" item (e.g. "💾 Enable Auto-Save" /
   "🗄️ git init") that gates persistence: before buying it, progress doesn't survive a reload/close (session
   only, no cookie/localStorage write); buying it is the moment your run becomes durable. Thematic (early-career
@@ -71,9 +72,11 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 
 ## Tech
 - [ ] Split the single file into modules + a tiny build step (keep a bundled single-file output).
-      Revisit ~2,500–3,000 lines, or when we want tests/reuse. Do CSS-dedup + chart-helper below then.
-- [ ] **DRY the theme CSS** — the win31/win95 (and other) `:root[data-theme=...]` surface-selector lists
-      repeat heavily. Clean once there's a preprocessor/build (risky to hand-refactor: specificity).
+      Revisit ~2,500–3,000 lines, or when we want tests/reuse. Do the chart-helper extraction below
+      then (theme CSS dedup already has a home — see the window-manager line just below).
+- [x] ~~DRY the theme CSS~~ — moved to [window manager.md](window%20manager.md) Phase 1: converting
+      panels into windows touches every one of these selector lists anyway, so it's bundled in there
+      instead of being a separate pass.
 - [ ] **Extract a chart-draw helper** — drawLine/drawBar/drawSpark/drawGauge each still repeat the
       same `$(id)` → `fitCanvas()` → `clearRect()` one-liner. Small, low-value on its own; bundle
       it in whenever these functions are touched for something else anyway.
@@ -89,4 +92,3 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] "AI co-founder" that occasionally gives cursed advice.
 - [ ] Konami code easter egg.
 - [ ] Export your career as a shareable "resume" card image.
- 

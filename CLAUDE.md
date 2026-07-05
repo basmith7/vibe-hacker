@@ -19,6 +19,7 @@ no bundler, no `npm install`.
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
 | `todo.md` | Standing backlog of future ideas. Not commitments. |
 | `crafting update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
+| `window manager.md` | An **active, in-progress** phased design+delivery doc (same format as `crafting update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system with a Start Menu. Check its `## Status` line for exactly where it's at before assuming anything about the current UI's structure. |
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
 should update `guide.md`/`README.md` in the same piece of work, not as a separate pass later.
@@ -32,6 +33,11 @@ by drops/gambling, a Toolbox stash + IDE crafting bench, patches/rarity, a mater
 rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legendary uniques). Any
 further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
 phase of that plan.
+
+Next up: `window manager.md`, a phased plan (still in planning as of this writing — check its
+`## Status` line) to rework the UI into draggable/minimizable windows with a Start Menu. It also
+absorbed two `todo.md` items (theme-CSS dedup, onboarding reveal polish) — see its "Backlog
+absorbed" section.
 
 ## Architecture inside `index.html`
 
