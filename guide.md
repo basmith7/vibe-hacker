@@ -117,10 +117,12 @@ mashing adds.
 
 - **Credits** are the shop currency, earned per successful task (plus passive income from
   Monitors, once bought).
-- **XP** fills a level bar; each level needs progressively more (about +13% and +22 flat over
-  the last). Leveling up grants **2 + (level ÷ 8) skill points**, fully heals Sanity, and every
-  3rd level bumps your **title** — Script Kiddie → Intern → … → CTO → **Benevolent AGI** (20
-  titles total).
+- **XP** fills a level bar; each level needs progressively more (about +10% and +18 flat over the
+  last). Leveling up grants **2 + (level ÷ 8) skill points**, fully heals Sanity, and every 5th
+  level bumps your **title** — Script Kiddie → Intern → … → CTO → **Benevolent AGI** (20 titles,
+  spanning **level 1 to 100**). Level 100 is a real, deliberately hard-fought milestone — roughly
+  35 million cumulative XP — and going past it gets brutal fast (150 needs ~4 billion). Leveling
+  never hard-caps, it just keeps getting steeper.
 - A separate **stage/plot bar** fills from task progress and advances your **career stage**
   (Day 1 → Week 1 → … → Singularity Onset, 28 stages) — each stage raises task difficulty and
   is a slower, longer-term bar than the level bar. Running out of stages doesn't end anything;
@@ -202,8 +204,8 @@ cosmetic lap counter for finishing all 28 stages, with no reset. IPO is the real
 
 ## Achievements
 
-21 achievements unlock automatically as you play, from "Hello, World" (clear one task) to
-"Serial Founder" (cash out 5 times) to "To The Stars" (reach the STARSHIP OS look). They show
+22 achievements unlock automatically as you play, from "Hello, World" (clear one task) to
+"Serial Founder" (cash out 5 times) to "Triple Digits" (reach level 100). They show
 up as a toast the moment you earn them and live in a checklist at the bottom of the shop with a
 running completion count. If you already qualify for one when you load an old save, it's
 granted silently — no spam on load.

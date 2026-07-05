@@ -928,6 +928,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"lv10",   em:"⭐",name:"Getting the Hang",     desc:"Reach level 10",               chk:()=>P.level>=10,        pct:()=>P.level/10},
     {id:"lv25",   em:"🌟",name:"Seasoned",            desc:"Reach level 25",               chk:()=>P.level>=25,        pct:()=>P.level/25},
     {id:"lv50",   em:"👑",name:"Living Legend",       desc:"Reach level 50",               chk:()=>P.level>=50,        pct:()=>P.level/50},
+    {id:"lv100",  em:"🏆",name:"Triple Digits",       desc:"Reach level 100",              chk:()=>P.level>=100,       pct:()=>P.level/100},
     {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25,   pct:()=>P.bestStreak/25},
     {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100,  pct:()=>P.bestStreak/100},
     {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1,  binary:true},
@@ -937,9 +938,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5,      pct:()=>P.up.model/5},
     {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7,       pct:()=>P.up.hire/7},
     {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6,      pct:()=>P.earned/1e6},
-    {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.level>=8,         pct:()=>P.level/8},
-    {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.level>=22,        pct:()=>P.level/22},
-    {id:"space",  em:"🚀",name:"To The Stars",        desc:"Reach STARSHIP OS",            chk:()=>P.level>=34,        pct:()=>P.level/34},
+    {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.up.os>=2,         pct:()=>P.up.os/2},
+    {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.up.os>=4,         pct:()=>P.up.os/4},
+    {id:"space",  em:"🚀",name:"To The Stars",        desc:"Reach STARSHIP OS",            chk:()=>P.up.os>=5,         pct:()=>P.up.os/5},
     {id:"ipo1",   em:"📈",name:"IPO Day",             desc:"Cash out for the first time",  chk:()=>P.ipos>=1,      binary:true},
     {id:"ipo5",   em:"🏦",name:"Serial Founder",      desc:"Cash out 5 times",             chk:()=>P.ipos>=5,          pct:()=>P.ipos/5},
     {id:"stage",  em:"🎬",name:"Season Finale",       desc:"Reach the final stage",        chk:()=>P.stage>=STAGES.length-1||P.prestige>=1,
@@ -1058,7 +1059,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     h.style.opacity=""; hintFaded=false; setTimeout(fadeHint,10000);
     save();
   }
-  function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
+  function titleFor(){ return TITLES[clamp(((P.level-1)/5)|0,0,TITLES.length-1)]; }   // 20 titles spaced evenly across Lv1-100
 
   /* ============ era themes — unlocked by buying "Upgrade OS", pick any unlocked one by clicking the label ============ */
   function unlockedThemes(){ return OS_TIERS.slice(0,P.up.os+1); }
@@ -1098,7 +1099,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function levelUp(){
     const before=titleFor();
-    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.13+22);
+    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);   // tuned so Lv100 is a real, hard-fought (but reachable) milestone — see "crafting update.md" Phase 2
     updateHpMax(); P.hp=P.hpMax;
     const gain=2+Math.floor(P.level/8); P.sp+=gain;
     const nt=titleFor();
@@ -1188,15 +1189,19 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     w.task=null; w.cooldown=rand(0.4,1.0);
   }
-  function tickWorker(w,dt){
-    // flavor typing
-    w.acc+=dt*(12+surge*24); let n=w.acc|0; w.acc-=n;
+  function revealChars(w,n){   // append n characters of fake code to a worker's buffer + re-render
     while(n-->0){
       if(w.pos>=w.buf.length){ w.buf=pick(SNIPPETS)+"\n\n"; w.pos=0; }
       w.shown+=w.buf[w.pos++];
     }
     let lines=w.shown.split("\n"); if(lines.length>9){ lines=lines.slice(-9); w.shown=lines.join("\n"); }
     w.code.innerHTML=lines.map(hl).join("<br>");
+  }
+  function tickWorker(w,dt){
+    if(!w.manual){   // auto agents "type" on their own; the manual worker's code only appears via real input (mashCode)
+      w.acc+=dt*(12+surge*24); let n=w.acc|0; w.acc-=n;
+      if(n>0) revealChars(w,n);
+    }
     if(w.flashT>0){ w.flashT-=dt; if(w.flashT<=0) w.el.classList.remove("win","fail","crit"); }
     if(!w.task){
       w.cooldown-=dt*(1+surge*.5);
@@ -1208,8 +1213,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     w.prog.style.width=clamp(w.elapsed/w.task.dur*100,0,100)+"%";
     if(w.elapsed>=w.task.dur) resolveTask(w);
   }
-  function mashCode(){   // typing/tapping drives your manual worker(s)
-    for(const w of WK){ if(w.manual && w.task){ w.elapsed+=w.task.dur*0.09; if(w.elapsed>=w.task.dur) resolveTask(w); } }
+  function mashCode(){   // typing/tapping is the ONLY thing that reveals a manual worker's code or advances its task
+    for(const w of WK){ if(w.manual){ revealChars(w,(2+Math.random()*3)|0);
+      if(w.task){ w.elapsed+=w.task.dur*0.09; if(w.elapsed>=w.task.dur) resolveTask(w); } } }
   }
 
   /* ============ counters + HUD update ============ */

@@ -90,3 +90,11 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 - [ ] Export your career as a shareable "resume" card image.
 
 
+## triage
+  these are low priorty, check in after other stages to see if these can be worked into the plan somewhere 
+
+ * day 1 should not auto type at all, user must type to make progress, game starts with blank terminal sceen and blinking cursor 
+ * remove reset from bottom left of day 1 screen, its fine to make them wait for the upgrades sceen to reset. 
+ * are there architectural changes that we should explore to make future updaets and changes easier? 
+ * change "reset save to 'sudo rm -r /`, keep are you sure prompt 
+ 

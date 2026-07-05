@@ -11,11 +11,13 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phase 1 (Stat consolidation) is done and merged.** Next up: **Phase 2 — Level 1–100 rework.**
-See the checklist in "Phased delivery" below for exact sub-step progress — that list is the
-source of truth for where to pick back up. Each phase works on its own branch, gets the full
-verify pass, updates `guide.md`/`todo.md`, then merges to `main` before the next phase starts
-(see the note at the end of "Phased delivery").
+**Phases 1-2 are done.** Next up: **Phase 3 — Hardware slots (structural only).** This is a big
+one — replacing the repeatable Hardware upgrades with real equip slots — so it should get its own
+branch rather than being worked directly on `main` (Phase 2 was small enough that it didn't, but
+Phase 3 shouldn't skip that). See the checklist in "Phased delivery" below for exact sub-step
+progress — that list is the source of truth for where to pick back up. Each phase works on its
+own branch, gets the full verify pass, updates `guide.md`/`todo.md`, then merges to `main` before
+the next phase starts (see the note at the end of "Phased delivery").
 
 ## Stats: 9 → 5
 
@@ -236,12 +238,28 @@ staleness is treated as part of "done," not a follow-up.
       headless-driver pass, no console errors
 - [x] Update `guide.md` (stats section) and `README.md`; commit + push
 
-### Phase 2 — Level 1–100 rework
-- [ ] Retune XP-curve constants so level 100 is a real, hard-fought milestone
-- [ ] Re-space the existing 20 titles across 1–100 (every 5 levels instead of every 3)
-- [ ] Confirm OS eras / Prestige still behave correctly against the new curve (both are
-      purchase-gated already, so this should be a non-event, but verify anyway)
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 2 — Level 1–100 rework ✅ DONE
+- [x] Retuned the XP-curve growth from `×1.13+22` to `×1.10+18` — level 100 now lands around
+      ~35M cumulative XP (a real, reachable-but-tough milestone), while 100→150 needs ~4.1B
+      (brutal, matching "technically possible, very very hard" for going past 100)
+- [x] Re-spaced the existing 20 titles across 1–100 (`floor((level-1)/5)`, was `floor(level/3)`) —
+      verified exact title at levels 1/5/6/50/96/100/150 via injected saves, all correct
+- [x] Confirmed OS eras / Prestige unaffected (both purchase-gated, untouched by the curve) — and
+      while checking this, found and fixed a **real pre-existing bug**: 3 achievements ("Start Me
+      Up," "Cyberpunk," "To The Stars") checked `P.level` for reaching an OS era, but OS eras have
+      been purchase-gated (not level-gated) since the OS-upgrade rework — meaning they could fire
+      from leveling alone without ever buying that OS tier. Fixed to check `P.up.os` instead;
+      verified a high-level/no-OS-bought save no longer triggers them, and a low-level/all-OS-owned
+      save does.
+- [x] Also fixed, while in the area: the manual worker's code display was revealing characters on
+      a passive timer regardless of input (same accumulator auto agents use), so it visibly
+      "auto-typed" before any keypress — contradicting the whole hackertyper premise. Split it so
+      only auto agents use the passive accumulator; the manual worker now reveals code exclusively
+      via `mashCode()`. Verified: blank terminal (just the blinking cursor) after 3s of zero input,
+      text appears only once real keypresses are sent; auto agents' passive typing unaffected.
+- [x] Added a "Triple Digits" (🏆) achievement for reaching level 100 — the milestone had zero
+      recognition otherwise. Total achievements: 22 (was 21).
+- [x] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
 
 ### Phase 3 — Hardware slots (structural only, no patches yet)
 - [ ] Replace the repeatable Hardware upgrades (RAM/CPU/SSD/Monitor/Coffee/GPU) with empty equip
