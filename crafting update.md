@@ -11,13 +11,16 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phases 1-2 are done.** Next up: **Phase 3 — Hardware slots (structural only).** This is a big
-one — replacing the repeatable Hardware upgrades with real equip slots — so it should get its own
-branch rather than being worked directly on `main` (Phase 2 was small enough that it didn't, but
-Phase 3 shouldn't skip that). See the checklist in "Phased delivery" below for exact sub-step
-progress — that list is the source of truth for where to pick back up. Each phase works on its
-own branch, gets the full verify pass, updates `guide.md`/`todo.md`, then merges to `main` before
-the next phase starts (see the note at the end of "Phased delivery").
+**Phases 1-3 are done.** Next up: **Phase 4 — Toolbox & crafting slot.** Phase 3 replaced the
+repeatable Hardware upgrades with real equip slots (RAM/CPU/Hard Drive/Monitor/GPU/Modem),
+auto-equip-if-better drop logic, and a migration path from old saves — verified end-to-end
+(including a simulated-real-play natural-drop test) on branch `phase3-hardware-slots`, merged to
+`main`. Phase 4 is the first phase to need actual inventory management (multiple candidate items
+per slot, not just auto-equip-or-salvage), so expect more UI work than Phase 3. See the checklist
+in "Phased delivery" below for exact sub-step progress — that list is the source of truth for
+where to pick back up. Each phase works on its own branch, gets the full verify pass, updates
+`guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at the end
+of "Phased delivery").
 
 ## Stats: 9 → 5
 
@@ -261,13 +264,44 @@ staleness is treated as part of "done," not a follow-up.
       recognition otherwise. Total achievements: 22 (was 21).
 - [x] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
 
-### Phase 3 — Hardware slots (structural only, no patches yet)
-- [ ] Replace the repeatable Hardware upgrades (RAM/CPU/SSD/Monitor/Coffee/GPU) with empty equip
-      slots: RAM, CPU, Hard Drive, Monitor, GPU, Modem
-- [ ] Items drop with a base type + item level (first pass of retro naming — a handful of names
-      per era is enough, doesn't need to be exhaustive yet)
-- [ ] Equip/unequip UI; minimum player level to equip
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 3 — Hardware slots (structural only, no patches yet) ✅ DONE
+- [x] Replaced the repeatable Hardware upgrades (RAM/CPU/SSD/Monitor/GPU) with empty equip slots:
+      RAM, CPU, Hard Drive, Monitor, GPU, Modem (`SLOTS`/`SLOT`, `P.equip`). Coffee (Espresso
+      Machine) and Autocomplete Assist stay as repeatable Hardware purchases — they were never
+      part of the itemization scope.
+- [x] Items drop with a base type + item level: `rollItem()` picks a retro name from
+      `RETRO_NAMES` keyed to `P.up.os` (era = *ownership*, not `themeChoice`'s display-only
+      preference) and an ilvl of `round(P.level * rand(0.8, 1.2))`. First pass has 3-4 names per
+      era, not exhaustive — fine per the plan's own "content-authoring pass, not a design
+      decision" note.
+- [x] Drop resolution wired into `resolveTask()`: the existing 16% drop chance now branches
+      70% real Hardware (`dropHardware()`) / 30% flavor Loot (`addLoot()`, unchanged). A drop
+      auto-equips if its ilvl beats the current item in that slot, otherwise it's auto-salvaged
+      for `round(ilvl*2)+1` credits — no candidate-comparison UI yet, that's Phase 4's Toolbox job.
+- [x] Shop gained a "🔧 Equipped Hardware" section: one card per slot showing the equipped item's
+      name/ilvl (or "Stock" if empty) with an Unequip button (disabled when empty).
+- [x] `recompute()` rewired so each slot's *ilvl* (not a purchase level) drives its multiplier:
+      RAM 2%/ilvl speed, CPU 3%/ilvl XP, Hard Drive 2.5%/ilvl credits, Monitor 0.15×ilvl passive
+      credits/sec, GPU 0.5%/ilvl crit (cap 60%), Modem 0.2%/ilvl success (cap +10%) and
+      0.5%/ilvl offline-earning efficiency (cap 90%, replacing the old flat 50%).
+  - Did **not** add a minimum-player-level-to-equip gate from the original checklist item — ilvl
+    already scales with level, so a low-level player naturally can't roll a high-ilvl item, and a
+    separate gate would just be an extra rule to explain for no real balance gain. Dropped as
+    unnecessary rather than deferred.
+- [x] Migration for old saves (no `"equip"` key): converts existing `up.ram/cpu/ssd/monitors/gpu`
+      purchase levels into starter equipped items (×6 for ram/cpu/harddrive/gpu, ×5 for monitor,
+      matching their old power curves approximately — real tuning deferred to playtesting, already
+      an open question below). `up.gpu`/etc. purchase-level fields are left in the save (harmless,
+      just unread) rather than deleted, since nothing else references them anymore.
+- [x] Verify end-to-end: recompute() formulas checked by code review; fresh-save slot UI
+      (all empty, Unequip disabled) confirmed visually; known-value equip state confirmed
+      correct card rendering + working Unequip button + persistence; **migration test** (old save
+      with `ram:5/cpu:3/ssd:2/monitors:4/gpu:0`, no `equip` key) confirmed exact expected
+      conversion (ilvl 30/18/12/20, gpu stayed `null` since old level was 0); **natural-drop
+      test** (simulated real key-mashing via CDP `Input.dispatchKeyEvent` for 35s at high stats)
+      confirmed all 6 slots fill with real equipped items purely through normal task resolution,
+      proving `dropHardware()` is actually reachable through live play, not just injectable state.
+- [x] Update `guide.md`/`todo.md`; commit + push
 
 ### Phase 4 — Toolbox & crafting slot
 - [ ] Card-list inventory (Toolbox) — filterable by slot and rarity

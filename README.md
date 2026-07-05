@@ -21,10 +21,11 @@ progression is real and auto-saves.
   clearing a task levels its stat. Fail a roll and you take **Sanity (HP)** damage — hit 0 and you **burn out**.
 - **~28 stages** from *Day 1: The Onboarding* to *Singularity Onset*, escalating titles across
   **level 1–100** (Script Kiddie → CTO → **Benevolent AGI**), and loot that boosts stats.
-- **Incremental economy** — earn **credits** per task and spend them in the **🛒 Upgrade shop**: RAM, CPU,
-  SSD, monitors, coffee, GPU (crit), plus one-time **Machine** and **AI Model** tiers, more agents, and
-  automation (offline earnings, auto-allocate, auto-buyer). Level-ups grant **skill points** you spend
-  on any stat via the `+` buttons.
+- **Incremental economy** — earn **credits** per task and spend them in the **🛒 Upgrade shop** on coffee,
+  one-time **Machine** and **AI Model** tiers, more agents, and automation (offline earnings,
+  auto-allocate, auto-buyer). **Hardware isn't bought** — RAM, CPU, Hard Drive, Monitor, GPU, and Modem
+  are equip slots filled by drops, auto-equipping whenever a better item shows up. Level-ups grant
+  **skill points** you spend on any stat via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **22 achievements** that unlock as you play.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing

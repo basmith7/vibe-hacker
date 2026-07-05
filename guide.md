@@ -82,9 +82,9 @@ stat, your Focus, and your hardware (RAM, Machine, and AI Model speed bonuses al
 together). Better stats and better hardware both directly shorten every task.
 
 **On success:** XP and credits both scale with difficulty and your stage, then get multiplied
-by your CPU/SSD upgrades and Machine/AI-Model tiers. There's also a **crit chance** (from the
-GPU upgrade) for a 3× payout on that task. You gain a little Sanity back, your streak grows,
-and there's a 16% chance of **loot**.
+by your equipped CPU/Hard Drive and Machine/AI-Model tiers. There's also a **crit chance** (from
+your equipped GPU) for a 3× payout on that task. You gain a little Sanity back, your streak
+grows, and there's a 16% chance of a drop — see **Hardware slots** below.
 
 **On failure:** you take damage equal to roughly `difficulty × 0.4–0.9`, reduced by up to 50%
 if your Rizz is high. Your streak resets to zero, and you get a small consolation XP trickle.
@@ -141,12 +141,10 @@ map). These are one-time or tiered purchases that exist specifically to introduc
 | Upgrade | Effect |
 |---|---|
 | 🪄 Autocomplete Assist | Your own manual slot auto-fills a bit on its own each second — +5%/level, capped at 15 levels (75%). You still need to type/tap for the rest; this never fully replaces you. |
-| 🧠 RAM | +8% task speed per level |
-| ⚙️ CPU Cores | +12% XP per level |
-| 💾 SSD Array | +10% credits per level |
-| 🖥️ Extra Monitor | +passive credits/sec (scaled by your Machine tier) |
 | ☕ Espresso Machine | +max Sanity and faster regen |
-| 🎮 Overclocked GPU | +3% crit chance per level (max 20 levels → 60% crit, capped) |
+
+RAM, CPU, Hard Drive, Monitor, GPU, and Modem are no longer bought here — they're **equip
+slots**, filled by drops. See **Hardware slots** below.
 
 ### Rigs (one-time tier upgrades — each tier replaces the last)
 - **💻 New Machine** — Hand-me-down Laptop → … → Dyson-Sphere Cluster. Each tier multiplies
@@ -158,8 +156,8 @@ map). These are one-time or tiered purchases that exist specifically to introduc
   it just takes effect" pattern as the other two.
 
 ### Automation (one-time toggles)
-- **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away, at 50%
-  efficiency).
+- **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away). Base efficiency
+  is 50%, improved by your equipped Modem (up to 90%).
 - **🎯 Auto-Allocate SP** — spends skill points for you, always on your current weakest stat.
 - **🛒 Auto-Buyer** — automatically buys the cheapest *affordable* upgrade every ~1.2 seconds
   (it'll happily buy a Rigs tier — including a new OS look — without asking, so don't be
@@ -172,11 +170,27 @@ price**, at any point. Once revealed, an item stays revealed forever, even if yo
 spend your credits on something else. Getting Started items and the IPO card are exempt and
 always shown.
 
-## Loot
+## Hardware slots
 
-A successful task has a 16% chance to drop a piece of flavor loot (Mechanical Keyboard of
-Clackening, Rubber Duck of Debugging, etc.) and boost one random stat by a small amount. Purely
-a bonus — there's no inventory to manage.
+A successful task has a 16% chance to drop something — most of the time (70%) it's a real
+**Hardware item** for one of six equip slots: 🧠 RAM, ⚙️ CPU, 💾 Hard Drive, 🖥️ Monitor,
+🎮 GPU, 📡 Modem. Each item has an item level (ilvl) that scales roughly with your character
+level, and a retro-flavored name drawn from an era matching your current OS tier (e.g. an early
+OS gets "Orange II RAM"; a late one gets "Singularity Core RAM"). There's no inventory to
+manage yet — a new item **auto-equips** if its ilvl beats what's in that slot, otherwise it's
+automatically **salvaged** for a small credit refund. You can also manually unequip any slot
+from the shop's **🔧 Equipped Hardware** section.
+
+Each slot has a distinct effect, scaling with the equipped item's ilvl:
+- 🧠 **RAM** — task speed
+- ⚙️ **CPU** — XP per task
+- 💾 **Hard Drive** — credits per task
+- 🖥️ **Monitor** — passive credits/sec
+- 🎮 **GPU** — crit chance (capped at 60%)
+- 📡 **Modem** — success chance and offline-earning efficiency (both capped)
+
+The other 30% of drops are flavor **loot** (Mechanical Keyboard of Clackening, Rubber Duck of
+Debugging, etc.) — a small one-time stat bump with no equip slot of its own.
 
 ## Themes (Upgrade OS)
 
@@ -241,7 +255,7 @@ open, so that corner button is the only reset available before then.
 ## A few tips
 
 - **Machine tiers are the biggest lever.** They multiply everything at once, so when you can
-  afford one, it usually beats several smaller Hardware buys.
+  afford one, it usually beats waiting on a Hardware slot upgrade to drop.
 - **Focus helps every task, not just its own** — it's worth leveling even if you're not
   actively doing Focus tasks.
 - **Rizz is a defensive stat.** If you're burning out a lot, it's the fix, not more Sanity
