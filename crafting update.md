@@ -47,15 +47,15 @@ Coding+Git-Fu and Architect+DevOps values get summed/scaled into the merged stat
 |---|---|
 | 🧠 RAM | Task speed |
 | ⚙️ CPU | XP gain |
+| 💾 Hard Drive / Storage | Credit multiplier (absorbs the old SSD effect) |
 | 🖥️ Monitor | Passive credits/sec |
 | 🎮 GPU | Crit chance / crit multiplier |
 | 📡 Modem *(new)* | Task failure-chance reduction, offline-earning efficiency |
 | ❄️ Cooling *(maybe, later)* | Sanity/burnout-adjacent effects |
 | 🧠 Neural Interface *(endgame, maybe)* | Big multi-stat patch pool — gated to the STARSHIP OS era |
 
-SSD's old credit-multiplier and Coffee's old Sanity effect don't get their own slot — they become
-**generic patches** (see below), rollable on *any* slot, since the user's slot list didn't call
-out storage or coffee as physical slots.
+Coffee's old Sanity effect has no obvious slot, so it stays a **generic patch** rollable on any
+slot (alongside flat +stat rolls and the old Rizz failure-damage-reduction effect).
 
 **Autocomplete Assist** stays a standalone repeatable purchase, *not* part of the slot/patch
 system — automating your own typing doesn't fit "damage roll on gear" cleanly.
@@ -63,21 +63,43 @@ system — automating your own typing doesn't fit "damage roll on gear" cleanly.
 Each slot holds one equipped item. Empty = the old "Lv 0" baseline (no bonus). Items are gated by
 a minimum player level to equip, so a lucky early drop can't be slotted in day one.
 
+### Retro hardware naming
+
+Base items (the "Stock" tier, before any patches) get names that mimic real-world hardware,
+starting in the '80s and moving forward — playful, not accurate (an "Orange II" doesn't need to
+make sense as a specific slot type). This should ride the **same 6-era timeline the OS tiers
+already use**, so your whole rig visibly ages together instead of just the wallpaper:
+
+| Era (matches OS_TIERS) | Example base-item flavor (any slot) |
+|---|---|
+| MS-DOS | "Orange II," "Trash-80," "IBM PC/XT clone" |
+| Windows 3.1 | "386SX Turbo," "Packard Smell" |
+| Windows 95 | "Pentium Overdrive," "SoundBlaster-compatible" |
+| Windows 10 | "ThinkPad-alike," "GeForce (bootleg)" |
+| NEON//OS | "Quantum-something," near-future consumer tech |
+| STARSHIP OS | fully sci-fi, no real-world referent needed |
+
+Exact per-slot name lists are a content-authoring pass, not a design decision — sketch a handful
+now, fill the rest in once the slot/patch system exists to hang them on.
+
 ## Patches (affixes)
 
 - Up to **4 patches** per item.
 - **Slot-specific** pool (the table above) + a **generic** pool usable on any slot:
-  flat +stat (any of the 5), credit multiplier (old SSD), Sanity max/regen (old Caffeine),
-  failure-damage reduction (old Rizz).
+  flat +stat (any of the 5), Sanity max/regen (old Caffeine), failure-damage reduction (old Rizz).
 - Each patch line has **tiers**; better tiers have **lower roll weight** (rare) and are **gated
   by the item's Build Version (ilvl)** — a low-ilvl item literally cannot roll the top tier.
 - Item level is set at drop time, roughly tied to your current stage/player level (like a
   monster-level→item-level relationship).
+- **Patches are earned as drops only** — never directly purchasable with credits. Credits stay
+  relevant a different way: every crafting action (see below) consumes a *small amount of
+  credits* in addition to its material, so the core economy doesn't go dead at endgame.
 
 ## Crafting materials
 
 Certain task types drop materials instead of (well, in addition to) credits — tied to the merged
-stats plus the currently-dead `P.loc` / `P.deploys` / `P.bugsFixed` counters, finally put to use:
+stats plus the currently-dead `P.loc` / `P.deploys` / `P.bugsFixed` counters, finally put to use.
+Every craft below also costs a small amount of credits on top of the material.
 
 | Material | Dropped by | Does |
 |---|---|---|
@@ -88,7 +110,19 @@ stats plus the currently-dead `P.loc` / `P.deploys` / `P.bugsFixed` counters, fi
 | **Revert Commit** | rare | Strip an item back to Stock (no patches) |
 | **Feature Branch Merge** | rare, late-game | Add a patch slot beyond the item's current count (up to 4) |
 
-## Missions — aiming the RNG
+Also earnable by **Decommissioning** unwanted gear (see Inventory, below) — sacrifice an item you
+don't want for a small material/credit refund instead of it just taking up space.
+
+### Material progress meters
+
+Each material gets a counter (how many you have) **plus a slim progress bar underneath it that
+fills toward the next unit** — a visible soft-pity meter. Actions that *could* drop that material
+nudge the bar even on attempts that don't drop one; a full bar either guarantees or heavily
+favors the next qualifying task producing one. This keeps individual rolls feeling random while
+making the grind toward a specific material legible and non-frustrating (rather than a silent
+die-roll every time with no sense of progress).
+
+## Missions — aiming the RNG, and craftable themselves
 
 Pure random material drops are frustrating once you're hunting one specific thing, so add
 **Missions**: short, player-selectable contracts that bias what you earn instead of leaving it
@@ -98,13 +132,44 @@ fully random.
   (next N tasks are Debugging-weighted and drop bonus Hotfixes), **"Deploy Week"** (Systems tasks
   favored, bonus Refactor Tokens), **"Hackathon"** (all task types, bonus flat Commits, shorter
   duration, higher intensity).
-- Missions run for a fixed number of tasks or a time window, then complete and the board
-  refreshes — a light, repeatable layer, not a separate minigame.
-- This gives players **agency over an otherwise pure-RNG economy**: still no guarantees on any
-  single roll, but you can steer *which* material you're accumulating toward, which matters a
-  lot once crafting a specific patch is the goal.
-- Natural home for this is a small panel or a tab inside The IDE (the crafting bench), so
-  crafting and mission-selection live in one place.
+- Missions run for a fixed number of tasks or a time window, then complete.
+- **Missions are craftable too** — the direct analogue of PoE's map mods. Spend a mission-specific
+  currency to add/reroll mods *on a mission itself* before starting it, making it harder and
+  proportionally more rewarding (bigger material payout, better odds at rare materials). This
+  gives a second crafting loop layered on top of the gear one, using the same core verbs
+  (add/reroll) applied to a different kind of target.
+- **Board refresh:** completing every active mission naturally refreshes the board. Rerolling
+  early (before finishing everything) costs more the more uncompleted missions you'd be
+  discarding and the higher their level — so early, untouched rerolls are cheap, but scrapping a
+  board you've already invested in isn't free.
+- Natural home for this is a small panel or tab inside The IDE (the crafting bench), so gear
+  crafting and mission management live in one place.
+
+## Inventory & crafting workflow
+
+A real inventory, not just instant-equip-on-drop:
+
+- **Buy or gamble for base items.** You can acquire multiple copies of a base item (e.g. several
+  CPUs) — via credits, materials, or a bit of both — stockpile them, and craft on more than one
+  candidate before deciding which to equip. This is also where the existing **Bulk-buy (x1/x10/max)**
+  backlog idea plugs in directly, for buying several base-item rolls at once. The existing flavor
+  Loot items (Cursed USB-C Dongle, etc.) fold in here as pure junk/flavor drops — funny, but not
+  real slot items, and Decommission-only (no equip value).
+- **A dedicated crafting slot** in The IDE holds whatever item you're actively working on —
+  separate from both your general stash and your actually-equipped gear. Craft there, then either
+  equip it (promote to a real slot) or send it back to storage.
+- **Decommission** (disenchant) unwanted items into a small amount of credits and/or materials, so
+  duplicates and dead-end rolls aren't just clutter.
+- **Missions can reward items directly**, not just materials — a guaranteed or bonus base-item
+  drop as part of a mission's payout.
+- **Spatial "inventory Tetris" (grid, item shapes/sizes) — recommendation: skip it.** This game's
+  pacing is idle/incremental — people glance at it and let it run — and a real-time packing puzzle
+  fights that pacing hard (it demands focused attention a genre like this generally isn't asking
+  for). A simple **list/card view** (reusing the same card pattern the shop already uses:
+  icon + name + stats + action button, filterable by slot and rarity) gets the "manage multiple
+  candidates" feeling without turning inventory management into its own chore. Open to revisiting
+  this once there's an actual prototype to look at and feel out — it's a real aesthetic call, not
+  just a mechanical one.
 
 ## In-universe vocabulary (PoE concept → themed name)
 
@@ -117,22 +182,25 @@ fully random.
 | Item level | **Build Version** (or "Firmware Rev") |
 | Crafting bench | **The IDE** |
 | Currency tab / stash | **Package Manager** |
+| General item inventory | **Toolbox** |
 | Orb: add random mod | **Feature Flag** |
 | Orb: reroll mod value | **Hotfix** |
 | Orb: reroll mod type | **Refactor Token** |
 | Orb: reroll all mods | **Full Rewrite** |
 | Orb: strip to normal | **Revert Commit** |
 | Orb: add mod slot | **Feature Branch Merge** |
+| Disenchant | **Decommission** |
 | Bounty / contract | **Mission** |
+| Map mod (mission difficulty/reward mods) | **Sprint Config** |
 
 ## Backlog items this absorbs
 
 - **More upgrade branches (networking)** → the Modem slot
-- **Stat synergies / set bonuses** → optional Phase 5 (2+ Custom-Built+ slots granting a bonus)
-- **Milestone bosses per stage** → Phase 5 gate for unlocking new slots (Modem/Cooling/Neural
+- **Stat synergies / set bonuses** → optional Phase 6 (2+ Custom-Built+ slots granting a bonus)
+- **Milestone bosses per stage** → Phase 6 gate for unlocking new slots (Modem/Cooling/Neural
   Interface) or raising the max obtainable Build Version
-- **Wire up write-only state** (`P.loc`/`P.deploys`/`P.bugsFixed`) → crafting material sources,
-  exactly as designed above — no longer dead trackers
+- **Wire up write-only state** (`P.loc`/`P.deploys`/`P.bugsFixed`) → crafting material sources
+- **Bulk-buy (x1/x10/max)** → buying/gambling multiple base-item rolls at once in the Toolbox
 
 ## Phased delivery
 
@@ -141,23 +209,32 @@ fully random.
    later phase assumes the final 5-stat list.
 2. **Level 1–100 rework** — retune XP curve, re-space the 20 titles across the full range.
 3. **Hardware slots (structural only)** — replace the repeatable Hardware upgrades with empty
-   equip slots (RAM/CPU/Monitor/GPU/Modem); items drop with a base type + ilvl, no patches yet;
-   equip/unequip UI.
-4. **Patches + crafting materials** — tiered weighted patch tables, the material-drop economy,
-   The IDE (crafting bench UI) to spend materials on equipped gear.
-5. **Missions** — the rotating contract board that biases material drops toward player choice.
-6. **Depth & polish** — milestone-boss slot/ilvl gates, optional set bonuses, Legendary Build
+   equip slots (RAM/CPU/Hard Drive/Monitor/GPU/Modem); items drop with a base type + ilvl (a
+   first pass of retro naming), no patches yet; equip/unequip UI.
+4. **Toolbox & crafting slot** — the card-list inventory, buying/gambling multiple base items,
+   Decommission, the dedicated in-progress crafting slot in The IDE.
+5. **Patches + crafting materials** — tiered weighted patch tables, the material-drop economy +
+   progress meters, spending materials + credits on the item sitting in the crafting slot.
+6. **Missions** — the rotating contract board, craftable mission mods (Sprint Config), scaling
+   reroll cost, item rewards.
+7. **Depth & polish** — milestone-boss slot/ilvl gates, optional set bonuses, Legendary Build
    uniques, the endgame Neural Interface slot.
 
 Each phase is independently shippable and testable before starting the next.
 
-## Open questions to settle before Phase 1 starts
+## Open questions still to settle
 
 - Exact XP-curve constants for the 1–100 rework (needs some playtesting/math, not a design call).
 - Full patch tier tables (value ranges + weights per tier per patch line) — first draft can be
   rough and rebalanced after playtesting.
-- Whether "Full Rewrite" / "Feature Branch Merge" are earnable drops or shop-purchasable with
-  credits as a safety valve for players with bad luck.
-- Mission board size/rotation cadence, and whether missions are free to pick or cost a small
-  credit/material fee to start (a fee would stop players from just re-rolling the board for a
-  favorable option with zero cost).
+- Exact soft-pity formula for material progress meters (linear per attempt? weighted by task
+  difficulty? guarantee at 100% or just heavily favored?).
+- Decommission conversion rates (how much credit/material for a Stock vs. Custom-Built item).
+- Full retro-hardware name list per slot per era (content-authoring pass, not urgent).
+- Toolbox UI: confirm card-list works once there's a real prototype, vs. revisiting spatial
+  inventory later if the card list feels too flat.
+
+## Feedback
+
+(Raw notes get folded into the sections above as they come in — this stays as a scratchpad for
+whatever's next.)
