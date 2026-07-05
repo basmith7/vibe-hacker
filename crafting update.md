@@ -11,18 +11,18 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phases 1-6 are done.** Next up: **Phase 7 — Depth & polish**, the last phase on this plan.
-Phase 6 added a 3-slot rotating Mission Board (5 templates biasing task selection + bonus material
-drops), whole-board reroll priced off uncompleted missions' levels, a Sprint Config currency with
-Extend/Crunch mission mods, and a 35% direct-item-reward chance on completion — on branch
-`phase6-missions`, verified end-to-end (including a real key-press-driven mission completion),
-merged to `main`. Phase 7 is genuinely optional/lower-priority relative to 1-6 (per the plan's own
-framing, it's endgame depth for players who've already exhausted the core loop): milestone-boss
-slot/item-level gates, set bonuses, Legendary Build uniques, and the endgame Neural Interface slot.
-See the checklist in "Phased delivery" below for exact sub-step progress — that list is the source
-of truth for where to pick back up. Each phase works on its own branch, gets the full verify pass,
-updates `guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at
-the end of "Phased delivery").
+**All 7 phases are done — this plan is complete.** Phase 7 (the last one) added level/OS-tier
+gates on the Cooling and Neural Interface slots plus an OS-tier item-level ceiling (`ILVL_CAP`),
+a stacking set bonus for 2+ Custom-Built-or-better equipped items, and rare (~1%) Legendary Build
+uniques with fixed patches — on branch `phase7-depth-polish`, verified end-to-end, merged to
+`main`. The repeatable Hardware-upgrade system this whole plan set out to replace is gone; in its
+place: 8 equip slots fed by drops/gambling, a real Toolbox stash + IDE crafting bench, patches +
+rarity + materials, a mission board that biases what you earn, and this phase's endgame ceiling.
+Any further itemization work (more Legendary entries, more mission templates, deeper set-bonus
+tiers, etc.) is now regular backlog — see `todo.md` — rather than a phase on this plan. Each phase
+worked on its own branch, got the full verify pass, updated `guide.md`/`todo.md`, then merged to
+`main` before the next phase started (see the note at the end of "Phased delivery" for that
+workflow, kept here for reference if a future expansion wants to reuse the same pattern).
 
 ## Stats: 9 → 5
 
@@ -211,9 +211,10 @@ A real inventory, not just instant-equip-on-drop:
 ## Backlog items this absorbs
 
 - **More upgrade branches (networking)** → the Modem slot
-- **Stat synergies / set bonuses** → optional Phase 6 (2+ Custom-Built+ slots granting a bonus)
-- **Milestone bosses per stage** → Phase 6 gate for unlocking new slots (Modem/Cooling/Neural
-  Interface) or raising the max obtainable Build Version
+- **Stat synergies / set bonuses** → Phase 7 (2+ Custom-Built+ slots granting a stacking bonus)
+- **Milestone bosses per stage** → Phase 7 gate for unlocking new slots (Cooling/Neural Interface,
+  via level/OS-tier since there's no boss-fight mechanic to gate behind) and raising the max
+  obtainable item level (via OS tier)
 - **Wire up write-only state** (`P.loc`/`P.deploys`/`P.bugsFixed`) → crafting material sources
 - **Bulk-buy (x1/x10/max)** → buying/gambling multiple base-item rolls at once in the Toolbox
 
@@ -443,29 +444,80 @@ staleness is treated as part of "done," not a follow-up.
       payouts landed. No console errors.
 - [x] Update `guide.md`/`README.md`; commit + push
 
-### Phase 7 — Depth & polish
-- [ ] Milestone-boss gates for new slots (Modem/Cooling/Neural Interface) and max item level
-- [ ] Optional set bonuses (2+ Custom-Built+ slots)
-- [ ] Legendary Build uniques
-- [ ] Endgame Neural Interface slot (gated to STARSHIP OS era)
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 7 — Depth & polish ✅ DONE
+- [x] **Slot/item-level gates**: this game has no boss-fight mechanic to gate behind (it's an
+      idle/incremental sim, not combat), so "milestone" was implemented as the closest real
+      equivalent already in the game — level and OS-tier progression. Cooling unlocks at **level
+      60**; Neural Interface unlocks on **STARSHIP OS** (the last OS tier), exactly matching the
+      plan's own explicit note for that slot. Modem stays ungated (it's been live since Phase 3,
+      not actually new here). `SLOT_UNLOCK`/`slotUnlocked()`/`slotUnlockHint()` drive both the drop
+      pool (`dropHardware()` filters to unlocked slots) and the Toolbox UI (locked slots show a 🔒
+      hint instead of Stock/roll buttons).
+- [x] **Max item level**: added `ILVL_CAP` indexed by `P.up.os` (40/80/140/220/340/520) — `rollItem()`
+      clamps every roll to the current OS tier's cap, so upgrading your rig raises the ceiling on
+      how good gear can even be, not just its own flat multiplier. Verified by rolling 19× at
+      level 200 on MS-DOS (os=0): every single roll capped at exactly 40.
+- [x] **Set bonus**: `countCustomBuiltPlus()` counts equipped items rated Custom-Built or better
+      (Legendary included); every 2 such items adds a stacking **+5%** to speed/XP/credits
+      (`GEAR.setBonus`, folded into `MULT.speed/xp/credit`). Shown live in the Equipped Hardware
+      section header ("Set Bonus ×1.10") once active. Absorbs the "stat synergies / set bonuses"
+      backlog item.
+- [x] **Legendary Build uniques**: `LEGENDARIES` table, one fixed-patch named item per slot
+      (all 8, including Cooling/Neural) — e.g. *Vim's Blessing*, *The ThinkPad X1 of Legend*.
+      `rollItem()` has a 1% chance to substitute a Legendary for a normal roll. `rarityOf()`
+      reports `"legendary"` via an explicit flag rather than patch count. Rendered with a gold
+      border + ★ marker across the equip/stash/IDE cards. **Known simplification, not a bug**:
+      Legendaries aren't patch-locked — you can still Commit/Hotfix/Refactor/Revert them like any
+      other item, so a Reverted Legendary keeps its unique name with 0 patches. Treated as an
+      acceptable simplification rather than building separate immutability rules, since the plan
+      doesn't specify uniques should be frozen.
+- [x] **Neural Interface's own effect**: unlike every other slot (which only affects its own single
+      multiplier), Neural Interface's base ilvl effect adds a small bonus to **all 5 stats at
+      once** (`neuralPower*0.05` per stat in `recomputeGear()`) — matching the plan's "big
+      multi-stat patch pool" framing for this slot specifically. It also gets its own slot-specific
+      patch (`neural_succ`, success chance) alongside the usual generic pool.
+      Cooling's effect: boosts Sanity regen (`cooling_regen` patch + a small base-ilvl contribution),
+      per the plan's "Sanity/burnout-adjacent effects" note for that slot.
+- [x] Toolbox rarity filter gained a "Legendary" option; migration needed **no new code** —
+      Cooling/Neural simply flow through the existing generic `for(const s of SLOTS) if(!(s.id in
+      P.equip)) P.equip[s.id]=null` backfill loop from Phase 3/4, since `SLOTS` now includes them.
+      Verified directly against a pre-Phase-7 save.
+- [x] Verify end-to-end: headless-driver pass confirming — locked-slot display and disabled
+      roll/equip buttons on a low-level/DOS save; both slots correctly unlocking at level 70 +
+      STARSHIP OS; the ilvl cap holding firm across 19 rolls at level 200 on MS-DOS; set-bonus
+      math (4 Custom-Built-or-better equipped → exactly ×1.10) and the legendary gold-border/★
+      treatment rendering together; migration backfilling both new slots to `null` on an old save
+      without touching anything else. No console errors.
+- [x] Update `guide.md`/`README.md`; commit + push
 
 **Workflow per phase:** branch off `main`, work the sub-steps above, run the full verify pass,
 update docs, then merge to `main` (which auto-deploys via GitHub Pages) only once the phase is
 complete — never mid-phase. This keeps the live site always on a *finished* phase, never a
 half-built one.
 
-## Open questions still to settle
+## Open questions — resolved during implementation
 
-- Exact XP-curve constants for the 1–100 rework (needs some playtesting/math, not a design call).
-- Full patch tier tables (value ranges + weights per tier per patch line) — first draft can be
-  rough and rebalanced after playtesting.
-- Exact soft-pity formula for material progress meters (linear per attempt? weighted by task
-  difficulty? guarantee at 100% or just heavily favored?).
-- Decommission conversion rates (how much credit/material for a Stock vs. Custom-Built item).
-- Full retro-hardware name list per slot per era (content-authoring pass, not urgent).
-- Toolbox UI: confirm card-list works once there's a real prototype, vs. revisiting spatial
-  inventory later if the card list feels too flat.
+All of these were left open when this plan was first drafted; each got settled as its phase
+landed, recorded here for the record rather than deleted outright:
+
+- **XP-curve constants (Phase 2)**: settled on `×1.10+18` per level after simulating cumulative
+  totals — level 100 ≈ 35M XP, 150 ≈ 4.1B.
+- **Patch tier tables (Phase 5)**: 3 tiers per patch line, weighted 70/25/5 toward common, gated by
+  item level (`gate:[0,25,55]` slot-specific / `[0,20,45]` generic). Rough first pass, not yet
+  rebalanced against real playtesting data — a legitimate follow-up if the numbers feel off, but
+  not a blocker for anything in this plan.
+- **Soft-pity formula (Phase 5)**: linear accumulator — every qualifying attempt nudges a 0..1 bar
+  by the material's base chance; a hit or a full bar both award and reset it.
+- **Decommission conversion rates (Phase 4/5)**: `round(ilvl*2)+1` credits, plus
+  `max(1,round(ilvl/15))` Commits regardless of rarity — rarity currently doesn't change the
+  refund, which is a reasonable simplification (patches are the point of Custom-Built gear, not
+  resale value) rather than an oversight.
+- **Retro hardware names (Phase 3)**: 3-4 names per era, not exhaustive. Still true — a real
+  future content-authoring pass could expand this, but it was explicitly flagged as non-urgent
+  from the start and stayed that way through all 7 phases.
+- **Toolbox UI (Phase 4)**: card list, not spatial inventory Tetris. Confirmed working well in
+  practice across Phases 4-7 (materials, missions, and crafting actions all reused the same card
+  pattern without friction) — no signal this needs revisiting.
 
 ## Feedback
 

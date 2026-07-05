@@ -266,6 +266,25 @@ bigger before it pays out: **Extend** (+3 tasks, a small permanent payout boost)
 (bigger payout boost, same length). Same add/reroll spirit as gear patches, applied to a mission
 instead of an item.
 
+## Endgame depth
+
+A few systems only kick in once you're deep into a run:
+
+- **Two more Hardware slots** — ❄️ **Cooling** (unlocks at **level 60**; boosts Sanity regen) and
+  🔮 **Neural Interface** (unlocks once you own **STARSHIP OS**, the last Upgrade OS tier; its base
+  effect is a small bonus to **all 5 stats at once**, unlike every other slot which only ever
+  touches its own single effect).
+- **Item level has a ceiling** tied to your current OS tier — buying a new OS doesn't just change
+  your look, it also raises the best gear you can possibly find or roll. Outgrow MS-DOS and your
+  drops outgrow it too.
+- **Set bonus** — every **2 equipped items that are Custom-Built or better** (Legendary counts)
+  adds a stacking **+5%** to task speed, XP, and credits. Full-clearing all 8 slots at Custom-Built+
+  is a real, visible payoff, shown right in the Equipped Hardware header once it's active.
+- **Legendary Build** — a vanishingly rare (~1%) alternative to a normal roll, dropped instead of
+  crafted: a named item with fixed patches already on it (e.g. *Vim's Blessing*, *The ThinkPad X1
+  of Legend*). Shown with a gold border and a ★ next to its level. You can still craft further
+  patches onto one — it's a rare head start, not a permanently frozen item.
+
 ## Themes (Upgrade OS)
 
 Your cockpit's look is tied to the **🖥️ Upgrade OS** purchase in Rigs, not to your level. Each
