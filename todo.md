@@ -11,10 +11,10 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
 - [ ] Seasonal / time-of-day palettes.
 
 ## Gameplay depth
-- [ ] **Prestige layer** with a meta-currency ("Legacy" / "Equity") that grants permanent global multipliers on reset.
+- [x] **Prestige layer** — "IPO / Cash Out" banks **Equity** for a permanent +2%/pt XP & credit multiplier.
+- [x] **Achievements** — 21 achievements with live unlock toasts + completion % in the shop.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
-- [ ] **Achievements** panel with unlock toasts + a completion %.
 - [ ] Stat **synergies / set bonuses** (e.g. high Focus + high Caffeine → "flow state" buff).
 - [ ] **Milestone bosses** per stage (a big timed task that gates progression).
 - [ ] Agent **personalities / specializations** (each agent better at certain stats).

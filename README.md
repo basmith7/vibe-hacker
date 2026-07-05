@@ -19,6 +19,8 @@ progression is real and auto-saves.
   SSD, monitors, coffee, GPU (crit), plus one-time **Machine** and **AI Model** tiers, more agents, and
   automation (offline earnings, auto-allocate, auto-buyer). Level-ups grant **skill points** you spend
   on any stat via the `+` buttons.
+- **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
+  credit multiplier, and start a fresh, stronger run. Plus **21 achievements** that unlock as you play.
 - **Evolving UI** — the whole interface ages up with your level: **MS-DOS → Windows 3.1 → Windows 95 →
   Windows 10 → NEON//OS → STARSHIP OS**.
 
