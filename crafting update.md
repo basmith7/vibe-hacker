@@ -11,17 +11,18 @@ they are — this only touches the Hardware layer.
 
 ## Status
 
-**Phases 1-5 are done.** Next up: **Phase 6 — Missions.** Phase 5 made itemization real: patches
-(slot-specific + generic, tiered/ilvl-gated), derived rarity (Stock/Modded/Custom-Built off patch
-count), a materials economy (Commit/Hotfix/Refactor Token/Full Rewrite/Revert Commit/Feature
-Branch Merge) with soft-pity progress bars, and crafting actions spendable in The IDE — on branch
-`phase5-patches-materials`, verified end-to-end, merged to `main`. Phase 6 is where missions start
-directing that RNG instead of leaving material sourcing purely passive — a rotating contract
-board, craftable mission mods (Sprint Config), and item rewards. See the checklist in "Phased
-delivery" below for exact sub-step progress — that list is the source of truth for where to pick
-back up. Each phase works on its own branch, gets the full verify pass, updates
-`guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at the end
-of "Phased delivery").
+**Phases 1-6 are done.** Next up: **Phase 7 — Depth & polish**, the last phase on this plan.
+Phase 6 added a 3-slot rotating Mission Board (5 templates biasing task selection + bonus material
+drops), whole-board reroll priced off uncompleted missions' levels, a Sprint Config currency with
+Extend/Crunch mission mods, and a 35% direct-item-reward chance on completion — on branch
+`phase6-missions`, verified end-to-end (including a real key-press-driven mission completion),
+merged to `main`. Phase 7 is genuinely optional/lower-priority relative to 1-6 (per the plan's own
+framing, it's endgame depth for players who've already exhausted the core loop): milestone-boss
+slot/item-level gates, set bonuses, Legendary Build uniques, and the endgame Neural Interface slot.
+See the checklist in "Phased delivery" below for exact sub-step progress — that list is the source
+of truth for where to pick back up. Each phase works on its own branch, gets the full verify pass,
+updates `guide.md`/`todo.md`, then merges to `main` before the next phase starts (see the note at
+the end of "Phased delivery").
 
 ## Stats: 9 → 5
 
@@ -399,12 +400,48 @@ staleness is treated as part of "done," not a follow-up.
       counts, disabled state) rather than racing against a live counter. No console errors.
 - [x] Update `guide.md`/`README.md`; commit + push
 
-### Phase 6 — Missions
-- [ ] Rotating contract board (3 active choices), board refresh on full completion
-- [ ] Scaling reroll cost (uncompleted-mission count × mission level)
-- [ ] Craftable mission mods (Sprint Config currency)
-- [ ] Mission item rewards
-- [ ] Verify end-to-end; update `guide.md`/`todo.md`; commit + push
+### Phase 6 — Missions ✅ DONE
+- [x] `MISSION_DEFS`: 5 templates (Debugging Sprint, Deploy Week, Algorithm Grind, Focus Block —
+      one per stat except Coding — plus stat-agnostic Hackathon, shorter but rewards on any task).
+      `P.missions` always holds 3 active instances (`rollMission()`), bootstrapped at boot time for
+      both brand-new games and saves that predate missions (`if(!P.missions||P.missions.length<3)
+      refreshBoard()` right after `loadState()` — simpler than a dedicated migration block, and
+      covers both cases with one check).
+- [x] **Design call beyond the plan's literal wording**: rather than a mission's task-counter only
+      advancing on *matching* tasks (which risked a mission stalling forever if the player never
+      cooperated), every successful task decrements *all three* active missions' counters —
+      matching a mission's favored stat instead gives a bonus-material chance and (new, in
+      `assignTask()`) **triples that stat's weight** in the task-pool pick, so leaning into a
+      mission is rewarded without ever being mandatory.
+- [x] Board refresh: `completeMission()` marks a slot done and pays out, but only calls
+      `refreshBoard()` once `P.missions.every(m=>m.done)` — a single finished contract sits at
+      "complete, waiting on the rest" rather than instantly refilling, matching "completing every
+      active mission naturally refreshes the board."
+- [x] Reroll: `rerollCost()` sums the *level* of every not-yet-done mission ×8 (a judgment-call
+      scaling constant, not from the plan doc) and discards/rerolls the whole board at once —
+      implemented as a whole-board action (matching "refreshes the board" language) rather than a
+      per-mission reroll, which the plan doesn't call for.
+- [x] Sprint Config: earned on mission completion (`round(1+level/20)`), spent via two mission mod
+      actions — **Extend** (+3 tasks, ×1.15 rewardMult, 2 Sprint Config) and **Crunch** (×1.35
+      rewardMult only, 3 Sprint Config) — the mission-crafting analogue of gear's add/reroll verbs,
+      simplified from the full patch-tier system since a mission doesn't need 4 independent slots.
+- [x] Mission item rewards: 35% chance of a direct `dropHardware()` call on completion, on top of
+      the guaranteed material + Sprint Config payout.
+- [x] UI: a "📋 Mission Board" section in the Toolbox tab (natural home already established by The
+      IDE living there) with a live Sprint Config counter in its header, one card per mission
+      (progress bar, bonus-material description, Extend/Crunch buttons gated on affordability), and
+      a Reroll Board card showing live cost.
+- [x] Verify end-to-end: headless-driver pass confirming board bootstrap on both a wiped
+      (brand-new) save and a pre-Phase-6 save; mission cards render with correct labels/levels;
+      Extend and Crunch both apply their exact stated effects and consume the exact Sprint Config
+      cost; and — after an initial false start where I tried to call the game's internal
+      `mashCode()`/`WK` directly via `Runtime.evaluate` and got silent no-ops because both are
+      private to the page's IIFE closure, not actually a game bug — switched to real CDP
+      `Input.dispatchKeyEvent` key presses (the same proven pattern from Phase 3's natural-drop
+      test) and confirmed a mission genuinely completes through ordinary play: `tasksDone`
+      incremented, the mission's `done` flipped `true`, and both the material and Sprint Config
+      payouts landed. No console errors.
+- [x] Update `guide.md`/`README.md`; commit + push
 
 ### Phase 7 — Depth & polish
 - [ ] Milestone-boss gates for new slots (Modem/Cooling/Neural Interface) and max item level

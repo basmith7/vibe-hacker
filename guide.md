@@ -246,6 +246,26 @@ material + a small amount of credits:
 scaled to the item's ilvl — so gear you don't want to keep still feeds the crafting economy
 instead of just disappearing.
 
+## Missions
+
+The **📋 Mission Board** (also in the Toolbox tab) always has **3 active contracts**, each tied to
+a stat: 🐛 Debugging Sprint, 🚀 Deploy Week, 🧮 Algorithm Grind, 🎯 Focus Block, or the stat-agnostic
+⚡ Hackathon. Every task you complete counts toward *all three* — nothing stalls just because you
+weren't working on the "right" kind — but a task matching a mission's stat is both **weighted
+higher** in what gets assigned to you and gives a chance at a **bonus material** on top of the
+mission's normal drops.
+
+Completing a mission pays out a lump sum of its bonus material, some **⚙️ Sprint Config**, and a
+35% chance at a direct Hardware item. A slot stays "complete" on the board until *all three* are
+done, at which point the whole board rerolls at once. You can also **reroll early** for credits —
+cost scales with the level of whatever you'd be discarding, so an untouched board is cheap to
+scrap but one you've already invested Sprint Config into costs more.
+
+**Sprint Config** is missions' own crafting currency — spend it on an active mission to make it
+bigger before it pays out: **Extend** (+3 tasks, a small permanent payout boost) or **Crunch**
+(bigger payout boost, same length). Same add/reroll spirit as gear patches, applied to a mission
+instead of an item.
+
 ## Themes (Upgrade OS)
 
 Your cockpit's look is tied to the **🖥️ Upgrade OS** purchase in Rigs, not to your level. Each
