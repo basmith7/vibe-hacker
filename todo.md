@@ -25,6 +25,12 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
   resets on prestige. "Getting Started" items and the IPO card are exempt (always the visible roadmap).
 - [ ] **Onboarding polish** — reveal animations beyond the fade-in, a "next unlock" progress hint once
   past the intro, gate more stats/panels, retune early credit pacing once there's playtest data.
+- [ ] **Make saving itself an early upgrade** — a cheap "Getting Started" item (e.g. "💾 Enable Auto-Save" /
+  "🗄️ git init") that gates persistence: before buying it, progress doesn't survive a reload/close (session
+  only, no cookie/localStorage write); buying it is the moment your run becomes durable. Thematic (early-career
+  dev who hasn't set up backups yet) and fits "everything is earned via purchase." Needs care: risk of real
+  frustration if someone plays a while pre-purchase and loses it — maybe make it near-free and/or nudge hard
+  toward buying it first; decide whether achievements/lifetime stats persist independently of this gate.
 - [ ] **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
 - [ ] Stat **synergies / set bonuses** (e.g. high Focus + high Caffeine → "flow state" buff).
