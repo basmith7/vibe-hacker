@@ -44,3 +44,13 @@ Single self-contained file, works fully offline. Your career auto-saves every fe
 
 Runs fully ambient with zero input too, so it works as a second-monitor / stream background that's
 always slowly leveling up.
+
+## License
+
+Copyright © 2026 basmith7
+
+Licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0) — see [LICENSE](LICENSE).
+
+This is copyleft: you're free to use, modify, and share it, but any modified version you
+distribute **or host as a network service** must also be released under the AGPL-3.0 with its
+source made available to users.
