@@ -24,7 +24,8 @@ progression is real and auto-saves.
 - **Incremental economy** — earn **credits** per task and spend them in the **🛒 Upgrade shop** on coffee,
   one-time **Machine** and **AI Model** tiers, more agents, and automation (offline earnings,
   auto-allocate, auto-buyer). **Hardware isn't bought** — RAM, CPU, Hard Drive, Monitor, GPU, and Modem
-  are equip slots filled by drops, auto-equipping whenever a better item shows up. Level-ups grant
+  are equip slots filled by drops (or gambled for with credits). Extras land in the **🧰 Toolbox**, a
+  filterable stash where you compare candidates, equip, or decommission for credits. Level-ups grant
   **skill points** you spend on any stat via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **22 achievements** that unlock as you play.
