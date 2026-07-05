@@ -806,11 +806,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
   }
   function levelUp(){
+    const before=titleFor();
     P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.13+22);
     updateHpMax(); P.hp=P.hpMax;
     const gain=2+Math.floor(P.level/8); P.sp+=gain;
     const nt=titleFor();
-    celebrate("LEVEL UP · LVL "+P.level,"#ffb000");
+    if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");   // big banner only on rank-up, not every level
     toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000");
     termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
     HUD.title.textContent=nt; updateSPui(); applyTheme(true); save();
@@ -881,7 +882,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       termLine("t-ok","✓",w.a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+xp+"xp  +"+money(cr));
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color);
       if(Math.random()<.16) addLoot();
-      if(P.streak>0 && P.streak%5===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
+      if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
     } else {
       const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)*(1-Math.min(0.5,P.stats.rizz/120))));  // Rizz softens the blow
       P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2*MULT.xp));
