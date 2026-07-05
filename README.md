@@ -15,7 +15,8 @@ progression is real and auto-saves.
   hit 10 credits and the 🛒 shop button appears. Your first purchase is the moment the whole cockpit
   wakes up. From there, the shop lets you **hire agents** (automation kicks in), **learn new skills**
   (more stats), and unlock the ghosted panels (**Install Telemetry**, **Go Global**) one by one.
-- **8 stats** (Git-Fu, Focus, Debugging, Architecture, DevOps, Algorithms, Rizz, Caffeine) that level up.
+- **9 stats** (Coding, Git-Fu, Focus, Debugging, Architecture, DevOps, Algorithms, Rizz, Caffeine) that
+  level up — you start with just Coding and unlock the rest one at a time via the shop.
 - **~64 tasks**, each tied to a stat. Your stat vs. the task's difficulty sets success chance and speed;
   clearing a task levels its stat. Fail a roll and you take **Sanity (HP)** damage — hit 0 and you **burn out**.
 - **~28 stages** from *Day 1: The Onboarding* to *Singularity Onset*, escalating titles (Script Kiddie →
@@ -31,7 +32,8 @@ progression is real and auto-saves.
   switches your look immediately — but click the OS name (top-left) anytime to switch back to any look
   you've already unlocked.
 
-See [todo.md](todo.md) for the future-ideas backlog.
+See [guide.md](guide.md) for exactly what every stat and upgrade does, and [todo.md](todo.md) for the
+future-ideas backlog.
 
 ## Controls
 
