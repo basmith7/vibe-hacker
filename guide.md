@@ -203,6 +203,12 @@ up as a toast the moment you earn them and live in a checklist at the bottom of 
 running completion count. If you already qualify for one when you load an old save, it's
 granted silently — no spam on load.
 
+Most of the list stays **hidden** until you're close: progress-based achievements (task counts,
+level thresholds, streaks, etc.) only appear once you're **75% of the way there**, so the panel
+doesn't open as a wall of 21 distant goals. A few are single-trigger events with no meaningful
+"75%" (Touch Grass/burnout, Critical Hit, IPO Day) — those stay fully hidden until the instant
+you actually earn them. "Hello, World" is always visible as a first nudge.
+
 ## Saving
 
 Your run auto-saves every few seconds to a cookie, with a `localStorage` mirror as a fallback

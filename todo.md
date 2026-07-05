@@ -2,6 +2,10 @@
 
 A backlog of things that would make it deeper / weirder / more fun. Not committed to any of these.
 
+## Small Wins
+- [ ] make the user have to "type" manually for their onw progress, allow an upgrade to automate this slowly. 
+- [ ] move reset button to the bottom of the store page so its available earlier. 
+
 ## Themes & vibe
 - [x] **Era themes, bought not leveled** — "Upgrade OS" is a Rigs-tier shop item (like New Machine/AI
   Model); buying it auto-switches your look. Click the OS name (top-left) to pick any *already-owned*
@@ -20,6 +24,9 @@ A backlog of things that would make it deeper / weirder / more fun. Not committe
   first purchase graduates into the full cockpit. Mid-intro saves resume correctly; old saves skip it.
 - [x] **Prestige layer** — "IPO / Cash Out" banks **Equity** for a permanent +2%/pt XP & credit multiplier.
 - [x] **Achievements** — 21 achievements with live unlock toasts + completion % in the shop.
+- [x] **Achievements stay hidden until close** — progress-based ones (task counts, levels, streaks)
+  reveal at 75% of the way there; single-trigger ones (Critical Hit, burnout, first IPO) stay hidden
+  until the instant they're earned. "Hello, World" is always visible.
 - [x] **Shop items reveal at 50%-saved** — Hardware/Rigs/Automation cards (and their category headers)
   stay hidden until your peak-ever credits reach half the price; owned items always stay visible; peak
   resets on prestige. "Getting Started" items and the IPO card are exempt (always the visible roadmap).

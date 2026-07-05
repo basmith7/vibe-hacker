@@ -894,28 +894,31 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ achievements ============ */
   const ACH=[
-    {id:"first",  em:"✅",name:"Hello, World",        desc:"Clear your first task",        chk:()=>P.tasksDone>=1},
-    {id:"t100",   em:"💯",name:"Centurion",           desc:"Clear 100 tasks",              chk:()=>P.tasksDone>=100},
-    {id:"t1000",  em:"🏭",name:"Feature Factory",     desc:"Clear 1,000 tasks",            chk:()=>P.tasksDone>=1000},
-    {id:"lv10",   em:"⭐",name:"Getting the Hang",     desc:"Reach level 10",               chk:()=>P.level>=10},
-    {id:"lv25",   em:"🌟",name:"Seasoned",            desc:"Reach level 25",               chk:()=>P.level>=25},
-    {id:"lv50",   em:"👑",name:"Living Legend",       desc:"Reach level 50",               chk:()=>P.level>=50},
-    {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25},
-    {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100},
-    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1},
-    {id:"crit",   em:"💥",name:"Critical Hit",        desc:"Land a critical success",      chk:()=>P.crits>=1},
-    {id:"loot25", em:"🎁",name:"Packrat",             desc:"Collect 25 loot",              chk:()=>P.loot>=25},
-    {id:"rig",    em:"💻",name:"Quantum Leap",        desc:"Own the Quantum Rig",          chk:()=>P.up.computer>=5},
-    {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5},
-    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7},
-    {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6},
-    {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.level>=8},
-    {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.level>=22},
-    {id:"space",  em:"🚀",name:"To The Stars",        desc:"Reach STARSHIP OS",            chk:()=>P.level>=34},
-    {id:"ipo1",   em:"📈",name:"IPO Day",             desc:"Cash out for the first time",  chk:()=>P.ipos>=1},
-    {id:"ipo5",   em:"🏦",name:"Serial Founder",      desc:"Cash out 5 times",             chk:()=>P.ipos>=5},
-    {id:"stage",  em:"🎬",name:"Season Finale",       desc:"Reach the final stage",        chk:()=>P.stage>=STAGES.length-1||P.prestige>=1},
+    {id:"first",  em:"✅",name:"Hello, World",        desc:"Clear your first task",        chk:()=>P.tasksDone>=1, always:true},
+    {id:"t100",   em:"💯",name:"Centurion",           desc:"Clear 100 tasks",              chk:()=>P.tasksDone>=100,   pct:()=>P.tasksDone/100},
+    {id:"t1000",  em:"🏭",name:"Feature Factory",     desc:"Clear 1,000 tasks",            chk:()=>P.tasksDone>=1000,  pct:()=>P.tasksDone/1000},
+    {id:"lv10",   em:"⭐",name:"Getting the Hang",     desc:"Reach level 10",               chk:()=>P.level>=10,        pct:()=>P.level/10},
+    {id:"lv25",   em:"🌟",name:"Seasoned",            desc:"Reach level 25",               chk:()=>P.level>=25,        pct:()=>P.level/25},
+    {id:"lv50",   em:"👑",name:"Living Legend",       desc:"Reach level 50",               chk:()=>P.level>=50,        pct:()=>P.level/50},
+    {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25,   pct:()=>P.bestStreak/25},
+    {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100,  pct:()=>P.bestStreak/100},
+    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1,  binary:true},
+    {id:"crit",   em:"💥",name:"Critical Hit",        desc:"Land a critical success",      chk:()=>P.crits>=1,     binary:true},
+    {id:"loot25", em:"🎁",name:"Packrat",             desc:"Collect 25 loot",              chk:()=>P.loot>=25,         pct:()=>P.loot/25},
+    {id:"rig",    em:"💻",name:"Quantum Leap",        desc:"Own the Quantum Rig",          chk:()=>P.up.computer>=5,   pct:()=>P.up.computer/5},
+    {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5,      pct:()=>P.up.model/5},
+    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7,       pct:()=>P.up.hire/7},
+    {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6,      pct:()=>P.earned/1e6},
+    {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.level>=8,         pct:()=>P.level/8},
+    {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.level>=22,        pct:()=>P.level/22},
+    {id:"space",  em:"🚀",name:"To The Stars",        desc:"Reach STARSHIP OS",            chk:()=>P.level>=34,        pct:()=>P.level/34},
+    {id:"ipo1",   em:"📈",name:"IPO Day",             desc:"Cash out for the first time",  chk:()=>P.ipos>=1,      binary:true},
+    {id:"ipo5",   em:"🏦",name:"Serial Founder",      desc:"Cash out 5 times",             chk:()=>P.ipos>=5,          pct:()=>P.ipos/5},
+    {id:"stage",  em:"🎬",name:"Season Finale",       desc:"Reach the final stage",        chk:()=>P.stage>=STAGES.length-1||P.prestige>=1,
+      pct:()=>P.prestige>=1?1:P.stage/(STAGES.length-1)},
   ];
+  const ACH_REVEAL=0.75;   // gradual achievements only show once you're this far toward them
+  function achVisible(a){ return !!a.always || !!P.achv[a.id] || (!a.binary && a.pct() >= ACH_REVEAL); }
   let achEls={};
   function initAch(){ for(const a of ACH){ if(!P.achv[a.id] && a.chk()) P.achv[a.id]=1; } }   // silent grant on load
   function checkAch(){
@@ -927,8 +930,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   function renderAch(){
     let got=0; for(const a of ACH) if(P.achv[a.id]) got++;
     const h=$("#achCat"); if(h) h.textContent="🏆 Achievements — "+got+"/"+ACH.length;
-    for(const a of ACH){ const el=achEls[a.id]; if(el) el.classList.toggle("got",!!P.achv[a.id]);
-      const c=el&&el.querySelector(".chk"); if(c) c.textContent=P.achv[a.id]?"✓":"🔒"; }
+    for(const a of ACH){ const el=achEls[a.id]; if(!el) continue;
+      el.style.display=achVisible(a)?"":"none";
+      el.classList.toggle("got",!!P.achv[a.id]);
+      const c=el.querySelector(".chk"); if(c) c.textContent=P.achv[a.id]?"✓":"🔒"; }
   }
 
   /* ============ surge ============ */
