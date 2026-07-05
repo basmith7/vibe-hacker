@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>vibe hacker // agent swarm cockpit</title>
+<style>
+  :root{
+    --bg:#05070d;--panel:#0a0f1a;--panel2:#0d1424;--edge:#16233d;
+    --green:#39ff14;--cyan:#00e5ff;--magenta:#ff2bd6;--amber:#ffb000;--blue:#4d8cff;
+    --red:#ff2b5e;--dim:#5b6b86;--txt:#c9e6ff;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.35;
+    overflow:hidden;cursor:crosshair;text-shadow:0 0 4px rgba(0,229,255,.15);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+    background:
+      repeating-linear-gradient(0deg,rgba(0,0,0,.14) 0px,rgba(0,0,0,.14) 1px,transparent 2px,transparent 3px),
+      radial-gradient(120% 120% at 50% 50%,transparent 55%,rgba(0,0,0,.65) 100%);
+    mix-blend-mode:multiply;
+  }
+  #matrix{position:fixed;inset:0;z-index:0;opacity:.16;pointer-events:none}
+  #cockpit{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;padding:8px;gap:8px}
+
+  /* status bar */
+  #statusbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;border:1px solid var(--edge);
+    background:linear-gradient(180deg,#0c1526,#070b14);border-radius:8px;padding:6px 8px;box-shadow:0 0 24px rgba(0,229,255,.06) inset}
+  .brand{display:flex;align-items:center;gap:8px;padding-right:10px;border-right:1px solid var(--edge);margin-right:2px}
+  .brand .logo{color:var(--magenta);font-weight:700;letter-spacing:.5px;text-shadow:0 0 10px var(--magenta)}
+  .brand .sub{color:var(--dim);font-size:11px}
+  .stat{display:flex;flex-direction:column;justify-content:center;padding:0 9px;min-width:78px;border-right:1px solid rgba(22,35,61,.6)}
+  .stat .k{font-size:9.5px;letter-spacing:1px;color:var(--dim);text-transform:uppercase}
+  .stat .v{font-size:15px;font-weight:700;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5)}
+  .stat.g .v{color:var(--green);text-shadow:0 0 8px rgba(57,255,20,.5)}
+  .stat.a .v{color:var(--amber);text-shadow:0 0 8px rgba(255,176,0,.5)}
+  .stat.m .v{color:var(--magenta);text-shadow:0 0 8px rgba(255,43,214,.5)}
+  .stat.r .v{color:var(--red);text-shadow:0 0 8px rgba(255,43,94,.5)}
+  .stat.grow{flex:1;border-right:none;min-width:150px}
+  .hpbar{height:8px;border-radius:5px;background:#0a1120;border:1px solid var(--edge);overflow:hidden;margin-top:3px}
+  .hpbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--green),var(--cyan));box-shadow:0 0 12px var(--cyan);transition:width .2s,background .3s}
+  .hpbar.low i{background:linear-gradient(90deg,var(--amber),var(--red));box-shadow:0 0 12px var(--red)}
+  .hpbar.hit{animation:hpflash .4s}
+  @keyframes hpflash{0%,100%{filter:none}30%{filter:brightness(2.4) saturate(2)}}
+  #resetBtn{margin-left:6px;align-self:center;font:inherit;font-size:10px;color:var(--dim);background:#0a1120;border:1px solid var(--edge);
+    border-radius:6px;padding:3px 8px;cursor:pointer}
+  #resetBtn:hover{color:var(--red);border-color:var(--red)}
+
+  /* grid */
+  #grid{flex:1;display:grid;gap:8px;min-height:0;grid-template-columns:1.05fr 1.35fr 1fr;grid-template-rows:1fr 1fr;
+    grid-template-areas:"globe agents charts" "globe agents terminal"}
+  .panel{position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
+    background:linear-gradient(180deg,var(--panel2),var(--panel));min-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5)}
+  .panel > .head{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--edge);
+    font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);background:rgba(255,255,255,.015)}
+  .panel > .head .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1.6s infinite}
+  .panel > .head .spacer{flex:1}
+  .panel > .head .tag{color:var(--cyan)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  #globePanel{grid-area:globe}
+  #agentsPanel{grid-area:agents;display:flex;flex-direction:column}
+  #chartsPanel{grid-area:charts}
+  #terminalPanel{grid-area:terminal}
+  #globeWrap{position:absolute;inset:0;top:26px}
+  #globe{width:100%;height:100%;display:block}
+  .globe-readout{position:absolute;left:10px;bottom:8px;font-size:10px;color:var(--dim);pointer-events:none}
+  .globe-readout b{color:var(--green)}
+
+  /* agents / workers */
+  #agentList{flex:1;display:grid;grid-template-rows:repeat(4,1fr);gap:6px;padding:6px;min-height:0}
+  .agent{display:flex;flex-direction:column;min-height:0;border:1px solid var(--edge);border-radius:6px;background:#070c16;overflow:hidden;transition:border-color .2s,box-shadow .2s}
+  .agent.win{border-color:var(--green);box-shadow:0 0 16px rgba(57,255,20,.35) inset}
+  .agent.fail{border-color:var(--red);box-shadow:0 0 16px rgba(255,43,94,.35) inset}
+  .agent .ah{display:flex;align-items:center;gap:7px;padding:3px 7px;font-size:10.5px;border-bottom:1px solid rgba(22,35,61,.7)}
+  .agent .ah .nm{font-weight:700;white-space:nowrap}
+  .agent .ah .tk{color:var(--txt);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .agent .ah .sTag{font-size:9px;padding:1px 6px;border-radius:10px;border:1px solid currentColor;opacity:.95;white-space:nowrap}
+  .agent .ah .diff{font-size:9px;color:var(--amber);letter-spacing:-1px;white-space:nowrap}
+  .agent .code{flex:1;overflow:hidden;padding:4px 8px;font-size:11px;white-space:pre-wrap;word-break:break-word;position:relative}
+  .agent .code::after{content:"▊";color:var(--green);animation:blink .8s steps(1) infinite}
+  .agent .prog{height:3px;background:#0a1120}
+  .agent .prog i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 8px var(--green)}
+  .kw{color:var(--magenta)}.str{color:var(--amber)}.com{color:var(--dim);font-style:italic}
+  .num{color:var(--cyan)}.fn{color:var(--green)}.pun{color:#7fa8d9}
+
+  /* charts */
+  #chartsBody{position:absolute;inset:26px 0 0 0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:6px;padding:8px}
+  .chart{border:1px solid var(--edge);border-radius:6px;background:#070c16;position:relative;overflow:hidden}
+  .chart .ct{position:absolute;top:4px;left:7px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);z-index:2}
+  .chart .cv{position:absolute;top:3px;right:7px;font-size:11px;font-weight:700;z-index:2}
+  .chart canvas{width:100%;height:100%;display:block}
+
+  /* terminal */
+  #termBody{position:absolute;inset:26px 0 0 0;overflow:hidden;padding:6px 9px;font-size:11px}
+  #termBody .l{white-space:pre-wrap;word-break:break-word;opacity:.95}
+  .t-ok{color:var(--green)}.t-info{color:var(--cyan)}.t-warn{color:var(--amber)}.t-git{color:var(--magenta)}.t-dim{color:var(--dim)}.t-bad{color:var(--red)}
+
+  /* toasts */
+  #toasts{position:fixed;right:14px;bottom:96px;z-index:40;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;max-width:360px}
+  .toast{border:1px solid var(--edge);border-left:3px solid var(--green);border-radius:7px;background:linear-gradient(180deg,#0d1626,#080d18);
+    padding:7px 11px;font-size:12px;box-shadow:0 6px 24px rgba(0,0,0,.6),0 0 18px rgba(57,255,20,.12);
+    transform:translateX(120%);opacity:0;transition:transform .35s cubic-bezier(.2,1.3,.4,1),opacity .35s;max-width:360px}
+  .toast.in{transform:translateX(0);opacity:1}
+  .toast .tt{font-weight:700;color:#eafff0}
+  .toast .td{color:var(--dim);font-size:10.5px}
+
+  /* meme banner + celebrations */
+  #memes{position:fixed;inset:0;z-index:35;pointer-events:none;overflow:hidden}
+  .meme{position:absolute;white-space:nowrap;font-weight:800;letter-spacing:1px;font-size:clamp(24px,5vw,72px);opacity:0;
+    text-transform:uppercase;text-shadow:0 0 24px currentColor;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
+  #flash{position:fixed;inset:0;z-index:55;pointer-events:none;background:#fff;opacity:0}
+  .levelup{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);z-index:56;font-weight:800;text-transform:uppercase;
+    text-align:center;letter-spacing:2px;pointer-events:none;opacity:0;font-size:clamp(28px,5vw,64px);
+    text-shadow:0 0 34px currentColor;filter:drop-shadow(0 6px 16px rgba(0,0,0,.6))}
+
+  /* hint */
+  #hint{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);z-index:45;border:1px solid var(--edge);
+    background:rgba(6,11,20,.9);border-radius:20px;padding:8px 16px;font-size:12px;color:var(--cyan);transition:opacity .8s;
+    box-shadow:0 0 24px rgba(0,229,255,.15);text-align:center}
+  #hint b{color:var(--green)}
+  #hint kbd{background:#0e1830;border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:#eafff0}
+
+  /* progress-quest HUD */
+  #hud{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;border:1px solid var(--edge);
+    background:linear-gradient(180deg,#0c1526,#070b14);border-radius:8px;padding:7px 10px;box-shadow:0 0 24px rgba(255,43,214,.06) inset}
+  .hud-block{display:flex;flex-direction:column;justify-content:center;gap:4px;min-width:130px}
+  .hud-block.lvl{flex:1.1}.hud-block.stg{flex:1.5}
+  .hud-block.stats{flex:2;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-left:12px;border-left:1px solid var(--edge);min-width:0}
+  .hl{display:flex;align-items:center;gap:8px;font-size:10.5px;letter-spacing:.4px;white-space:nowrap;overflow:hidden}
+  .hl .lv{font-weight:700;color:var(--amber);text-shadow:0 0 8px var(--amber)}
+  .hl .title{color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis}
+  .hl .lbl{color:var(--dim);text-transform:uppercase;letter-spacing:1px}
+  .hl .stgname{color:var(--txt);overflow:hidden;text-overflow:ellipsis}
+  .hl .pct{margin-left:auto;color:var(--dim);font-variant-numeric:tabular-nums;padding-left:6px}
+  .hbar{height:9px;border-radius:6px;background:#0a1120;border:1px solid var(--edge);overflow:hidden}
+  .hbar i{display:block;height:100%;width:0%;transition:width .1s linear}
+  .hbar.xp i{background:linear-gradient(90deg,var(--amber),var(--magenta));box-shadow:0 0 12px var(--magenta)}
+  .hbar.plot i{background:linear-gradient(90deg,var(--blue),var(--cyan));box-shadow:0 0 12px var(--cyan)}
+  .statchip{display:flex;align-items:center;gap:5px;line-height:1;min-width:88px}
+  .statchip .em{font-size:13px}
+  .statchip .sk{font-size:8.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.3px}
+  .statchip .sv{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;margin-left:auto}
+  .statchip.up{animation:statup .6s}
+  @keyframes statup{0%{filter:none}30%{filter:brightness(2.2)}}
+
+  @media (max-width:900px){
+    #grid{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;grid-template-areas:"globe" "agents" "charts" "terminal"}
+    .stat{min-width:70px}
+  }
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div id="cockpit">
+  <header id="statusbar">
+    <div class="brand"><span class="logo">◈ VIBE//HACKER</span><span class="sub">career sim v5.0.0</span></div>
+    <div class="stat g"><span class="k">LOC shipped</span><span class="v" id="s_loc">0</span></div>
+    <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
+    <div class="stat r"><span class="k">tasks ✗</span><span class="v" id="s_fail">0</span></div>
+    <div class="stat a"><span class="k">streak 🔥</span><span class="v" id="s_streak">0</span></div>
+    <div class="stat m"><span class="k">loot 🎁</span><span class="v" id="s_loot">0</span></div>
+    <div class="stat a"><span class="k">☕ caffeine</span><span class="v" id="s_cof">0</span></div>
+    <div class="stat"><span class="k">uptime</span><span class="v" id="s_up">00:00:00</span></div>
+    <div class="stat grow">
+      <span class="k">❤ sanity — <span id="s_hp">100</span>%</span>
+      <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
+    </div>
+    <button id="resetBtn" title="wipe your save">⟲ reset</button>
+  </header>
+
+  <div id="grid">
+    <section class="panel" id="globePanel">
+      <div class="head"><span class="dot"></span> GLOBAL DEPLOY MESH <span class="spacer"></span><span class="tag" id="globeRegion">us-east-1 ⇄ ap-south-1</span></div>
+      <div id="globeWrap"><canvas id="globe"></canvas></div>
+      <div class="globe-readout">stage <b id="g_stage">1</b>/<span id="g_stages">28</span> · in-flight <b id="g_arcs">0</b> · streak <b id="g_streak">0</b></div>
+    </section>
+
+    <section class="panel" id="agentsPanel">
+      <div class="head"><span class="dot"></span> AUTONOMOUS AGENT SWARM <span class="spacer"></span><span class="tag" id="agentCount">4 workers on task</span></div>
+      <div id="agentList"></div>
+    </section>
+
+    <section class="panel" id="chartsPanel">
+      <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag">realtime</span></div>
+      <div id="chartsBody">
+        <div class="chart"><span class="ct">xp / sec</span><span class="cv" id="cv_line" style="color:var(--cyan)">0</span><canvas id="cLine"></canvas></div>
+        <div class="chart"><span class="ct">stat sheet</span><canvas id="cBar"></canvas></div>
+        <div class="chart"><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
+        <div class="chart"><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
+      </div>
+    </section>
+
+    <section class="panel" id="terminalPanel">
+      <div class="head"><span class="dot"></span> BUILD · CI · GIT <span class="spacer"></span><span class="tag">~/career/main</span></div>
+      <div id="termBody"></div>
+    </section>
+  </div>
+
+  <footer id="hud">
+    <div class="hud-block lvl">
+      <div class="hl"><span class="lv" id="hud_lv">LVL 1</span><span class="title" id="hud_title">Script Kiddie</span><span class="pct" id="hud_xppct">0%</span></div>
+      <div class="hbar xp"><i id="hud_xp"></i></div>
+    </div>
+    <div class="hud-block stg">
+      <div class="hl"><span class="lbl">📅 Stage</span><span class="stgname" id="hud_stage">Day 1: The Onboarding</span><span class="pct" id="hud_plotpct">0%</span></div>
+      <div class="hbar plot"><i id="hud_plot"></i></div>
+    </div>
+    <div class="hud-block stats" id="statChips"></div>
+  </footer>
+</div>
+
+<div id="flash"></div>
+<div id="toasts"></div>
+<div id="memes"></div>
+
+<div id="hint">
+  🎮 <b>MASH ANY KEY</b> to grind faster · progression auto-saves · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd>/<kbd>`</kbd> boss key
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = s => document.querySelector(s);
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  const pick=a=>a[(Math.random()*a.length)|0];
+  const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fmt=n=>Math.floor(n).toLocaleString("en-US");
+
+  /* ============ stats ============ */
+  const STATS=[
+    {id:"gitfu",   lbl:"Git-Fu",     em:"⚡", color:"#ff2bd6"},
+    {id:"focus",   lbl:"Focus",      em:"🧠", color:"#00e5ff"},
+    {id:"debug",   lbl:"Debugging",  em:"🐛", color:"#39ff14"},
+    {id:"arch",    lbl:"Architect",  em:"🏛", color:"#4d8cff"},
+    {id:"devops",  lbl:"DevOps",     em:"🚀", color:"#ffb000"},
+    {id:"algo",    lbl:"Algorithms", em:"🧮", color:"#c77dff"},
+    {id:"rizz",    lbl:"Rizz",       em:"✨", color:"#ff6ec7"},
+    {id:"caffeine",lbl:"Caffeine",   em:"☕", color:"#ff8a3d"},
+  ];
+  const STAT=Object.fromEntries(STATS.map(s=>[s.id,s]));
+  const STAT_IDS=STATS.map(s=>s.id);
+
+  /* ============ tasks (name, statId) ============ */
+  const TASKS=[
+    ["Rebase 47 commits without conflicts","gitfu"],["Resolve the merge from hell","gitfu"],["Cherry-pick across 3 branches","gitfu"],
+    ["Force-push and pray","gitfu"],["Bisect the sneaky regression","gitfu"],["Squash 200 commits into one","gitfu"],
+    ["Recover from a detached HEAD","gitfu"],["Write a coherent commit message","gitfu"],
+    ["Enter deep flow for 4 hours","focus"],["Ignore 38 Slack pings","focus"],["Achieve inbox zero","focus"],
+    ["Resist the urge to refactor","focus"],["Read the entire RFC","focus"],["Finish the ticket, finally","focus"],
+    ["Silence every notification","focus"],["Complete a full pomodoro","focus"],
+    ["Corner the Heisenbug","debug"],["Fix the race condition","debug"],["Repro the 1-in-1000 crash","debug"],
+    ["Trace the null pointer","debug"],["Fix prod at 3am","debug"],["Remove all the console.logs","debug"],
+    ["Patch the memory leak","debug"],["Explain why it works now","debug"],
+    ["Design the microservice mesh","arch"],["Draw the system diagram","arch"],["Choose the right abstraction","arch"],
+    ["Slay the God object","arch"],["Define the API contract","arch"],["Plan the zero-downtime migration","arch"],
+    ["Whiteboard the data model","arch"],["Justify the monorepo","arch"],
+    ["Deploy to prod on a Friday","devops"],["Tame the Kubernetes cluster","devops"],["Optimize the CI pipeline","devops"],
+    ["Write the perfect Dockerfile","devops"],["Rotate the leaked secrets","devops"],["Survive the on-call page","devops"],
+    ["Roll back the bad deploy","devops"],["Provision the infra","devops"],
+    ["Crush the O(n²) bottleneck","algo"],["Beat the LeetCode hard","algo"],["Memoize the recursion","algo"],
+    ["Balance the binary tree","algo"],["Solve the knapsack, dynamically","algo"],["Prove the loop invariant","algo"],
+    ["Shave the constant factor","algo"],["Reverse the linked list (again)","algo"],
+    ["Charm the code reviewer","rizz"],["Survive the standup","rizz"],["Negotiate the deadline","rizz"],
+    ["Demo without it crashing","rizz"],["Convince PM to cut scope","rizz"],["Mentor the new hire","rizz"],
+    ["End the tabs-vs-spaces debate","rizz"],["Get the giant PR approved","rizz"],
+    ["Brew the perfect pour-over","caffeine"],["Pull a double espresso","caffeine"],["Power through the slump","caffeine"],
+    ["Hydrate (revolutionary)","caffeine"],["Take an actual break","caffeine"],["Sleep 8 hours (mythical)","caffeine"],
+    ["Refill the office coffee pot","caffeine"],["Resist the 5th cup","caffeine"],
+  ];
+
+  /* ============ campaign stages ("weeks") ============ */
+  const STAGES=[
+    "Day 1: The Onboarding","Week 1: First Commit","Week 2: Merge Conflict Bootcamp","Week 3: On-Call Baptism",
+    "Week 4: First Prod Incident","Month 2: Feature Factory","Month 3: Tech Debt Reckoning","Q2: The Big Refactor",
+    "Q3: Scaling Pains","Q4: Crunch Season","Year 1: Promotion Committee","The Rewrite (in Rust)",
+    "The Microservices Migration","The Kubernetes Saga","The Great AI Pivot","Series A Sprint",
+    "Hypergrowth Chaos","The Platform Team","Staff Engineer Trials","The Reorg","Principal Ascension",
+    "The IPO Crunch","Post-IPO Malaise","Sabbatical (Denied)","Founding Your Own Startup",
+    "The AGI Project","Singularity Onset","Post-Scarcity Retirement",
+  ];
+
+  const TITLES=["Script Kiddie","Intern","Junior Dev","Mid-Level Dev","Senior Dev","Staff Engineer","Principal Engineer",
+    "Distinguished Engineer","10x Engineer","Rockstar Dev","Ninja Coder","Code Wizard","Systems Guru","Tech Lead",
+    "Chief Architect","Thought Leader","VP of Vibes","CTO","Singularity Whisperer","Benevolent AGI"];
+
+  const LOOT=["Mechanical Keyboard of Clackening +7","Standing Desk of Focus","Rubber Duck of Debugging",
+    "Noise-Cancelling Headphones +5","Ergonomic Chair of the Ancients","Second Monitor of Productivity",
+    "Artisanal Cold Brew of Awakening","Vim Cheatsheet (Legendary)","+500 Stack Overflow Reputation",
+    "Dark-Mode Theme (Mythic)","Cursed USB-C Dongle","Blue-Light Glasses of Clarity","Hoodie of Invisibility",
+    "Golden Pull Request","Sticker of the Rust Crab","Legendary Yak Shaver","Amulet of No Meetings"];
+
+  const MEMES=["10x-ing that shit","vibing so hard","we're so back","shipped it 🚀","trust the process",
+    "ship > perfect","LGTM 🔥","to the moon 🌙","cracked engineer hours","real ones ship fridays","the vision is real","no thoughts only code"];
+  const MEME_COLORS=["#39ff14","#00e5ff","#ff2bd6","#ffb000","#4d8cff","#63ffd1"];
+  const AGENTS=[{name:"claude-opus-4.8",color:"#ff8a3d"},{name:"GPT-Turbo-9000",color:"#00e5ff"},{name:"Devin.exe",color:"#39ff14"},
+    {name:"Cursor-Prime",color:"#ff2bd6"},{name:"v0-ultra",color:"#ffb000"},{name:"replit-ghost",color:"#4d8cff"},
+    {name:"windsurf-x",color:"#63ffd1"},{name:"aider-9",color:"#c77dff"}];
+
+  const SNIPPETS=[
+`async function run(task){
+  const stat = await measure(task.skill);
+  if (stat < task.diff) return retry(task);
+  return ship(task, { yolo: true });
+}`,
+`for await (const t of queue()) {
+  const roll = Math.random();
+  if (roll < successChance(t)) win(t);
+  else takeDamage(t.diff);
+}`,
+`fn level_up(dev: &mut Dev) -> Rank {
+  dev.xp += reward;
+  while dev.xp >= dev.need { dev.rank += 1; }
+  dev.rank
+}`,
+`const grind = () => {
+  stats.gitfu += 0.8;   // number go up
+  hp = clamp(hp + 2, 0, hpMax);
+  return "we're so back";
+};`,
+`export const handler = async (e) => {
+  const out = await agent.solve(e.task);
+  metrics.done++;
+  return json({ out });
+};`,
+`// TODO: remove before prod (shipped anyway)
+db.query("DROP TABLE bugs;");
+notify("#general", "10x-ing that shit 🔥");`,
+  ];
+
+  /* ============ tiny syntax highlighter ============ */
+  const KW=/\b(async|await|function|const|let|var|return|if|else|for|while|throw|new|class|fn|Result|Ok|Err|import|from|of|in|mut)\b/;
+  function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+  function hl(line){
+    const cm=line.match(/(\/\/.*$|#.*$)/); let code=line, tail="";
+    if(cm){ code=line.slice(0,cm.index); tail=`<span class="com">${esc(cm[0])}</span>`; }
+    let out="";
+    for(const t of code.split(/(\s+|[(){}\[\].,;:]|"[^"]*"|'[^']*')/g)){
+      if(!t) continue;
+      if(/^["'].*["']$/.test(t)) out+=`<span class="str">${esc(t)}</span>`;
+      else if(KW.test(t)) out+=`<span class="kw">${esc(t)}</span>`;
+      else if(/^\d[\d_.e]*$/.test(t)) out+=`<span class="num">${esc(t)}</span>`;
+      else if(/^[(){}\[\].,;:]$/.test(t)) out+=`<span class="pun">${esc(t)}</span>`;
+      else if(/^[A-Za-z_]\w*$/.test(t)) out+=`<span class="fn">${esc(t)}</span>`;
+      else out+=esc(t);
+    }
+    return out+tail;
+  }
+
+  /* ============ state + persistence (cookie, with localStorage fallback) ============ */
+  const SAVE_VER=5;
+  function defaults(){
+    const stats={}; STAT_IDS.forEach(id=>stats[id]=rand(6,12));
+    return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
+      stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
+      playSecs:0,burnouts:0};
+  }
+  let P=defaults();
+  const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
+    "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts"];
+  function readStore(){
+    const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
+    if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
+    try{ return localStorage.getItem("vibehacker"); }catch(e){}
+    return null;
+  }
+  function loadState(){
+    const raw=readStore(); if(!raw) return false;
+    try{
+      const d=JSON.parse(raw);
+      if(d && d.ver===SAVE_VER){
+        for(const k of PERSIST) if(k in d) P[k]=d[k];
+        for(const id of STAT_IDS) if(!(id in P.stats)) P.stats[id]=rand(6,12);
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+  function save(){
+    const o={}; for(const k of PERSIST) o[k]=P[k];
+    const json=JSON.stringify(o);
+    try{ document.cookie="vibehacker="+encodeURIComponent(json)+";path=/;max-age="+(3600*24*365)+";SameSite=Lax"; }catch(e){}
+    try{ localStorage.setItem("vibehacker",json); }catch(e){}
+  }
+  function wipe(){
+    try{ document.cookie="vibehacker=;path=/;max-age=0"; }catch(e){}
+    try{ localStorage.removeItem("vibehacker"); }catch(e){}
+    P=defaults(); location.reload();
+  }
+
+  /* ============ surge ============ */
+  let surge=1; const bumpSurge=a=>{surge=clamp(surge+a,1,9);};
+
+  /* ============ celebrations / flash ============ */
+  function celebrate(text,color){
+    const el=document.createElement("div"); el.className="levelup"; el.style.color=color; el.textContent=text;
+    document.body.appendChild(el);
+    el.animate([{opacity:0,transform:"translate(-50%,-50%) scale(.5)"},
+      {opacity:1,transform:"translate(-50%,-50%) scale(1.06)",offset:.22},
+      {opacity:1,transform:"translate(-50%,-50%) scale(1)",offset:.72},
+      {opacity:0,transform:"translate(-50%,-62%) scale(1)"}],
+      {duration:1700,easing:"cubic-bezier(.2,1.3,.3,1)"}).onfinish=()=>el.remove();
+    const f=$("#flash"); f.style.background=color; f.animate([{opacity:.30},{opacity:0}],{duration:520,easing:"ease-out"});
+  }
+  const hpbar=$("#hpbar");
+  function flashHp(){ hpbar.classList.remove("hit"); void hpbar.offsetWidth; hpbar.classList.add("hit"); }
+
+  /* ============ terminal ============ */
+  const term=$("#termBody"); const termLines=[];
+  function termLine(cls,pre,txt){
+    const div=document.createElement("div"); div.className="l "+cls;
+    div.innerHTML=`<span class="t-dim">$</span> <span>${pre}</span> ${esc(txt)}`;
+    term.appendChild(div); termLines.push(div);
+    while(termLines.length>60) termLines.shift().remove();
+    term.scrollTop=term.scrollHeight;
+  }
+
+  /* ============ toasts ============ */
+  const toasts=$("#toasts");
+  function toast(t,d,col){
+    const div=document.createElement("div"); div.className="toast";
+    div.style.borderLeftColor=col||"#39ff14";
+    div.innerHTML=`<div class="tt">${t}</div><div class="td">${d}</div>`;
+    toasts.appendChild(div);
+    requestAnimationFrame(()=>div.classList.add("in"));
+    setTimeout(()=>{div.classList.remove("in");setTimeout(()=>div.remove(),400);},rand(3200,5200));
+    while(toasts.children.length>6) toasts.firstChild.remove();
+  }
+
+  /* ============ meme banner ============ */
+  const memes=$("#memes");
+  function flyMeme(txt){
+    const el=document.createElement("div"); el.className="meme"; const col=pick(MEME_COLORS);
+    el.textContent=txt||pick(MEMES); el.style.color=col; el.style.top=rand(14,78)+"%";
+    memes.appendChild(el);
+    const fromLeft=Math.random()<.5, y=rand(-8,8);
+    el.animate([{transform:`translate(${fromLeft?-40:120}vw,0) rotate(${y}deg)`,opacity:0},
+      {opacity:1,offset:.2},{opacity:1,offset:.8},
+      {transform:`translate(${fromLeft?120:-40}vw,0) rotate(${-y}deg)`,opacity:0}],
+      {duration:rand(2.8,4.4)*1000,easing:"ease-in-out"}).onfinish=()=>el.remove();
+  }
+
+  /* ============ progression engine ============ */
+  const HUD={};
+  function buildHUD(){
+    for(const id of ["lv","title","xp","xppct","stage","plot","plotpct"]) HUD[id]=$("#hud_"+id);
+    const wrap=$("#statChips"); wrap.innerHTML="";
+    HUD.chip={};
+    STATS.forEach(s=>{
+      const el=document.createElement("div"); el.className="statchip";
+      el.innerHTML=`<span class="em">${s.em}</span><span class="sk">${s.lbl}</span><span class="sv" style="color:${s.color}">0</span>`;
+      wrap.appendChild(el); HUD.chip[s.id]={el,v:el.querySelector(".sv")};
+    });
+    HUD.stage.textContent=STAGES[P.stage]||("New Game+ "+P.prestige);
+    HUD.title.textContent=titleFor();
+    $("#g_stages").textContent=STAGES.length;
+  }
+  function titleFor(){ return TITLES[clamp((P.level/3)|0,0,TITLES.length-1)]; }
+  function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
+  function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
+  function addLoot(){
+    const item=pick(LOOT); P.loot++; const sid=pick(STAT_IDS); statUp(sid,rand(0.6,1.6));
+    toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color);
+    termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
+  }
+  function levelUp(){
+    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.13+22);
+    P.hpMax=100+P.level*6; P.hp=P.hpMax;
+    const nt=titleFor(); const sid=pick(STAT_IDS); statUp(sid,rand(1,3));
+    celebrate("LEVEL UP · LVL "+P.level,"#ffb000");
+    toast("⭐ Level "+P.level+" — "+nt,"Sanity restored · +"+STAT[sid].lbl,"#ffb000");
+    termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt);
+    HUD.title.textContent=nt; save();
+  }
+  function stageAdvance(){
+    P.plot-=P.plotNeed; P.stage++; P.plotNeed=Math.round(P.plotNeed*1.16+45);
+    let name;
+    if(P.stage>=STAGES.length){ P.prestige++; P.stage=0; name="✦ New Game+ "+P.prestige+" · "+STAGES[0]; }
+    else name=STAGES[P.stage];
+    P.hp=P.hpMax;
+    celebrate("📅 "+name,"#00e5ff"); flyMeme("NEW STAGE");
+    toast("📅 New stage unlocked",name+" · difficulty ↑","#00e5ff");
+    termLine("t-info","▶","═══ "+name+" ═══"); addXp(Math.round(30*(1+P.stage*.1)));
+    HUD.stage.textContent=name; save();
+  }
+  function burnout(){
+    P.burnouts++; const lost=Math.round(P.xp*0.4); P.xp=Math.max(0,P.xp-lost);
+    P.hp=Math.round(P.hpMax*0.6); P.streak=0; P.stats.caffeine=Math.max(1,P.stats.caffeine-3);
+    celebrate("🔥 BURNOUT","#ff2b5e"); flashHp();
+    toast("🔥 BURNOUT","Mental-health day forced · -"+lost+" XP","#ff2b5e");
+    termLine("t-bad","☠","BURNOUT — sanity hit zero. -"+lost+" XP, coffee break enforced"); save();
+  }
+
+  /* ============ workers ============ */
+  const WK=[];
+  function buildWorkers(){
+    const list=$("#agentList"); list.innerHTML=""; WK.length=0;
+    AGENTS.slice().sort(()=>Math.random()-.5).slice(0,4).forEach(a=>{
+      const el=document.createElement("div"); el.className="agent";
+      el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
+        <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
+        <div class="code"></div><div class="prog"><i></i></div>`;
+      list.appendChild(el);
+      const w={a,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
+        dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
+        task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
+      w.nm.textContent=a.name; WK.push(w);
+    });
+  }
+  function assignTask(w){
+    const [name,stat]=pick(TASKS);
+    const diff=5+P.stage*1.35+rand(0,4);
+    const sv=P.stats[stat];
+    const speed=1+sv/22+P.stats.focus/60;                 // relevant stat + Focus → faster
+    const dur=clamp((5.5+diff*0.35)/speed,3.2,16);
+    w.task={name,stat,diff,dur}; w.elapsed=0; w.flashT=0;
+    w.el.classList.remove("win","fail");
+    const s=STAT[stat];
+    w.tk.textContent=name; w.sTag.textContent=s.em+" "+s.lbl; w.sTag.style.color=s.color;
+    w.prog.style.background=`linear-gradient(90deg,${s.color},#fff2)`;
+    const stars=clamp(Math.round(diff/6),1,5); w.dEl.textContent="★".repeat(stars);
+    termLine("t-dim","→",w.a.name+" started ‹"+name+"›");
+  }
+  function resolveTask(w){
+    const {name,stat,diff}=w.task, sv=P.stats[stat];
+    const chance=clamp(0.58+(sv-diff)*0.045+Math.min(0.15,P.streak*0.01),0.15,0.97);
+    const win=Math.random()<chance;
+    const s=STAT[stat];
+    if(win){
+      const xp=Math.round((diff+6)*(1+P.stage*0.08));
+      addXp(xp); statUp(stat,rand(0.5,1.4));
+      P.plot+=diff*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
+      P.tasksDone++; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
+      if(stat==="debug")P.bugsFixed++;
+      P.hp=clamp(P.hp+2,0,P.hpMax);
+      w.el.classList.add("win"); w.flashT=0.6; spawnArc("#39ff14");
+      termLine("t-ok","✓",w.a.name+" cleared ‹"+name+"›  +"+xp+"xp  +"+s.lbl);
+      if(Math.random()<.85) toast("✓ "+name,"+"+xp+" XP · "+s.em+" "+s.lbl+" up",s.color);
+      if(Math.random()<.16) addLoot();
+      if(P.streak>0 && P.streak%5===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
+    } else {
+      let dmg=Math.round(diff*rand(0.4,0.9));
+      dmg=Math.max(1,Math.round(dmg*(1-Math.min(0.5,P.stats.rizz/120))));   // Rizz softens the blow
+      P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2));
+      w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); flashHp();
+      termLine("t-bad","✗",w.a.name+" FAILED ‹"+name+"›  -"+dmg+" HP  (streak reset)");
+      toast("💥 "+name+" failed","-"+dmg+" HP · "+s.lbl+" too low",s.color==="#39ff14"?"#ff2b5e":"#ff2b5e");
+      if(P.hp<=0) burnout();
+    }
+    w.task=null; w.cooldown=rand(0.4,1.1);
+  }
+  function tickWorker(w,dt){
+    // flavor typing
+    w.acc+=dt*(12+surge*24); let n=w.acc|0; w.acc-=n;
+    while(n-->0){
+      if(w.pos>=w.buf.length){ w.buf=pick(SNIPPETS)+"\n\n"; w.pos=0; }
+      w.shown+=w.buf[w.pos++];
+    }
+    let lines=w.shown.split("\n"); if(lines.length>9){ lines=lines.slice(-9); w.shown=lines.join("\n"); }
+    w.code.innerHTML=lines.map(hl).join("<br>");
+    if(w.flashT>0){ w.flashT-=dt; if(w.flashT<=0) w.el.classList.remove("win","fail"); }
+    if(!w.task){
+      w.cooldown-=dt*(1+surge*.5);
+      if(w.cooldown<=0) assignTask(w);
+      return;
+    }
+    w.elapsed+=dt*(1+surge*1.1);
+    w.prog.style.width=clamp(w.elapsed/w.task.dur*100,0,100)+"%";
+    if(w.elapsed>=w.task.dur) resolveTask(w);
+  }
+
+  /* ============ counters + HUD update ============ */
+  let saveTimer=0;
+  function tickProgress(dt){
+    P.hp=clamp(P.hp+dt*(0.5+P.stats.caffeine*0.03),0,P.hpMax);   // Caffeine → recovery
+    P.playSecs+=dt;
+    let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
+
+    $("#s_loc").textContent=fmt(P.loc);
+    $("#s_task").textContent=fmt(P.tasksDone);
+    $("#s_fail").textContent=fmt(P.tasksFailed);
+    $("#s_streak").textContent=P.streak;
+    $("#s_loot").textContent=fmt(P.loot);
+    $("#s_cof").textContent=Math.floor(P.stats.caffeine);
+    const t=P.playSecs; const hh=String((t/3600|0)).padStart(2,"0"),mm=String((t/60%60|0)).padStart(2,"0"),ss=String((t%60|0)).padStart(2,"0");
+    $("#s_up").textContent=`${hh}:${mm}:${ss}`;
+    const hpPct=clamp(P.hp/P.hpMax*100,0,100);
+    $("#s_hp").textContent=Math.round(hpPct);
+    $("#hpfill").style.width=hpPct+"%";
+    hpbar.classList.toggle("low",hpPct<28);
+
+    HUD.lv.textContent="LVL "+P.level+(P.prestige?(" ✦"+P.prestige):"");
+    HUD.xp.style.width=clamp(P.xp/P.xpNeed*100,0,100).toFixed(1)+"%";
+    HUD.xppct.textContent=Math.floor(clamp(P.xp/P.xpNeed*100,0,100))+"%";
+    HUD.plot.style.width=clamp(P.plot/P.plotNeed*100,0,100).toFixed(1)+"%";
+    HUD.plotpct.textContent=Math.floor(clamp(P.plot/P.plotNeed*100,0,100))+"%";
+    for(const id of STAT_IDS) HUD.chip[id].v.textContent=Math.floor(P.stats[id]);
+
+    $("#g_stage").textContent=P.stage+1; $("#g_streak").textContent=P.streak; $("#g_arcs").textContent=globe?globe.arcs.length:0;
+    $("#agentCount").textContent=WK.filter(w=>w.task).length+" workers on task";
+
+    saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
+  }
+
+  /* ============ canvas helpers ============ */
+  function fitCanvas(cv){
+    const r=cv.getBoundingClientRect(),dpr=Math.min(2,devicePixelRatio||1);
+    cv.width=Math.max(1,r.width*dpr); cv.height=Math.max(1,r.height*dpr);
+    const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:r.width,h:r.height};
+  }
+
+  /* ============ globe ============ */
+  const globeCv=$("#globe"); let globe=null;
+  function initGlobe(){
+    const nodes=[]; for(let i=0;i<44;i++) nodes.push({lat:rand(-1.35,1.35),lon:rand(-Math.PI,Math.PI),p:Math.random()});
+    globe={nodes,arcs:[],rot:0};
+  }
+  function spawnArc(col){
+    if(!globe) return; const a=pick(globe.nodes),b=pick(globe.nodes); if(a===b) return;
+    globe.arcs.push({a,b,t:0,speed:rand(.35,.8),col:col||pick(MEME_COLORS)});
+    if(globe.arcs.length>46) globe.arcs.shift();
+  }
+  const v3=(lat,lon)=>{const cl=Math.cos(lat);return [cl*Math.cos(lon),Math.sin(lat),cl*Math.sin(lon)];};
+  function drawGlobe(dt){
+    if(!globe) return; const {ctx,w,h}=fitCanvas(globeCv); ctx.clearRect(0,0,w,h);
+    const cx=w/2,cy=h/2,R=Math.min(w,h)*0.42;
+    globe.rot+=dt*(0.12+surge*0.14); const cr=Math.cos(globe.rot),sr=Math.sin(globe.rot);
+    const proj=(x,y,z)=>{const X=x*cr+z*sr,Z=-x*sr+z*cr;return [cx+X*R,cy-y*R,Z];};
+    ctx.strokeStyle="rgba(0,229,255,.25)";ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+    ctx.save();ctx.globalCompositeOperation="lighter";ctx.lineWidth=1;
+    for(let la=-60;la<=60;la+=30){const lat=la*Math.PI/180;ctx.beginPath();let st=false;
+      for(let lo=-180;lo<=180;lo+=8){const [x,y,z]=v3(lat,lo*Math.PI/180);const [px,py,pz]=proj(x,y,z);
+        if(pz>=0){if(!st){ctx.moveTo(px,py);st=true;}else ctx.lineTo(px,py);}else st=false;}
+      ctx.strokeStyle="rgba(77,140,255,.18)";ctx.stroke();}
+    for(let lo=-180;lo<180;lo+=30){const lon=lo*Math.PI/180;ctx.beginPath();let st=false;
+      for(let la=-90;la<=90;la+=6){const [x,y,z]=v3(la*Math.PI/180,lon);const [px,py,pz]=proj(x,y,z);
+        if(pz>=0){if(!st){ctx.moveTo(px,py);st=true;}else ctx.lineTo(px,py);}else st=false;}
+      ctx.strokeStyle="rgba(77,140,255,.14)";ctx.stroke();}
+    for(const n of globe.nodes){const [x,y,z]=v3(n.lat,n.lon);const [px,py,pz]=proj(x,y,z);if(pz<0)continue;
+      const pulse=0.6+0.4*Math.sin(performance.now()/500+n.p*9);
+      ctx.fillStyle=`rgba(57,255,20,${0.35+0.5*pz})`;ctx.beginPath();ctx.arc(px,py,1.6+1.4*pulse,0,7);ctx.fill();}
+    ctx.lineWidth=1.6;
+    for(let i=globe.arcs.length-1;i>=0;i--){const arc=globe.arcs[i];arc.t+=dt*arc.speed*(0.7+surge*0.5);
+      if(arc.t>=1){globe.arcs.splice(i,1);continue;}
+      const A=v3(arc.a.lat,arc.a.lon),B=v3(arc.b.lat,arc.b.lon);
+      const om=Math.acos(clamp(A[0]*B[0]+A[1]*B[1]+A[2]*B[2],-1,1));
+      const seg=26;let prev=null;const head=arc.t,tail=Math.max(0,arc.t-0.35);
+      for(let sI=0;sI<=seg;sI++){const u=tail+(head-tail)*(sI/seg);let X,Y,Z;
+        if(om<1e-3){X=A[0];Y=A[1];Z=A[2];}else{const s1=Math.sin((1-u)*om)/Math.sin(om),s2=Math.sin(u*om)/Math.sin(om);
+          X=A[0]*s1+B[0]*s2;Y=A[1]*s1+B[1]*s2;Z=A[2]*s1+B[2]*s2;}
+        const lift=1+0.28*Math.sin(Math.PI*u);const [sx,sy]=proj(X*lift,Y*lift,Z*lift);
+        if(prev){ctx.beginPath();ctx.moveTo(prev[0],prev[1]);ctx.lineTo(sx,sy);ctx.strokeStyle=arc.col;ctx.stroke();}prev=[sx,sy];}
+      if(prev){ctx.fillStyle=arc.col;ctx.beginPath();ctx.arc(prev[0],prev[1],2.4,0,7);ctx.fill();}}
+    ctx.restore();
+  }
+  let arcTimer=0;
+  function tickGlobe(dt){ arcTimer-=dt*(1+surge); while(arcTimer<=0){arcTimer+=rand(.6,1.4);spawnArc("rgba(0,229,255,.5)");} drawGlobe(dt); }
+
+  /* ============ charts (stat-driven) ============ */
+  const lineData=new Array(60).fill(0); const sparkData=new Array(60).fill(0);
+  let xpAccum=0, failEMA=0, vibeAngle=0, chartAcc=0;
+  function drawLine(){
+    const cv=$("#cLine");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const max=Math.max(1,...lineData)*1.15;
+    ctx.strokeStyle="rgba(77,140,255,.08)";ctx.lineWidth=1;
+    for(let gy=0;gy<4;gy++){const y=h*gy/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+    ctx.beginPath();lineData.forEach((v,i)=>{const x=i/(lineData.length-1)*w,y=h-(v/max)*(h-14)-7;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle="#00e5ff";ctx.lineWidth=1.6;ctx.shadowColor="#00e5ff";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+    ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+    const grd=ctx.createLinearGradient(0,0,0,h);grd.addColorStop(0,"rgba(0,229,255,.22)");grd.addColorStop(1,"rgba(0,229,255,0)");
+    ctx.fillStyle=grd;ctx.fill();
+    $("#cv_line").textContent=fmt(lineData[lineData.length-1]);
+  }
+  function drawBar(){
+    const cv=$("#cBar");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const vals=STATS.map(s=>P.stats[s.id]);const max=Math.max(1,...vals);
+    const n=STATS.length,pad=8,gap=(w-pad*2)/n,bw=gap*0.62;
+    STATS.forEach((s,i)=>{const bh=(P.stats[s.id]/max)*(h-16);const x=pad+i*gap+(gap-bw)/2,y=h-bh-4;
+      ctx.fillStyle=s.color;ctx.shadowColor=s.color;ctx.shadowBlur=6;ctx.fillRect(x,y,bw,bh);ctx.shadowBlur=0;});
+  }
+  function drawSpark(){
+    const cv=$("#cSpark");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const max=Math.max(0.001,...sparkData)*1.2;
+    ctx.beginPath();sparkData.forEach((v,i)=>{const x=i/(sparkData.length-1)*w,y=h-(v/max)*(h-10)-5;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle="#ff2b5e";ctx.lineWidth=1.4;ctx.shadowColor="#ff2b5e";ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;
+    $("#cv_spark").textContent=Math.round(failEMA*100)+"%";
+  }
+  function drawGauge(dt){
+    const cv=$("#cGauge");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const cx=w/2,cy=h*0.62,r=Math.min(w,h)*0.34;const val=clamp(P.hp/P.hpMax,0,1);
+    const a0=Math.PI*0.85,a1=Math.PI*2.15;ctx.lineWidth=7;ctx.lineCap="round";
+    ctx.strokeStyle="rgba(255,255,255,.06)";ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();
+    const a=a0+(a1-a0)*val;const col=val<0.28?"#ff2b5e":"#39ff14";
+    ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(cx,cy,r,a0,a);ctx.stroke();ctx.shadowBlur=0;
+    ctx.fillStyle=col;ctx.font="700 15px "+getComputedStyle(document.body).fontFamily;ctx.textAlign="center";
+    ctx.fillText(Math.round(val*100)+"%",cx,cy+2);
+    $("#cv_gauge").textContent=Math.round(val*100)+"%";$("#cv_gauge").style.color=col;
+  }
+  function tickCharts(dt){
+    chartAcc+=dt;
+    if(chartAcc>=0.25){ lineData.push(xpAccum/chartAcc); lineData.shift(); xpAccum=0;
+      sparkData.push(failEMA*100); sparkData.shift(); chartAcc=0; }
+    drawLine();drawBar();drawSpark();drawGauge(dt);
+  }
+
+  /* ============ matrix rain ============ */
+  const mcv=$("#matrix");let mCols,mYs,mFont=14;
+  const GLYPHS="アイウエオカキクケコ01<>{}[]$#/*+=;クサ日本ヲabcdef".split("");
+  function initMatrix(){const {w,h}=fitCanvas(mcv);mFont=Math.max(12,Math.min(18,w/90));mCols=Math.floor(w/mFont);mYs=new Array(mCols).fill(0).map(()=>rand(0,h/mFont));}
+  function drawMatrix(dt){const {ctx,w,h}=fitCanvas(mcv);ctx.fillStyle="rgba(5,7,13,0.10)";ctx.fillRect(0,0,w,h);
+    ctx.font=mFont+"px "+getComputedStyle(document.body).fontFamily;
+    for(let i=0;i<mCols;i++){const x=i*mFont,y=mYs[i]*mFont;ctx.fillStyle=Math.random()<.03?"#eafff0":"#1f8a3d";
+      ctx.fillText(pick(GLYPHS),x,y);if(y>h&&Math.random()>.975)mYs[i]=0;else mYs[i]+=(0.4+surge*0.25);}}
+
+  /* ============ main loop ============ */
+  let last=performance.now(),paused=false;
+  function frame(now){
+    let dt=(now-last)/1000;last=now;dt=Math.min(0.05,dt);if(reduce)dt*=0.5;
+    surge+=(1-surge)*Math.min(1,dt*1.4);
+    // failure-rate EMA relaxes toward current ratio
+    const total=P.tasksDone+P.tasksFailed; const inst=total?P.tasksFailed/total:0;
+    failEMA+=(inst-failEMA)*Math.min(1,dt*0.5);
+    if(!paused){
+      drawMatrix(dt); tickGlobe(dt);
+      for(const w of WK) tickWorker(w,dt);
+      tickProgress(dt); tickCharts(dt);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ============ interaction ============ */
+  let bossOn=false;
+  function toggleBoss(force){
+    bossOn=force!==undefined?force:!bossOn; paused=bossOn;
+    let b=$("#bossScreen");
+    if(bossOn){
+      if(!b){ b=document.createElement("div"); b.id="bossScreen";
+        b.style.cssText="position:fixed;inset:0;z-index:100;background:#f3f3f1;color:#333;display:flex;flex-direction:column;font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;text-shadow:none;cursor:default";
+        b.innerHTML=`<div style="height:52px;background:#217346;color:#fff;display:flex;align-items:center;gap:16px;padding:0 18px;font-size:13px">📊 Q3_Financial_Projections_FINAL_v7.xlsx — Excel<span style="margin-left:auto;opacity:.85">— □ ✕</span></div>
+          <div style="height:34px;background:#e8e8e6;border-bottom:1px solid #cfcfcd;display:flex;align-items:center;gap:18px;padding:0 18px;font-size:12px;color:#555">File Home Insert Formulas Data Review View</div>
+          <div style="flex:1;display:grid;place-items:center;color:#9a9a97;font-size:14px;text-align:center">Recalculating workbook… please wait</div>`;
+        document.body.appendChild(b);
+      }
+      b.style.display="flex"; document.title="Q3_Financial_Projections_FINAL_v7.xlsx - Excel";
+    } else { if(b) b.style.display="none"; document.title="vibe hacker // agent swarm cockpit"; last=performance.now(); }
+  }
+  let hintFaded=false;
+  function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
+  addEventListener("keydown",e=>{
+    if(e.key==="Escape"||e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
+    if(bossOn) return;
+    bumpSurge(0.9); addXp(2); P.plot+=0.5; for(const w of WK) if(w.task) w.elapsed+=0.05;
+    if(Math.random()<.3) spawnArc();
+    fadeHint();
+  });
+  addEventListener("click",()=>{ if(!bossOn) bumpSurge(1.2); });
+  addEventListener("resize",initMatrix);
+  addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
+  addEventListener("beforeunload",save);
+  $("#resetBtn").addEventListener("click",e=>{ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); });
+
+  /* ============ boot ============ */
+  const restored=loadState();
+  buildHUD(); buildWorkers(); initGlobe(); initMatrix();
+  WK.forEach(w=>{ assignTask(w); w.elapsed=rand(0,w.task.dur*0.6); });
+  for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
+  if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")); }
+  else { termLine("t-info","◈","new career started — welcome, Script Kiddie"); }
+  setTimeout(fadeHint,10000);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
