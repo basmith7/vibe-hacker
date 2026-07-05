@@ -3,9 +3,10 @@
 A backlog of things that would make it deeper / weirder / more fun. Not committed to any of these.
 
 ## Small Wins
-- [ ] make the user have to "type" manually for their own progress, allow an upgrade to automate this slowly.
-  (Partially exists: you start fully manual and "Hire an Agent" adds full automation per purchase — this
-  idea is about a gentler middle ground, e.g. an upgrade that partially auto-fills your own manual bar.)
+- [x] **🪄 Autocomplete Assist** (Hardware, repeatable, max 15 levels) — your own manual slot now
+  auto-fills +5%/sec per level (capped 75%), stacking with mashing. Baseline (0 levels) is unchanged:
+  verified zero progress with zero input over 2.5s; at max level, verified 20%→63% progress over 2.5s
+  with zero input. Typing/tapping is still required for the last stretch even at max level.
 - [x] Reset moved to the bottom of the shop drawer (danger-zone footer), plus a small always-visible
   "⟲" fallback in the bottom-left corner for the pre-shop intro window (shop needs 10 credits to open,
   so the corner button is the only way to reset from a truly fresh start). Verified: reachable at $9

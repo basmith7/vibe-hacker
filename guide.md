@@ -107,7 +107,11 @@ key or tap the screen (this is also how the intro's hackertyper terminal works).
 **👥 Hire an Agent** in the shop adds an *automatic* worker that codes on its own, no input
 needed. Each further hire adds another, up to 8 workers total (you + 7 hires). Auto agents
 always work; your manual slot only works when you're actively mashing/tapping — so hiring
-agents is what turns this from an active clicker into a true idle game.
+agents is what turns this from an active clicker into a true idle game. The **🪄 Autocomplete
+Assist** upgrade (Hardware) is a gentler alternative: instead of adding a whole new worker, it
+gives your *own* manual slot a slow passive trickle, so it makes progress even when you're not
+actively typing — up to 75% of a full auto-worker's rate at max level, on top of whatever
+mashing adds.
 
 ## Credits, XP, and leveling
 
@@ -134,6 +138,7 @@ map). These are one-time or tiered purchases that exist specifically to introduc
 ### Hardware (repeatable — each purchase gets a bit more expensive)
 | Upgrade | Effect |
 |---|---|
+| 🪄 Autocomplete Assist | Your own manual slot auto-fills a bit on its own each second — +5%/level, capped at 15 levels (75%). You still need to type/tap for the rest; this never fully replaces you. |
 | 🧠 RAM | +8% task speed per level |
 | ⚙️ CPU Cores | +12% XP per level |
 | 💾 SSD Array | +10% credits per level |

@@ -599,6 +599,7 @@
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
     {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", cat:"Getting Started", fx:()=>"reveal the live charts panel"},
     {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
     {id:"ram",     kind:"repeat",emoji:"🧠",name:"RAM Upgrade",     base:40, growth:1.18, cat:"Hardware", fx:l=>"task speed ×"+Math.pow(1.08,l).toFixed(2)+" (+8%/lvl)"},
     {id:"cpu",     kind:"repeat",emoji:"⚙️",name:"CPU Cores",       base:55, growth:1.19, cat:"Hardware", fx:l=>"XP ×"+Math.pow(1.12,l).toFixed(2)+" (+12%/lvl)"},
     {id:"ssd",     kind:"repeat",emoji:"💾",name:"SSD Array",       base:50, growth:1.18, cat:"Hardware", fx:l=>"credits ×"+Math.pow(1.10,l).toFixed(2)+" (+10%/lvl)"},
@@ -681,7 +682,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,u_tele:0,u_globe:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,u_tele:0,u_globe:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
@@ -743,7 +744,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ derived multipliers ============ */
-  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4};
+  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0};
   function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
   function recompute(){
     const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
@@ -756,6 +757,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     MULT.crit=Math.min(0.6,u.gpu*0.03);
     MULT.regen=0.5+u.coffee*0.35;
     MULT.hpBonus=u.coffee*15;
+    MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
     MULT.workers=Math.min(8,1+u.hire);   // 1 = you (manual); each hire adds an auto agent
     updateHpMax();
   }
@@ -1178,7 +1180,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(w.cooldown<=0) assignTask(w);
       return;
     }
-    if(!w.manual) w.elapsed+=dt*(1+surge*1.1);   // auto agents advance themselves; "you" advances by typing
+    if(!w.manual) w.elapsed+=dt*(1+surge*1.1);   // auto agents advance themselves
+    else w.elapsed+=dt*MULT.assist;               // "you" still need to type — Autocomplete Assist just adds a trickle
     w.prog.style.width=clamp(w.elapsed/w.task.dur*100,0,100)+"%";
     if(w.elapsed>=w.task.dur) resolveTask(w);
   }
