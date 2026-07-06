@@ -36,7 +36,9 @@ progression is real and auto-saves.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing
   history: **MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS**. Each purchase
   switches your look immediately — but click the OS name (top-left) anytime to switch back to any look
-  you've already unlocked.
+  you've already unlocked. And it's more than a reskin: on **MS-DOS** your apps are **tiled** (tmux-style),
+  but buying **Windows 3.1** unbolts them into **real draggable windows** with a **⊞ Start** menu to
+  reopen anything you close (desktop only; prestige drops you back to the tiled DOS layout).
 
 See [guide.md](guide.md) for exactly what every stat and upgrade does, and [todo.md](todo.md) for the
 future-ideas backlog.

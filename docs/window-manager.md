@@ -17,12 +17,14 @@ gets rebuilt around windows in this plan, so patching the old mechanism first wo
 
 ## Status
 
-**Phase 1 core built + verified** on branch `phase1-window-manager` (2026-07-05), not yet committed/
-merged. Day-1 is now a single full-screen terminal; buying unlocks tiles apps into a tmux-style
-reflowing grid; the manual mash surface and the auto-agent swarm are split into separate apps. One
-Phase 1 item deferred (theme-CSS DRY — see its checkbox). **Next: commit/merge Phase 1, then Phase 2
-(the Windows 3.1 floating-window gate).** Major design forks are all decided (reuse "Upgrade OS" tier
-for the flip; full per-app gates; prestige → tmux).
+**Phases 1 and 2 shipped.** Phase 1 (live on `main`, 2026-07-05): day-1 single terminal → tmux-style
+tiling as apps unlock; manual mash surface split from the auto-agent swarm. Phase 2 (verified on
+`phase2-floating-wm`, 2026-07-06): owning the Windows 3.1 OS tier (`P.up.os >= 1`) flips desktop from
+tiling to a floating window manager — draggable/minimizable/closable windows, a Start Menu + Start
+button, Reset Layout, click-to-focus z-order. **Next: Phase 3 (convert Deploy Mesh/Telemetry fully +
+a Status app), then Phase 4 (split the shop drawer into Store/Equipment/Inventory/IDE/Missions apps —
+this is also where the five deferred app-unlock purchases land).** One item still deferred: the
+theme-CSS DRY pass (Phase 1 checkbox). Major design forks all decided.
 
 Treat this doc as a living, resumable record (as with `crafting-update.md`'s 7 phases) — checkboxes
 are the source of truth for where to pick back up, not a spec frozen at t=0.
@@ -277,14 +279,21 @@ a tmux-style tiled split as apps are bought one by one. No floating windows yet.
 ### Phase 2 — Windows 3.1 gate: floating window manager
 This is the paradigm flip, gated on the **existing** "Upgrade OS" purchase — no new upgrade. Everything
 under "Window manager mechanics" / "Start Menu" / "OS chrome" describes this **post-upgrade** state.
-- [ ] Switch the top-level layout engine on `P.up.os >= 1` (owns Win31): tmux tiling below, floating
-      windows at/above. Keys off *owned tier*, not `P.themeChoice` (see paradigm section)
-- [ ] Floating window render mode: title bar (icon/title/minimize/close), drag, focus/z-order
-- [ ] Minimal always-on taskbar strip (brand, theme-picker, credits, Start Menu button) — the "OS chrome"
-- [ ] Start Menu (relaunch any app; grayed locked apps) + Reset Layout
-- [ ] Same app content renders correctly in both modes; verify the flip both ways — buying Upgrade OS
-      (tmux→floating) *and* prestige (floating→tmux, since `P.up.os` resets to 0), and that it persists across reload
-- [ ] Verify end-to-end; update docs; commit + push
+**Status: complete + verified on `phase2-floating-wm` (2026-07-06). Committed in three increments.**
+- [x] Switch the top-level layout engine on `P.up.os >= 1` (owns Win31) on desktop: tmux tiling below,
+      floating windows at/above. Keys off *owned tier* (`P.up.os`), not `P.themeChoice`. `P.windows`
+      (x/y/w/h/z/open per app) added to defaults/PERSIST + seed-on-load migration; `DEFAULT_WINDOWS`
+- [x] Floating window render mode: `.head` becomes the title bar (drag + inject min/close), pointer
+      drag with canvas clamping, click-to-focus z-order (top window gets a cyan focus ring)
+- [x] Start button lives in the existing top strip (`#statusbar`) — shown only in float mode
+- [x] Start Menu (`#startMenu`): every app with open/closed state, greys out still-locked apps,
+      reopens/focuses any app; hosts Reset Layout (restores `DEFAULT_WINDOWS`). Minimize == close ==
+      "send to Start Menu" (identical in the Win31 era, per plan)
+- [x] Verified both-way flip: buying Upgrade OS live (tmux→float) *and* prestige (float→tmux, since
+      `P.up.os` resets to 0); drag/close/reopen/persist across reload; mobile stays tiling at any
+      `os`; Phase 1 tiling regression re-checked at `os:0`. 0 JS exceptions across all suites.
+- [x] Docs updated; committed. (Note: existing saves with level≥4 have `os≥1` via the legacy
+      level→OS migration, so they open straight into floating windows — intended "you own this era".)
 
 ### Phase 3 — Convert remaining gameplay panels (both modes)
 - [ ] Deploy Mesh + Telemetry become apps, preserving their existing purchase-gated lock behavior
