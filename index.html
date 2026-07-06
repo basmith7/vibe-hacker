@@ -105,6 +105,34 @@
   #terminalBody{position:absolute;inset:26px 0 0 0;display:flex;flex-direction:column;min-height:0}
   #manualWrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
   #manualWrap .agent{flex:1;border:none;border-radius:0;background:transparent}
+
+  /* ---------- floating window manager (Windows 3.1+ era: P.up.os>=1, desktop only) ---------- */
+  body.wm-float #grid{display:block;position:relative;overflow:hidden;gap:0}
+  body.wm-float .panel{position:absolute;border-radius:6px;box-shadow:0 10px 34px rgba(0,0,0,.62),0 0 0 1px rgba(0,0,0,.55)}
+  body.wm-float .panel.wfocus{box-shadow:0 12px 40px rgba(0,0,0,.7),0 0 0 1px var(--cyan),0 0 18px rgba(0,229,255,.25)}
+  body.wm-float .panel>.head{cursor:move}
+  .wctl{display:none}
+  body.wm-float .wctl{display:inline-flex;gap:4px;margin-left:6px}
+  .wctl button{font:inherit;font-size:11px;line-height:1;min-width:18px;height:16px;padding:0 3px;cursor:pointer;
+    border:1px solid var(--edge);border-radius:3px;background:#0a1120;color:var(--dim)}
+  .wctl button:hover{color:#fff;border-color:var(--cyan)}
+  .wctl .wclose:hover{color:var(--red);border-color:var(--red)}
+  /* Start button (in the top strip / taskbar) + Start Menu */
+  #startBtn{align-self:center;font:inherit;font-size:10px;color:var(--cyan);background:#0a1120;
+    border:1px solid var(--edge);border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap;display:none;margin-right:2px}
+  #startBtn:hover{color:#fff;border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.35)}
+  body.wm-float #startBtn{display:inline-flex;align-items:center;gap:5px}
+  #startMenu{position:fixed;left:8px;top:50px;z-index:210;min-width:216px;
+    background:linear-gradient(180deg,#0c1526,#070b14);border:1px solid var(--edge);border-radius:8px;
+    box-shadow:0 14px 34px rgba(0,0,0,.65);padding:6px;display:none;flex-direction:column;gap:2px}
+  #startMenu.open{display:flex}
+  #startMenu .smhead{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:4px 9px 6px}
+  #startMenu .smi{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt);padding:7px 9px;border-radius:5px;cursor:pointer;text-align:left;background:none;border:none;font-family:inherit;width:100%}
+  #startMenu .smi:hover{background:rgba(0,229,255,.12)}
+  #startMenu .smi.locked{color:var(--dim);cursor:default}
+  #startMenu .smi.locked:hover{background:none}
+  #startMenu .smi .sub{margin-left:auto;font-size:9px;color:var(--dim)}
+  #startMenu .smsep{height:1px;background:var(--edge);margin:5px 2px}
   #globeWrap{position:absolute;inset:0;top:26px}
   #globe{width:100%;height:100%;display:block}
   .globe-readout{position:absolute;left:10px;bottom:8px;font-size:10px;color:var(--dim);pointer-events:none}
@@ -429,6 +457,7 @@
       <span class="sub" id="themeLabel" title="click to change look" tabindex="0">career sim v6.0.0</span>
       <div id="themeMenu"></div>
     </div>
+    <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
     <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
@@ -491,6 +520,7 @@
 <div id="flash"></div>
 <div id="toasts"></div>
 <div id="memes"></div>
+<div id="startMenu"></div>
 
 <div id="shopScrim"></div>
 <aside id="shop">
@@ -844,6 +874,16 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ state + persistence (cookie, with localStorage fallback) ============ */
   const SAVE_VER=6;
+  // window-manager Phase 2 — default floating-window geometry per app (relative to the #grid canvas).
+  // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
+  // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
+  const DEFAULT_WINDOWS={
+    terminal:    {x:16,  y:16,  w:600, h:388, z:1, open:true},
+    agents:      {x:632, y:16,  w:560, h:388, z:2, open:true},
+    deploy_mesh: {x:16,  y:420, w:600, h:250, z:3, open:true},
+    telemetry:   {x:632, y:420, w:560, h:250, z:4, open:true},
+  };
+  const cloneWindows=()=>JSON.parse(JSON.stringify(DEFAULT_WINDOWS));
   function defaults(){
     const stats={}; STAT_IDS.forEach(id=>stats[id]=rand(6,12));
     return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
@@ -859,6 +899,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
+      windows:cloneWindows(),
       achv:{},seenTips:{shop:false,sp:false}};
   }
   let P=defaults();
@@ -866,7 +907,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "materials","matPity","missions","sprintConfig","missionSeq",
-    "themeChoice","unlocked","unlockedStats","intro","reveal","achv","seenTips"];
+    "themeChoice","unlocked","unlockedStats","intro","reveal","windows","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -917,6 +958,10 @@ notify("#general", "10x-ing that shit 🔥");`,
         // migration: saves from before the intro funnel skip it (they've already progressed)
         if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
         if(!P.reveal) P.reveal={credits:false,shop:false};
+        // migration: window-manager Phase 2 — saves predating the floating WM lack P.windows; seed it
+        // (and backfill any app id missing from an older windows object) from DEFAULT_WINDOWS.
+        if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
+        for(const id in DEFAULT_WINDOWS) if(!P.windows[id]||typeof P.windows[id]!=="object") P.windows[id]={...DEFAULT_WINDOWS[id]};
         // migration: backfill maxCredits from saves predating the shop-reveal-at-50%-saved system
         if(typeof P.maxCredits!=="number") P.maxCredits=P.credits||0;
         // migration: OS used to auto-advance with level; grandfather that era in as "purchased" so nobody regresses
@@ -1025,10 +1070,14 @@ notify("#general", "10x-ing that shit 🔥");`,
         toast("🧠 New skill — "+next.lbl, next.em+" now in the task pool · spend SP on it", next.color);
         termLine("t-git","🧠","learned a new skill: "+next.lbl); }
     } else if(u.id==="os"){
+      const wasFloat=wmFloat();
       P.up.os++; const t=OS_TIERS[P.up.os];
       pickTheme(t.id);   // new tier auto-switches to it; player can still pick an older unlocked look afterward
+      applyLayout();     // crossing into Win3.1 (os>=1) flips tiling → floating windows
       celebrate("🖥 SYSTEM UPGRADE","#00e5ff"); flyMeme(t.name.toUpperCase());
-      toast("🖥 New OS installed — "+t.name, "click the OS name (top-left) to switch looks anytime", "#00e5ff");
+      const msg=(!wasFloat && wmFloat())?"windows unbolted — drag them around; ⊞ Start reopens any you close"
+        :"click the OS name (top-left) to switch looks anytime";
+      toast("🖥 New OS installed — "+t.name, msg, "#00e5ff");
       termLine("t-git","🖥","upgraded OS → "+t.name);
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
@@ -1435,20 +1484,43 @@ notify("#general", "10x-ing that shit 🔥");`,
   // whether it tiles in. terminal is always on (day-1); agents reuses the Hire-an-Agent tier
   // (MULT.workers=1+hire, so hire>=1 means an auto-swarm exists); telemetry/globe reuse their buys.
   const APPS=[
-    {id:"terminal",    panelId:"terminalPanel", order:1, unlocked:()=>true},
-    {id:"agents",      panelId:"agentsPanel",   order:2, unlocked:()=>P.up.hire>=1},
-    {id:"deploy_mesh", panelId:"globePanel",    order:3, unlocked:()=>!!P.unlocked.globe},
-    {id:"telemetry",   panelId:"chartsPanel",   order:4, unlocked:()=>!!P.unlocked.telemetry},
+    {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
+    {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
+    {id:"deploy_mesh", panelId:"globePanel",    order:3, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
+    {id:"telemetry",   panelId:"chartsPanel",   order:4, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
   ];
-  function applyLayout(){   // tmux-style tiling: show only unlocked app panels, reflow #grid by count
+  const APP=Object.fromEntries(APPS.map(a=>[a.id,a]));
+  // window-manager Phase 2 — the floating WM unlocks at the Windows 3.1 OS tier (P.up.os>=1). Below
+  // that tier, and on mobile, the layout stays the Phase 1 tmux-style tiling. Same app panels, two modes.
+  function wmFloat(){ return P.up.os>=1 && innerWidth>820; }
+  function bringToFront(id){ let mz=0; for(const k in P.windows) mz=Math.max(mz,P.windows[k].z||0); P.windows[id].z=mz+1; }
+  function clampWindow(w,grid){
+    w.w=clamp(w.w,240,Math.max(240,grid.clientWidth)); w.h=clamp(w.h,120,Math.max(120,grid.clientHeight));
+    w.x=clamp(w.x,0,Math.max(0,grid.clientWidth-80)); w.y=clamp(w.y,0,Math.max(0,grid.clientHeight-34));
+  }
+  function applyLayout(){   // tiling (tmux) below Win3.1; floating windows at/above it
     const grid=$("#grid"); if(!grid) return;
+    const float=wmFloat();
+    document.body.classList.toggle("wm-float", float);
     let n=0;
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
-      const on=a.unlocked();
-      el.style.display=on?"":"none"; el.style.order=a.order;
-      if(on) n++;
+      const unlocked=a.unlocked();
+      const w=P.windows[a.id]||(P.windows[a.id]={...DEFAULT_WINDOWS[a.id]});
+      if(float){
+        const show=unlocked && w.open!==false;
+        el.style.display=show?"":"none"; el.style.order="";
+        if(show){ clampWindow(w,grid);
+          el.style.left=w.x+"px"; el.style.top=w.y+"px"; el.style.width=w.w+"px"; el.style.height=w.h+"px"; el.style.zIndex=String(w.z||1);
+          n++;
+        }
+      } else {
+        el.style.display=unlocked?"":"none"; el.style.order=a.order;
+        el.style.left=el.style.top=el.style.width=el.style.height=el.style.zIndex="";
+        if(unlocked) n++;
+      }
     }
-    grid.dataset.count=String(clamp(n,1,4));
+    grid.dataset.count=float?"float":String(clamp(n,1,4));
+    if(typeof renderStartMenu==="function") renderStartMenu();
   }
   function applyUnlocks(){
     const gp=$("#globePanel"), cp=$("#chartsPanel");
@@ -2129,7 +2201,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     fadeHint();
   });
   addEventListener("click",()=>{ if(bossOn||shopOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
-  addEventListener("resize",initMatrix);
+  addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
   function confirmReset(e){ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); }
