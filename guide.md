@@ -23,12 +23,13 @@ that only moves when you type or tap. That's deliberate: nothing is explained up
 buy your way into each app one at a time.
 
 - Fill the bar once (clear your first task) → the **$ credits** counter appears.
-- Reach **10 credits** → the **🛒 upgrades** button appears.
-- Your **first purchase** graduates you into the cockpit: a slim top strip (logo, OS name, credits,
-  upgrades) plus a **📟 Status** app — your character sheet (skill points, tasks, streak, loot,
-  uptime, sanity, level/stage bars, stat chips).
+- Reach **10 credits** → the **🛒 Store** app tiles in beside the terminal — your shop for upgrades.
+- Your **first purchase** graduates you into the cockpit: the slim top strip fills in (logo, OS name,
+  credits, 🧰 toolbox) plus a **📟 Status** app — your character sheet (skill points, tasks, streak,
+  loot, uptime, sanity, level/stage bars, stat chips).
 - From there, more apps **tile into the screen** as you unlock them: **👥 Hire an Agent** opens the
   Agent Swarm, **📊 Install Telemetry** opens the charts, **🌐 Go Global** opens the Deploy Mesh.
+  Your gear, crafting, and missions live in the **🧰 Toolbox** (top-right button, or press **U**).
   The more apps you own, the more the layout splits (tmux-style) to fit them beside the terminal.
   (Once you buy **Windows 3.1** in Upgrade OS, these tiles become draggable windows — see below.)
 

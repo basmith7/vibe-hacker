@@ -138,6 +138,7 @@
   /* status app — detail stats + level/stage HUD, relocated out of the always-on chrome */
   .tbspace{flex:1}
   #statusBody{position:absolute;inset:26px 0 0 0;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+  #storeBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
   #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
   #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
@@ -309,22 +310,21 @@
   body.intro.reveal-credits #statusbar{display:flex}
   body.intro #statusbar > *{display:none}
   body.intro.reveal-credits #statusbar .stat.credits{display:flex;animation:reveal .5s ease-out}
-  body.intro.reveal-shop #statusbar #shopBtn{display:inline-flex;animation:reveal .5s ease-out}
   body.intro #hud{display:none}
   body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
   body.intro .agent .ah .sTag,body.intro .agent .ah .diff{display:none}
-  /* day-1 immersive terminal: the tiling engine already shows only the (unlocked) terminal app;
-     here we strip its chrome + build log and enlarge the mash surface for the full-screen hackertyper feel */
-  body.intro #terminalPanel{border:none;border-radius:0}
-  body.intro #terminalPanel > .head{display:none}
-  body.intro #terminalBody{inset:0}
-  body.intro #termBody{display:none}
-  body.intro #manualWrap .code{font-size:15px;padding:16px 22px}
-  body.intro #manualWrap .prog{height:10px}
-  body.intro #manualWrap .agent{border:none;border-radius:0;background:transparent}
-  body.intro #manualWrap .agent .ah{padding:14px 22px 6px;border-bottom:none}
-  body.intro #manualWrap .agent .ah .nm{font-size:14px}
-  body.intro #manualWrap .agent .ah .tk{font-size:13px;color:var(--dim)}
+  /* day-1 immersive terminal — only until the Store reveals at 10 credits; after that the terminal is
+     a normal tile beside the Store. Strips the terminal's chrome + build log and enlarges the mash surface. */
+  body.intro:not(.reveal-shop) #terminalPanel{border:none;border-radius:0}
+  body.intro:not(.reveal-shop) #terminalPanel > .head{display:none}
+  body.intro:not(.reveal-shop) #terminalBody{inset:0}
+  body.intro:not(.reveal-shop) #termBody{display:none}
+  body.intro:not(.reveal-shop) #manualWrap .code{font-size:15px;padding:16px 22px}
+  body.intro:not(.reveal-shop) #manualWrap .prog{height:10px}
+  body.intro:not(.reveal-shop) #manualWrap .agent{border:none;border-radius:0;background:transparent}
+  body.intro:not(.reveal-shop) #manualWrap .agent .ah{padding:14px 22px 6px;border-bottom:none}
+  body.intro:not(.reveal-shop) #manualWrap .agent .ah .nm{font-size:14px}
+  body.intro:not(.reveal-shop) #manualWrap .agent .ah .tk{font-size:13px;color:var(--dim)}
   @keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
   /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
@@ -465,7 +465,7 @@
     <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <span class="tbspace"></span>
-    <button id="shopBtn" title="upgrades (U)">🛒 upgrades</button>
+    <button id="shopBtn" title="toolbox — gear, crafting & missions (U)">🧰 toolbox</button>
   </header>
 
   <div id="grid">
@@ -525,6 +525,11 @@
         <div id="termBody"></div>
       </div>
     </section>
+
+    <section class="panel" id="storePanel" data-app="store">
+      <div class="head"><span class="dot"></span> STORE <span class="spacer"></span><span class="tag" id="storeBal">$0</span></div>
+      <div id="storeBody"></div>
+    </section>
   </div>
 </div>
 
@@ -536,15 +541,12 @@
 <div id="shopScrim"></div>
 <aside id="shop">
   <div id="shopHead">
-    <button class="tabBtn on" id="tabUpg" title="Upgrades">🛒</button>
-    <button class="tabBtn" id="tabTool" title="Toolbox (hardware inventory)">🧰</button>
-    <span class="t" id="shopTitle">UPGRADES</span>
+    <span class="t" id="shopTitle">🧰 TOOLBOX</span>
     <span class="bal" id="shopBal">$0</span>
     <span class="x" id="shopClose">✕</span>
   </div>
   <div id="shopBody">
-    <div id="paneUpgrades"></div>
-    <div id="paneToolbox" style="display:none"></div>
+    <div id="paneToolbox"></div>
   </div>
   <div id="shopFooter"><button id="resetBtn" title="wipe your save">⟲ sudo rm -r /</button></div>
 </aside>
@@ -889,11 +891,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
   const DEFAULT_WINDOWS={
-    terminal:    {x:16,  y:16,  w:600, h:360, z:1, open:true},
-    agents:      {x:632, y:16,  w:520, h:360, z:2, open:true},
-    status:      {x:16,  y:392, w:380, h:250, z:3, open:true},
-    deploy_mesh: {x:410, y:392, w:410, h:250, z:4, open:true},
-    telemetry:   {x:836, y:392, w:420, h:250, z:5, open:true},
+    terminal:    {x:16,   y:16,  w:540, h:340, z:1, open:true},
+    agents:      {x:568,  y:16,  w:430, h:340, z:2, open:true},
+    store:       {x:1006, y:16,  w:258, h:604, z:6, open:true},
+    status:      {x:16,   y:368, w:380, h:250, z:3, open:true},
+    deploy_mesh: {x:408,  y:368, w:300, h:250, z:4, open:true},
+    telemetry:   {x:720,  y:368, w:278, h:250, z:5, open:true},
   };
   const cloneWindows=()=>JSON.parse(JSON.stringify(DEFAULT_WINDOWS));
   function defaults(){
@@ -1106,8 +1109,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
   let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
-  function buildShop(){
-    const body=$("#paneUpgrades"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
+  function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
+    const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
     const pc=document.createElement("div"); pc.className="card prestige";
     pc.innerHTML=`<span class="em">💰</span><div class="mid"><div class="nm">IPO — Cash Out <span class="lv" id="eqLv"></span></div><div class="fx" id="eqFx"></div></div><button class="buy" id="eqBtn"></button>`;
@@ -1132,7 +1135,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       el.innerHTML=`<span class="em">${a.em}</span><div class="mid"><div class="nm">${a.name}</div><div class="fx">${a.desc}</div></div><span class="chk"></span>`;
       body.appendChild(el); achEls[a.id]=el;
     }
-    shopBuilt=true; renderShop();
+    shopBuilt=true; renderStore();
   }
   // crafting update Phase 4 — the Toolbox tab: equipped-hardware overview, gambling for a random
   // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
@@ -1309,19 +1312,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     renderStashList();
   }
-  function setShopTab(tab){
-    shopTab=tab;
-    $("#tabUpg").classList.toggle("on",tab==="up");
-    $("#tabTool").classList.toggle("on",tab==="tb");
-    $("#shopTitle").textContent=tab==="up"?"UPGRADES":"TOOLBOX";
-    $("#paneUpgrades").style.display=tab==="up"?"flex":"none";
-    $("#paneToolbox").style.display=tab==="tb"?"flex":"none";
-    if(tab==="tb"&&!toolboxBuilt) buildToolbox();
-    renderShop();
-  }
-  function renderShop(){
+  function renderStore(){   // Store app content — runs on the timer whenever the store is on screen
     if(!shopBuilt) return;
-    $("#shopBal").textContent=money(P.credits)+"  ·  +"+money(MULT.passive)+"/s";
+    const sb=$("#storeBal"); if(sb) sb.textContent=money(P.credits)+" · +"+money(MULT.passive)+"/s";
     const eqLv=$("#eqLv"),eqFx=$("#eqFx"),eqBtn=$("#eqBtn");
     if(eqLv){ const g=equityGain();
       eqLv.textContent=P.equity?("· "+P.equity+" Equity (+"+(P.equity*2)+"%)"):"";
@@ -1345,11 +1338,16 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
     renderAch();
+  }
+  // full refresh (store + the Toolbox drawer) — used after any buy/craft/roll that can touch both
+  function renderShop(){
+    renderStore();
+    const bal=$("#shopBal"); if(bal) bal.textContent=money(P.credits)+"  ·  +"+money(MULT.passive)+"/s";
     renderToolbox();
   }
-  function toggleShop(force){
+  function toggleShop(force){   // opens the 🧰 Toolbox drawer (the Store is now an always-on app)
     shopOpen=force!==undefined?force:!shopOpen;
-    if(shopOpen && !shopBuilt) buildShop();
+    if(shopOpen && !toolboxBuilt) buildToolbox();
     $("#shop").classList.toggle("on",shopOpen);
     $("#shopScrim").classList.toggle("on",shopOpen);
     if(shopOpen){ renderShop(); closeThemeMenu(); }
@@ -1499,8 +1497,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
     {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
     {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!P.intro},
-    {id:"deploy_mesh", panelId:"globePanel",    order:4, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
-    {id:"telemetry",   panelId:"chartsPanel",   order:5, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
+    {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.shop)},
+    {id:"deploy_mesh", panelId:"globePanel",    order:5, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
+    {id:"telemetry",   panelId:"chartsPanel",   order:6, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
   ];
   const APP=Object.fromEntries(APPS.map(a=>[a.id,a]));
   // window-manager Phase 2 — the floating WM unlocks at the Windows 3.1 OS tier (P.up.os>=1). Below
@@ -1612,7 +1611,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function checkReveal(){
     if(!P.intro) return;
     if(!P.reveal.credits && P.credits>0){ P.reveal.credits=true; applyReveal(); save(); }
-    if(!P.reveal.shop && P.credits>=10){ P.reveal.shop=true; applyReveal(); save(); }
+    if(!P.reveal.shop && P.credits>=10){ P.reveal.shop=true; applyReveal(); applyLayout(); save(); }   // Store app tiles in at 10 credits
   }
   function endIntro(){
     if(!P.intro) return;
@@ -2060,7 +2059,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ counters + HUD update ============ */
-  let saveTimer=0,autoBuyT=0,shopRefresh=0,achTimer=0;
+  let saveTimer=0,autoBuyT=0,shopRefresh=0,storeRefresh=0,achTimer=0;
   function tickProgress(dt){
     P.hp=clamp(P.hp+dt*MULT.regen,0,P.hpMax);   // Espresso Machine → recovery; Caffeine-stat bonus returns as a gear patch in Phase 5
     P.credits+=MULT.passive*dt;                                          // passive income (monitors)
@@ -2098,8 +2097,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     UI.g_stage.textContent=P.stage+1; UI.g_streak.textContent=P.streak; UI.g_arcs.textContent=globe?globe.arcs.length:0;
     UI.agentCount.textContent=WK.filter(w=>!w.manual&&w.task).length+"/"+Math.max(0,WK.length-1)+" agents on task";
 
+    // Store is an always-on app → refresh its cards on the timer; the Toolbox drawer refreshes only when open
+    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); }
     if(shopOpen){ shopRefresh+=dt; if(shopRefresh>=0.2){ shopRefresh=0; renderShop(); } }
-    else if(UI.shopBtn) UI.shopBtn.classList.toggle("pip",anyAffordable());
+    if(UI.shopBtn) UI.shopBtn.classList.toggle("pip",!shopOpen && anyAffordable());
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
@@ -2282,8 +2283,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#resetBtn").addEventListener("click",confirmReset);
   $("#shopBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(); fadeHint(); });
   $("#shopClose").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
-  $("#tabUpg").addEventListener("click",e=>{ e.stopPropagation(); setShopTab("up"); });
-  $("#tabTool").addEventListener("click",e=>{ e.stopPropagation(); setShopTab("tb"); });
   $("#shopScrim").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
   $("#shop").addEventListener("click",e=>{ e.stopPropagation(); });   // don't grind while shopping
   $("#themeLabel").addEventListener("click",e=>{ e.stopPropagation(); toggleThemeMenu(); fadeHint(); });
