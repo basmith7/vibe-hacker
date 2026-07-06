@@ -25,12 +25,14 @@ buy your way into each app one at a time.
 - Fill the bar once (clear your first task) → the **$ credits** counter appears.
 - Reach **10 credits** → the **🛒 Store** app tiles in beside the terminal — your shop for upgrades.
 - Your **first purchase** graduates you into the cockpit: the slim top strip fills in (logo, OS name,
-  credits, 🧰 toolbox) plus a **📟 Status** app — your character sheet (skill points, tasks, streak,
-  loot, uptime, sanity, level/stage bars, stat chips).
-- From there, more apps **tile into the screen** as you unlock them: **👥 Hire an Agent** opens the
-  Agent Swarm, **📊 Install Telemetry** opens the charts, **🌐 Go Global** opens the Deploy Mesh.
-  Your gear, crafting, and missions live in the **🧰 Toolbox** (top-right button, or press **U**).
-  The more apps you own, the more the layout splits (tmux-style) to fit them beside the terminal.
+  credits) plus a **📟 Status** app — your character sheet (skill points, tasks, streak, loot,
+  uptime, sanity, level/stage bars, stat chips).
+- From there, **every system is its own app, bought one at a time** from the Store's "Getting Started"
+  list — each one **tiles into the screen** when you buy it: **👥 Hire an Agent** (Agent Swarm),
+  **📊 Install Telemetry** (charts), **🧰 Open Toolbox** (Inventory — roll & stash gear),
+  **🔧 Equip Hardware** (Equipment), **🛠 Launch the IDE** (crafting bench + materials),
+  **🌐 Go Global** (Deploy Mesh), and **📋 Mission Board** (bounties). The more apps you own, the more
+  the layout splits (tmux-style) to fit them beside the terminal.
   (Once you buy **Windows 3.1** in Upgrade OS, these tiles become draggable windows — see below.)
 
 If you've been playing a while, everything you'd already unlocked stays unlocked — the one-by-one
@@ -201,10 +203,11 @@ Each slot has a distinct effect, scaling with the equipped item's ilvl:
 The other 30% of drops are flavor **loot** (Mechanical Keyboard of Clackening, Rubber Duck of
 Debugging, etc.) — a small one-time stat bump with no equip slot of its own.
 
-## The Toolbox
+## The Toolbox apps
 
-Press the **🧰** tab at the top of the shop panel (next to **🛒**) to open the Toolbox — your
-hardware inventory, separate from the Upgrades list:
+Your hardware and crafting live in four apps you unlock from the Store — **🔧 Equipment**,
+**🧰 Inventory**, **🛠 The IDE**, and **📋 Missions** — each tiling in (or a window, post-Windows 3.1)
+when you buy it:
 
 - **🔧 Equipped Hardware** — the same 6 slots as before; **Unequip** returns that item to
   your stash instead of deleting it.
@@ -255,7 +258,7 @@ instead of just disappearing.
 
 ## Missions
 
-The **📋 Mission Board** (also in the Toolbox tab) always has **3 active contracts**, each tied to
+The **📋 Missions** app always has **3 active contracts**, each tied to
 a stat: 🐛 Debugging Sprint, 🚀 Deploy Week, 🧮 Algorithm Grind, 🎯 Focus Block, or the stat-agnostic
 ⚡ Hackathon. Every task you complete counts toward *all three* — nothing stalls just because you
 weren't working on the "right" kind — but a task matching a mission's stat is both **weighted
@@ -345,9 +348,9 @@ you actually earn them. "Hello, World" is always visible as a first nudge.
 
 Your run auto-saves every few seconds to a cookie, with a `localStorage` mirror as a fallback
 (cookies don't work on `file://`, which is how the mirror keeps local play working). Nothing is
-sent anywhere — it's entirely local to your browser. **⟲ sudo rm -r /** at the bottom of the shop
-wipes it and starts over, after confirming. There's no reset option during the intro terminal —
-the shop needs 10 credits to open, and reaching it is quick enough that waiting is fine.
+sent anywhere — it's entirely local to your browser. **⟲ sudo rm -r /** at the bottom of the
+**Store** app wipes it and starts over, after confirming. There's no reset during the intro terminal —
+the Store appears at 10 credits, and reaching it is quick enough that waiting is fine.
 
 ## Controls
 
@@ -355,11 +358,10 @@ the shop needs 10 credits to open, and reaching it is quick enough that waiting 
 |---|---|
 | Mash any key / tap the screen | Drives your manual worker; surges the whole game briefly |
 | Click the OS name (top-left) | Switch to any unlocked look |
-| `U` | Open the shop |
 | `T` | Cycle through your unlocked looks |
 | `F11` | Fullscreen (browser-native) |
 | `Esc` / `` ` `` | Boss key — hide behind a fake spreadsheet |
-| `⟲ sudo rm -r /` (bottom of shop) | Wipe your save and start over |
+| `⟲ sudo rm -r /` (bottom of the Store app) | Wipe your save and start over |
 
 ## A few tips
 

@@ -22,11 +22,12 @@ tiling as apps unlock; manual mash split from the auto-agent swarm. Phase 2 (202
 Windows 3.1 OS tier (`P.up.os >= 1`) flips desktop tiling into a floating window manager — draggable/
 minimizable/closable windows, Start Menu + Start button, Reset Layout, click-to-focus z-order. Phase 3
 (2026-07-06): detail stats + level/stage HUD moved out of the always-on chrome into a **Status app**
-(slimming the top strip to a real taskbar); dead lockmask retired. Phase 4 was split: **4a — the Store
-app** (verified on `phase4-shop-apps`, 2026-07-06): the Upgrades tab became a `#storePanel` app that
-tiles in at 10 credits, and the drawer is now Toolbox-only. **Next: Phase 4b (the four Toolbox
-tool-apps — Equipment/Inventory/IDE/Missions — + their unlock purchases + retire the drawer; needs
-the tiling-mode launcher decision).** Still deferred: the theme-CSS DRY pass. Major forks decided.
+(slimming the top strip to a real taskbar); dead lockmask retired. Phase 4 shipped in two chunks: **4a**
+(the Store became a `#storePanel` app that tiles in at 10 credits) and **4b** (Equipment/Inventory/
+IDE/Missions became purchase-gated apps and the shop drawer was fully retired). **The whole shop is
+now apps; there is no drawer.** **Next: Phase 5 (onboarding + economy tuning; also a polish pass on
+the float-mode default window arrangement) and Phase 6 (per-era window chrome + the deferred theme-CSS
+DRY).** Major forks all decided.
 
 Treat this doc as a living, resumable record (as with `crafting-update.md`'s 7 phases) — checkboxes
 are the source of truth for where to pick back up, not a spec frozen at t=0.
@@ -330,14 +331,25 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
       the Toolbox drawer (`🧰 toolbox`). Store is a window in float mode (Start-Menu reopenable).
 - [x] Verified fresh→reveal→float + full Phase 1–3 regression; 0 exceptions.
 
-**4b — the four Toolbox tool-apps (remaining):**
-- [ ] Equipment (Equipped Hardware + set-bonus header), Inventory (stash + Roll-for-Hardware), IDE
-      (crafting bench + materials), Missions (board) → apps, from `buildToolbox`/`renderToolbox` etc.
-- [ ] Four deferred purchase gates (inventory/equipment/ide/missions — each a `P.unlocked` key +
-      absence-grandfather migration; buying auto-opens the app). **Design to resolve:** on-demand tool
-      apps default *closed*; tiling mode has no Start Menu, so decide the launcher — likely make the
-      Start Menu available in **both** modes (drop the float-only limit), tool tiles toggle via it.
-- [ ] Retire the `#shop` drawer entirely (move Reset/wipe into the Store or Start Menu); verify; ship.
+**4b — the four Toolbox tool-apps — DONE + verified on `phase4b-toolbox-apps` (2026-07-06):**
+- [x] `buildToolbox` refactored to build each section into its own app panel (ids preserved so
+      `renderToolbox`/`renderStashList`/`renderIdeCard`/`renderMaterials`/`renderMissionBoard` are
+      unchanged): **Equipment** (`#equipPanel`), **Inventory** (roll + stash, `#inventoryPanel`),
+      **The IDE** (bench + materials, `#idePanel`), **Missions** (`#missionsPanel`). Built at boot.
+- [x] Four purchase gates (inventory 500 / equipment 700 / ide 1000 / missions 1800), each a
+      `P.unlocked` key + defaults/`unlockAll`/absence-grandfather migration; buying tiles the app in.
+- [x] **Launcher decision (resolved the design fork the simple way):** tool apps are *regular
+      gated apps* — shown when unlocked, `open:true` by default (like deploy_mesh/telemetry) — so **no
+      launcher redesign** was needed; the Start Menu stayed float-only. Rationale: the DOS/tiling era
+      is early-game (tools cost more than Win31's 650), so a fully-unlocked tiling player is rare and
+      the 4×3 tile grid handles up to 10 tiles cleanly. *Known cosmetic tradeoff:* in float mode a
+      fully-unlocked save opens ~10 overlapping windows — fine (draggable/closable/Reset-Layout), but
+      the default float **arrangement** wants a polish pass → Phase 5.
+- [x] Drawer fully retired: `#shop`/`#shopScrim`/tabs/`toggleShop`/`shopOpen`/`#shopBtn` + the `U`
+      shortcut all removed; Reset/wipe moved into the Store's footer. Store + tool apps refresh on the
+      main timer. (Dead drawer *CSS* left as harmless no-match selectors — trivial future cleanup.)
+- [x] Verified: content builds into all 4 panels; fresh save gates them; buying tiles one in; 10-tile
+      tiling + float windows; full Phase 1–3 + 4a regression; 0 exceptions. Docs updated.
 
 ### Phase 5 — Onboarding integration & economy tuning
 - [ ] Nail the purchase-one-by-one funnel end-to-end (day-1 terminal → Store → each app's unlock);
