@@ -12,9 +12,9 @@ progression is real and auto-saves.
 
 - **Starts tiny, grows wild.** You begin as a **full-screen terminal** that only moves when you type or
   tap — pure [hackertyper](https://hackertyper.net/). Fill the bar once and the credits counter fades in;
-  hit 10 credits and the 🛒 shop button appears. Your first purchase is the moment the whole cockpit
-  wakes up. From there, the shop lets you **hire agents** (automation kicks in), **learn new skills**
-  (more stats), and unlock the ghosted panels (**Install Telemetry**, **Go Global**) one by one.
+  hit 10 credits and the 🛒 shop button appears. From there you **buy your apps one at a time** — hire
+  the agent swarm, install telemetry, go global — and each one **tiles into the screen** beside the
+  terminal, splitting the layout tmux-style as you grow.
 - **5 stats** (Coding, Focus, Debugging, Systems, Algorithms) that level up — you start with just
   Coding and unlock the rest one at a time via the shop.
 - **~60 tasks**, each tied to a stat. Your stat vs. the task's difficulty sets success chance and speed;

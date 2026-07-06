@@ -19,16 +19,19 @@ Everything below explains one layer of that loop in detail.
 ## Getting started
 
 The game starts as a **full-screen terminal** — just you, one stat (Coding), and a progress bar
-that only moves when you type or tap. That's deliberate: nothing is explained up front, every
-system reveals itself the moment you can afford to buy into it.
+that only moves when you type or tap. That's deliberate: nothing is explained up front, and you
+buy your way into each app one at a time.
 
 - Fill the bar once (clear your first task) → the **$ credits** counter appears.
 - Reach **10 credits** → the **🛒 upgrades** button appears.
-- Your **first purchase** reveals the whole cockpit — status bar, level/stage HUD, and the
-  globe/telemetry panels (still locked until you buy their specific unlocks).
+- Your **first purchase** brings up the status bar and the level/stage HUD.
+- From there, apps **tile into the screen** as you unlock them: **👥 Hire an Agent** opens the
+  Agent Swarm, **📊 Install Telemetry** opens the charts, **🌐 Go Global** opens the Deploy Mesh.
+  The more apps you own, the more the layout splits (tmux-style) to fit them beside the terminal.
+  (More systems become their own apps — and these tiles become draggable windows — in later updates.)
 
-If you've been playing a while, the shop and full UI are already unlocked and this is just
-history — the funnel only runs once, on a brand-new save.
+If you've been playing a while, everything you'd already unlocked stays unlocked — the one-by-one
+funnel only gates a brand-new save.
 
 ## Stats
 
@@ -49,7 +52,7 @@ button, at the same time. There's no stat you can see but not use.
 
 *(Rizz and Caffeine used to be their own grindable stats — softening failure damage and speeding
 Sanity regen, respectively. They're retired as active stats for now; a future update reintroduces
-both as equippable gear patches instead, see `crafting update.md`.)*
+both as equippable gear patches instead, see `docs/crafting-update.md`.)*
 
 ### How stats raise
 
@@ -102,10 +105,11 @@ costly.
 
 ## Workers & agents
 
-You start as the only worker — a **manual** one, meaning tasks only advance when you press a
-key or tap the screen (this is also how the intro's hackertyper terminal works). Buying
-**👥 Hire an Agent** in the shop adds an *automatic* worker that codes on its own, no input
-needed. Each further hire adds another, up to 8 workers total (you + 7 hires). Auto agents
+You start as the only worker — a **manual** one, living in the **Terminal** app, meaning tasks
+only advance when you press a key or tap the screen (this is also how the day-1 hackertyper
+terminal works). Buying **👥 Hire an Agent** in the shop opens the separate **Agent Swarm** app
+and adds an *automatic* worker that codes on its own, no input needed. Each further hire adds
+another, up to 8 workers total (you + 7 hires). Auto agents
 always work; your manual slot only works when you're actively mashing/tapping — so hiring
 agents is what turns this from an active clicker into a true idle game. The **🪄 Autocomplete
 Assist** upgrade (Hardware) is a gentler alternative: instead of adding a whole new worker, it
@@ -133,9 +137,9 @@ mashing adds.
 Everything costs credits and falls into four sections:
 
 ### Getting Started
-Always visible — this is the guided path, never hidden. **Hire an Agent**, **Learn a New
-Skill**, **Install Telemetry** (reveals the charts panel), **Go Global** (reveals the world
-map). These are one-time or tiered purchases that exist specifically to introduce a new system.
+Always visible — this is the guided path, never hidden. **Hire an Agent** (opens the Agent Swarm
+app), **Learn a New Skill**, **Install Telemetry** (opens the charts app), and **Go Global**
+(opens the Deploy Mesh app). Each app you unlock tiles into the screen beside the terminal.
 
 ### Hardware (repeatable — each purchase gets a bit more expensive)
 | Upgrade | Effect |
