@@ -17,27 +17,47 @@ no bundler, no `npm install`.
 | `index.html` | The entire game. Single `<script>` IIFE, ~2,150 lines. |
 | `README.md` | Player-facing project overview (what the game is, controls, license). |
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
-| `todo.md` | Standing backlog of future ideas. Not commitments. |
-| `crafting update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
-| `window manager.md` | An **active, in-progress** phased design+delivery doc (same format as `crafting update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system with a Start Menu. Check its `## Status` line for exactly where it's at before assuming anything about the current UI's structure. |
+| `todo.md` | Standing backlog of future ideas (formalized, but not commitments). Root, because it's the primary agent-facing worklist. |
+| `docs/ideas.md` | **Staging inbox** — raw ideas before they're formalized. Two sections with a specific workflow; see "Idea-intake workflow" below. |
+| `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
+| `docs/window-manager.md` | An **active, in-progress** phased design+delivery doc (same format as `docs/crafting-update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system. Note: the design has since shifted so the moveable-window desktop is an *earned "Windows 3.1" upgrade*, with a tmux-style tiled terminal as the pre-upgrade UI — check its `## Status` line and top sections before assuming anything about the current UI's structure. |
+
+Design docs and the idea inbox live under `docs/`; player-facing docs (`README.md`, `guide.md`) and
+the primary worklist (`todo.md`) stay in root. Only `index.html` deploys, so file layout is purely
+for navigation.
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
 should update `guide.md`/`README.md` in the same piece of work, not as a separate pass later.
 
+## Idea-intake workflow
+
+Ideas flow through `docs/ideas.md` before becoming real work. It has two sections, and the
+distinction is about **who acts**, not just how mature the idea is:
+
+- **🌱 Still planning** — the *user's* thinking space. You may add input as indented sub-bullets
+  (questions, tradeoffs, what the code already does), but do **not** action, formalize, or move these.
+- **📥 Ready** — the user has blessed these; they're yours to route out. Routing means: small idea →
+  a line in `todo.md`; large/multi-phase idea → its own phased design doc under `docs/` (like
+  `window-manager.md`). **Delete each item from `ideas.md` once routed** — that file is a staging
+  area, not a second backlog.
+
+So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → `todo.md` **or** a new `docs/*.md` design doc.
+
 ## Current state (as of the last major work)
 
 The "crafting update" — a Path-of-Exile-style itemization overhaul — is fully shipped across all
-7 of its planned phases (see `crafting update.md`'s Status line for the detailed retrospective of
+7 of its planned phases (see `docs/crafting-update.md`'s Status line for the detailed retrospective of
 each). In short: the old flat repeatable Hardware upgrades are gone, replaced by 8 equip slots fed
 by drops/gambling, a Toolbox stash + IDE crafting bench, patches/rarity, a materials economy, a
 rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legendary uniques). Any
 further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
 phase of that plan.
 
-Next up: `window manager.md`, a phased plan (still in planning as of this writing — check its
-`## Status` line) to rework the UI into draggable/minimizable windows with a Start Menu. It also
-absorbed two `todo.md` items (theme-CSS dedup, onboarding reveal polish) — see its "Backlog
-absorbed" section.
+Next up: `docs/window-manager.md`, a phased plan (still in planning as of this writing — check its
+`## Status` line) to rework the UI into an OS-like progression: a day-1 minimal terminal → tmux-style
+tiled panes as apps are purchased one by one → draggable/minimizable windows + Start Menu unlocked by
+an earned "Windows 3.1" upgrade. It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
+reveal polish) — see its "Backlog absorbed" section.
 
 ## Architecture inside `index.html`
 

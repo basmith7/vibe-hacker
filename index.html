@@ -85,8 +85,12 @@
   .hpbar.hit{animation:hpflash .4s}
   @keyframes hpflash{0%,100%{filter:none}30%{filter:brightness(2.4) saturate(2)}}
   /* grid */
-  #grid{flex:1;display:grid;gap:8px;min-height:0;grid-template-columns:1.05fr 1.35fr 1fr;grid-template-rows:1fr 1fr;
-    grid-template-areas:"globe agents charts" "globe agents terminal"}
+  /* tmux-style tiling: layout reflows by how many apps are unlocked (applyLayout sets data-count) */
+  #grid{flex:1;display:grid;gap:8px;min-height:0;grid-template-columns:1fr;grid-template-rows:1fr}
+  #grid[data-count="1"]{grid-template-columns:1fr;grid-template-rows:1fr}
+  #grid[data-count="2"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+  #grid[data-count="3"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr}
+  #grid[data-count="4"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
   .panel{position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
     background:linear-gradient(180deg,var(--panel2),var(--panel));min-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5)}
   .panel > .head{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--edge);
@@ -95,10 +99,12 @@
   .panel > .head .spacer{flex:1}
   .panel > .head .tag{color:var(--cyan)}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-  #globePanel{grid-area:globe}
-  #agentsPanel{grid-area:agents;display:flex;flex-direction:column}
-  #chartsPanel{grid-area:charts}
-  #terminalPanel{grid-area:terminal}
+  #agentsPanel{display:flex;flex-direction:column}
+  #terminalPanel{display:flex;flex-direction:column}
+  /* terminal app = manual mash surface (top) + build/CI/git log (bottom) */
+  #terminalBody{position:absolute;inset:26px 0 0 0;display:flex;flex-direction:column;min-height:0}
+  #manualWrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+  #manualWrap .agent{flex:1;border:none;border-radius:0;background:transparent}
   #globeWrap{position:absolute;inset:0;top:26px}
   #globe{width:100%;height:100%;display:block}
   .globe-readout{position:absolute;left:10px;bottom:8px;font-size:10px;color:var(--dim);pointer-events:none}
@@ -129,7 +135,7 @@
   .chart canvas{width:100%;height:100%;display:block}
 
   /* terminal */
-  #termBody{position:absolute;inset:26px 0 0 0;overflow:hidden;padding:6px 9px;font-size:11px}
+  #termBody{flex:0 0 38%;min-height:0;overflow:hidden;padding:6px 9px;font-size:11px;border-top:1px solid var(--edge)}
   #termBody .l{white-space:pre-wrap;word-break:break-word;opacity:.95}
   .t-ok{color:var(--green)}.t-info{color:var(--cyan)}.t-warn{color:var(--amber)}.t-git{color:var(--magenta)}.t-dim{color:var(--dim)}.t-bad{color:var(--red)}
 
@@ -273,18 +279,21 @@
   body.intro #statusbar > *{display:none}
   body.intro.reveal-credits #statusbar .stat.credits{display:flex;animation:reveal .5s ease-out}
   body.intro.reveal-shop #statusbar #shopBtn{display:inline-flex;animation:reveal .5s ease-out}
-  body.intro #hud,body.intro #globePanel,body.intro #chartsPanel,body.intro #terminalPanel{display:none}
+  body.intro #hud{display:none}
   body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
   body.intro .agent .ah .sTag,body.intro .agent .ah .diff{display:none}
-  body.intro #grid{display:flex;flex-direction:column;flex:1 1 auto;gap:0}
-  body.intro #agentsPanel{flex:1 1 auto;height:auto;border:none;border-radius:0}
-  body.intro #agentsPanel > .head{display:none}
-  body.intro #agentsPanel .code{font-size:15px;padding:16px 22px}
-  body.intro #agentsPanel .prog{height:10px}
-  body.intro .agent{border:none;border-radius:0;background:transparent}
-  body.intro .agent .ah{padding:14px 22px 6px;border-bottom:none}
-  body.intro .agent .ah .nm{font-size:14px}
-  body.intro .agent .ah .tk{font-size:13px;color:var(--dim)}
+  /* day-1 immersive terminal: the tiling engine already shows only the (unlocked) terminal app;
+     here we strip its chrome + build log and enlarge the mash surface for the full-screen hackertyper feel */
+  body.intro #terminalPanel{border:none;border-radius:0}
+  body.intro #terminalPanel > .head{display:none}
+  body.intro #terminalBody{inset:0}
+  body.intro #termBody{display:none}
+  body.intro #manualWrap .code{font-size:15px;padding:16px 22px}
+  body.intro #manualWrap .prog{height:10px}
+  body.intro #manualWrap .agent{border:none;border-radius:0;background:transparent}
+  body.intro #manualWrap .agent .ah{padding:14px 22px 6px;border-bottom:none}
+  body.intro #manualWrap .agent .ah .nm{font-size:14px}
+  body.intro #manualWrap .agent .ah .tk{font-size:13px;color:var(--dim)}
   @keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
   /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
@@ -304,9 +313,13 @@
     #grid{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
     .panel{min-height:0}
     #globePanel{height:64vw;min-height:220px;max-height:340px}
-    #agentsPanel{height:460px}
+    #agentsPanel{height:420px}
     #chartsPanel{height:300px}
-    #terminalPanel{height:240px}
+    #terminalPanel{height:420px}
+    /* day-1 on mobile: terminal is the only unlocked tile → let it fill the screen for the immersive mash */
+    body.intro #cockpit{min-height:100vh}
+    body.intro #grid{flex:1 1 auto}
+    body.intro #terminalPanel{height:auto;flex:1 1 auto;min-height:82vh}
 
     #hud{flex-direction:column;gap:8px}
     .hud-block{min-width:0;width:100%}
@@ -442,19 +455,19 @@
   </footer>
 
   <div id="grid">
-    <section class="panel" id="globePanel">
+    <section class="panel" id="globePanel" data-app="deploy_mesh">
       <div class="head"><span class="dot"></span> GLOBAL DEPLOY MESH <span class="spacer"></span><span class="tag" id="globeRegion">us-east-1 ⇄ ap-south-1</span></div>
       <div id="globeWrap"><canvas id="globe"></canvas></div>
       <div class="globe-readout">stage <b id="g_stage">1</b>/<span id="g_stages">28</span> · in-flight <b id="g_arcs">0</b> · streak <b id="g_streak">0</b></div>
       <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “🌐 Go Global” in the shop to bring the deploy mesh online.</div></div>
     </section>
 
-    <section class="panel" id="agentsPanel">
-      <div class="head"><span class="dot"></span> AUTONOMOUS AGENT SWARM <span class="spacer"></span><span class="tag" id="agentCount">4 workers on task</span></div>
+    <section class="panel" id="agentsPanel" data-app="agents">
+      <div class="head"><span class="dot"></span> AUTONOMOUS AGENT SWARM <span class="spacer"></span><span class="tag" id="agentCount">0 agents on task</span></div>
       <div id="agentList"></div>
     </section>
 
-    <section class="panel" id="chartsPanel">
+    <section class="panel" id="chartsPanel" data-app="telemetry">
       <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag">realtime</span></div>
       <div id="chartsBody">
         <div class="chart"><span class="ct">xp / sec</span><span class="cv" id="cv_line" style="color:var(--cyan)">0</span><canvas id="cLine"></canvas></div>
@@ -465,9 +478,12 @@
       <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “📊 Install Telemetry” in the shop to reveal live charts.</div></div>
     </section>
 
-    <section class="panel" id="terminalPanel">
-      <div class="head"><span class="dot"></span> BUILD · CI · GIT <span class="spacer"></span><span class="tag">~/career/main</span></div>
-      <div id="termBody"></div>
+    <section class="panel" id="terminalPanel" data-app="terminal">
+      <div class="head"><span class="dot"></span> TERMINAL <span class="spacer"></span><span class="tag">~/career/main</span></div>
+      <div id="terminalBody">
+        <div id="manualWrap"></div>
+        <div id="termBody"></div>
+      </div>
     </section>
   </div>
 </div>
@@ -754,8 +770,8 @@
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
-    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", cat:"Getting Started", fx:()=>"reveal the live charts panel"},
-    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
+    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
     {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
     {id:"coffee",  kind:"repeat",emoji:"☕",name:"Espresso Machine",base:90, growth:1.22, cat:"Hardware", fx:l=>"+"+(l*15)+" max sanity, +regen"},
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
@@ -1002,7 +1018,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(u.kind==="unlock"){
       P.up[u.id]=1; P.unlocked[u.unlocks]=true; applyUnlocks();
       toast("🔓 Unlocked — "+u.name, u.fx(), "#39ff14"); termLine("t-git","🔓","unlocked: "+u.name);
-      flyMeme((u.unlocks==="globe"?"GLOBAL DEPLOY":"TELEMETRY")+" ONLINE");
+      flyMeme((u.meme||"SYSTEM")+" ONLINE");
     } else if(u.kind==="skill"){
       const next=STATS[P.unlockedStats.length];
       if(next){ P.unlockedStats.push(next.id); P.up.skill++; applyUnlocks(); recompute();
@@ -1016,7 +1032,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       termLine("t-git","🖥","upgraded OS → "+t.name);
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
-      if(u.id==="hire"){ recompute(); buildWorkers(); } else recompute();
+      if(u.id==="hire"){ recompute(); buildWorkers(); applyLayout(); } else recompute();   // first hire = agents app tiles in
       const label=u.kind==="tier"?(u.tiers[lvl].name||u.name):(u.name+" Lv"+lvl);
       termLine("t-git","$","bought "+label+" — "+money(c));
       toast("🛠 "+u.emoji+" "+u.name, u.kind==="tier"?("→ "+(u.tiers[lvl].name||"")):("now level "+lvl), "#ffb000");
@@ -1293,7 +1309,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed, loot:P.loot,
       burnouts:P.burnouts, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
     P=Object.assign(defaults(),keep);
-    recompute(); buildWorkers(); WK.forEach(w=>assignTask(w));
+    recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
     HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme(); updateSPui();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
     toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% XP & credits","#39ff14");
@@ -1415,11 +1431,31 @@ notify("#general", "10x-ing that shit 🔥");`,
     HUD.title.textContent=titleFor();
     $("#g_stages").textContent=STAGES.length;
   }
+  // window-manager Phase 1 — app registry. Each app wraps an existing panel; `unlocked()` gates
+  // whether it tiles in. terminal is always on (day-1); agents reuses the Hire-an-Agent tier
+  // (MULT.workers=1+hire, so hire>=1 means an auto-swarm exists); telemetry/globe reuse their buys.
+  const APPS=[
+    {id:"terminal",    panelId:"terminalPanel", order:1, unlocked:()=>true},
+    {id:"agents",      panelId:"agentsPanel",   order:2, unlocked:()=>P.up.hire>=1},
+    {id:"deploy_mesh", panelId:"globePanel",    order:3, unlocked:()=>!!P.unlocked.globe},
+    {id:"telemetry",   panelId:"chartsPanel",   order:4, unlocked:()=>!!P.unlocked.telemetry},
+  ];
+  function applyLayout(){   // tmux-style tiling: show only unlocked app panels, reflow #grid by count
+    const grid=$("#grid"); if(!grid) return;
+    let n=0;
+    for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
+      const on=a.unlocked();
+      el.style.display=on?"":"none"; el.style.order=a.order;
+      if(on) n++;
+    }
+    grid.dataset.count=String(clamp(n,1,4));
+  }
   function applyUnlocks(){
     const gp=$("#globePanel"), cp=$("#chartsPanel");
     if(gp) gp.classList.toggle("locked",!P.unlocked.globe);
     if(cp) cp.classList.toggle("locked",!P.unlocked.telemetry);
     if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
+    applyLayout();
   }
   function applyReveal(){   // intro funnel: full-screen terminal → credits → shop button
     const b=document.body.classList;
@@ -1779,8 +1815,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ workers ============ */
   const WK=[];
   function buildWorkers(){
-    const list=$("#agentList"); list.innerHTML=""; WK.length=0;
-    const n=MULT.workers; list.style.gridTemplateRows=`repeat(${n},1fr)`;
+    // slot 0 = "you" (manual mash surface) → lives in the terminal app; slots 1+ = auto agents → agents app
+    const autoList=$("#agentList"), manualWrap=$("#manualWrap");
+    autoList.innerHTML=""; if(manualWrap) manualWrap.innerHTML=""; WK.length=0;
+    const n=MULT.workers, nAuto=n-1;
+    autoList.style.gridTemplateRows=`repeat(${Math.max(1,nAuto)},1fr)`;
     const autos=AGENTS.slice().sort(()=>Math.random()-.5);
     for(let i=0;i<n;i++){
       const manual=(i===0);
@@ -1789,7 +1828,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
         <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
         <div class="code"></div><div class="prog"><i></i></div>`;
-      list.appendChild(el);
+      (manual&&manualWrap?manualWrap:autoList).appendChild(el);
       const w={a,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
         dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
         task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
@@ -1911,7 +1950,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     updateSPui();
 
     UI.g_stage.textContent=P.stage+1; UI.g_streak.textContent=P.streak; UI.g_arcs.textContent=globe?globe.arcs.length:0;
-    UI.agentCount.textContent=WK.filter(w=>w.task).length+"/"+WK.length+" agents on task";
+    UI.agentCount.textContent=WK.filter(w=>!w.manual&&w.task).length+"/"+Math.max(0,WK.length-1)+" agents on task";
 
     if(shopOpen){ shopRefresh+=dt; if(shopRefresh>=0.2){ shopRefresh=0; renderShop(); } }
     else if(UI.shopBtn) UI.shopBtn.classList.toggle("pip",anyAffordable());
