@@ -314,6 +314,16 @@ under "Window manager mechanics" / "Start Menu" / "OS chrome" describes this **p
       5 windows; stats still update live; 0 JS exceptions). Docs updated.
 
 ### Phase 4 — Split the shop into apps
+**Sequencing note (2026-07-06):** this is the largest, most **all-or-nothing** phase — the shop is a
+slide-out drawer (`#shop`, tabs `#paneUpgrades` + `#paneToolbox`), and a partial conversion (e.g.
+Store-only) leaves a half-drawer that can't ship to `main` ("nothing half-finished on main"). So do
+the whole set on a branch and merge only once the drawer is fully retired. Also lands the four
+remaining deferred purchase gates (inventory/equipment/ide/missions — status was un-gated in Phase 3;
+each needs its own `P.unlocked` key + an absence-grandfather migration). Relevant functions:
+`buildShop`/`renderShop` (upgrades), `buildToolbox`/`renderToolbox` + `renderStashList`/`renderIdeCard`/
+`renderMaterials`/`renderMissionBoard` (the four toolbox sections), `setShopTab`. Decide: do the
+section apps live in the `#grid` app system (tiled/windowed like the rest — preferred, consistent) and
+the `🛒`/`🧰` drawer + `#shopBtn` go away, replaced by opening those apps from the Start Menu / buying them?
 - [ ] Store window (current Upgrades tab content)
 - [ ] Equipment window (Equipped Hardware section, incl. the set-bonus header)
 - [ ] Inventory window (Toolbox stash + Roll-for-Hardware)
