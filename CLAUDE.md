@@ -53,10 +53,10 @@ rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legenda
 further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
 phase of that plan.
 
-Next up: `docs/window-manager.md`, a phased plan (still in planning as of this writing — check its
-`## Status` line) to rework the UI into an OS-like progression: a day-1 minimal terminal → tmux-style
+In progress: `docs/window-manager.md`, a phased plan (Phases 1–2 shipped, Phase 3 next — check its
+`## Status` line) reworking the UI into an OS-like progression: a day-1 minimal terminal → tmux-style
 tiled panes as apps are purchased one by one → draggable/minimizable windows + Start Menu unlocked by
-an earned "Windows 3.1" upgrade. It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
+the earned "Windows 3.1" OS tier (`P.up.os >= 1`). It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
 reveal polish) — see its "Backlog absorbed" section.
 
 ## Architecture inside `index.html`

@@ -298,6 +298,17 @@ lock in that look forever: **click the OS name** (top-left, next to the logo) an
 menu of every look you've *ever* unlocked and switch back to it. Owning tier 4 doesn't cost you
 the ability to display tier 1's look.
 
+### Windows (the desktop)
+
+Upgrade OS isn't just a reskin. On **MS-DOS** (the first tier), your apps are **tiled** — they split
+the screen automatically as you unlock them (tmux-style). The moment you buy **Windows 3.1** (or own
+any later tier), the desktop **unbolts into real windows**: drag any app by its title bar, minimize
+or close it (both tuck it into the **⊞ Start** menu in the top-left), and click a window to bring it
+to front. **⊞ Start** reopens anything you've closed and has a **Reset Layout** option to snap
+everything back to defaults. Your window positions are saved. This is desktop-only — on phones the
+layout stays a simple stack whatever OS you're on. Note that **prestige resets your OS to DOS**, so
+cashing out drops you back to the tiled layout until you buy your way back up to Windows 3.1.
+
 ## Prestige (IPO / Equity)
 
 Once you're **level 10+** and have earned enough lifetime credits, the shop's top card lets you
