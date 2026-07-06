@@ -21,11 +21,12 @@ gets rebuilt around windows in this plan, so patching the old mechanism first wo
 tiling as apps unlock; manual mash split from the auto-agent swarm. Phase 2 (2026-07-06): owning the
 Windows 3.1 OS tier (`P.up.os >= 1`) flips desktop tiling into a floating window manager — draggable/
 minimizable/closable windows, Start Menu + Start button, Reset Layout, click-to-focus z-order. Phase 3
-(verified on `phase3-status-app`, 2026-07-06): the detail stats + level/stage HUD moved out of the
-always-on chrome into a **Status app** (slimming the top strip to a real taskbar); the dead lockmask
-overlay retired. **Next: Phase 4 (split the shop drawer into Store/Equipment/Inventory/IDE/Missions
-apps — this is where the four remaining deferred app-unlock purchases land).** Still deferred: the
-theme-CSS DRY pass (Phase 1 checkbox). Major design forks all decided.
+(2026-07-06): detail stats + level/stage HUD moved out of the always-on chrome into a **Status app**
+(slimming the top strip to a real taskbar); dead lockmask retired. Phase 4 was split: **4a — the Store
+app** (verified on `phase4-shop-apps`, 2026-07-06): the Upgrades tab became a `#storePanel` app that
+tiles in at 10 credits, and the drawer is now Toolbox-only. **Next: Phase 4b (the four Toolbox
+tool-apps — Equipment/Inventory/IDE/Missions — + their unlock purchases + retire the drawer; needs
+the tiling-mode launcher decision).** Still deferred: the theme-CSS DRY pass. Major forks decided.
 
 Treat this doc as a living, resumable record (as with `crafting-update.md`'s 7 phases) — checkboxes
 are the source of truth for where to pick back up, not a spec frozen at t=0.
@@ -314,23 +315,29 @@ under "Window manager mechanics" / "Start Menu" / "OS chrome" describes this **p
       5 windows; stats still update live; 0 JS exceptions). Docs updated.
 
 ### Phase 4 — Split the shop into apps
-**Sequencing note (2026-07-06):** this is the largest, most **all-or-nothing** phase — the shop is a
-slide-out drawer (`#shop`, tabs `#paneUpgrades` + `#paneToolbox`), and a partial conversion (e.g.
-Store-only) leaves a half-drawer that can't ship to `main` ("nothing half-finished on main"). So do
-the whole set on a branch and merge only once the drawer is fully retired. Also lands the four
-remaining deferred purchase gates (inventory/equipment/ide/missions — status was un-gated in Phase 3;
-each needs its own `P.unlocked` key + an absence-grandfather migration). Relevant functions:
-`buildShop`/`renderShop` (upgrades), `buildToolbox`/`renderToolbox` + `renderStashList`/`renderIdeCard`/
-`renderMaterials`/`renderMissionBoard` (the four toolbox sections), `setShopTab`. Decide: do the
-section apps live in the `#grid` app system (tiled/windowed like the rest — preferred, consistent) and
-the `🛒`/`🧰` drawer + `#shopBtn` go away, replaced by opening those apps from the Start Menu / buying them?
-- [ ] Store window (current Upgrades tab content)
-- [ ] Equipment window (Equipped Hardware section, incl. the set-bonus header)
-- [ ] Inventory window (Toolbox stash + Roll-for-Hardware)
-- [ ] IDE window (crafting bench + materials)
-- [ ] Missions window (mission board)
-- [ ] Retire the old `#shop` two-tab aside once every piece has a new home
-- [ ] Verify end-to-end; update docs; commit + push
+**Reframed into two shippable chunks (2026-07-06).** The shop was a two-tab drawer (`#paneUpgrades`
+Upgrades + `#paneToolbox` Toolbox). Converting *everything* at once is all-or-nothing, but the
+**Upgrades tab (Store) extracts cleanly on its own** — the Store behaves like a default-open dashboard
+app (used constantly, needs to be reachable during the intro to make the first purchase), so it
+doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped alone; 4b does the rest.
+
+**4a — Store app — DONE + verified on `phase4-shop-apps` (2026-07-06):**
+- [x] `#paneUpgrades` → a `#storePanel` app (upgrades + IPO/prestige + achievements), built by
+      `buildShop` into `#storeBody`; `renderShop` split into `renderStore` (store, timer-refreshed
+      whenever on screen) + the drawer path. Registered in APPS/DEFAULT_WINDOWS; gated on `P.reveal.shop`
+      (tiles in at 10 credits — the immersive day-1 terminal now ends there, `:not(.reveal-shop)`).
+- [x] Drawer slimmed to Toolbox-only (`🧰 TOOLBOX`), tabs/`setShopTab` removed; `#shopBtn` → opens
+      the Toolbox drawer (`🧰 toolbox`). Store is a window in float mode (Start-Menu reopenable).
+- [x] Verified fresh→reveal→float + full Phase 1–3 regression; 0 exceptions.
+
+**4b — the four Toolbox tool-apps (remaining):**
+- [ ] Equipment (Equipped Hardware + set-bonus header), Inventory (stash + Roll-for-Hardware), IDE
+      (crafting bench + materials), Missions (board) → apps, from `buildToolbox`/`renderToolbox` etc.
+- [ ] Four deferred purchase gates (inventory/equipment/ide/missions — each a `P.unlocked` key +
+      absence-grandfather migration; buying auto-opens the app). **Design to resolve:** on-demand tool
+      apps default *closed*; tiling mode has no Start Menu, so decide the launcher — likely make the
+      Start Menu available in **both** modes (drop the float-only limit), tool tiles toggle via it.
+- [ ] Retire the `#shop` drawer entirely (move Reset/wipe into the Store or Start Menu); verify; ship.
 
 ### Phase 5 — Onboarding integration & economy tuning
 - [ ] Nail the purchase-one-by-one funnel end-to-end (day-1 terminal → Store → each app's unlock);
