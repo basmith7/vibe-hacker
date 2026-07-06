@@ -53,11 +53,13 @@ rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legenda
 further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
 phase of that plan.
 
-In progress: `docs/window-manager.md`, a phased plan (Phases 1–3 shipped, Phase 4 next — check its
+In progress: `docs/window-manager.md`, a phased plan (Phases 1–4 shipped, Phase 5 next — check its
 `## Status` line) reworking the UI into an OS-like progression: a day-1 minimal terminal → tmux-style
 tiled panes as apps are purchased one by one → draggable/minimizable windows + Start Menu unlocked by
-the earned "Windows 3.1" OS tier (`P.up.os >= 1`). Phase 3 also moved the stats/HUD into a Status app
-and slimmed the top strip into a taskbar. It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
+the earned "Windows 3.1" OS tier (`P.up.os >= 1`). Phase 3 moved the stats/HUD into a Status app and
+slimmed the top strip into a taskbar; Phase 4 turned the entire shop into apps (Store + Equipment/
+Inventory/IDE/Missions, each purchase-gated) and **retired the slide-out shop drawer entirely** — so
+the shop `#shop` aside and `buildShop`/`buildToolbox` now render into `#grid` app panels, not a drawer. It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
 reveal polish) — see its "Backlog absorbed" section.
 
 ## Architecture inside `index.html`

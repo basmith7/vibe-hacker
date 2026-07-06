@@ -93,6 +93,8 @@
   #grid[data-count="4"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
   #grid[data-count="5"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
   #grid[data-count="6"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
+  #grid[data-count="7"],#grid[data-count="8"]{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr}
+  #grid[data-count="9"],#grid[data-count="10"]{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr)}
   .panel{position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
     background:linear-gradient(180deg,var(--panel2),var(--panel));min-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5)}
   .panel > .head{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--edge);
@@ -138,7 +140,10 @@
   /* status app — detail stats + level/stage HUD, relocated out of the always-on chrome */
   .tbspace{flex:1}
   #statusBody{position:absolute;inset:26px 0 0 0;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
-  #storeBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+  #storeBody{position:absolute;inset:26px 0 42px 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+  #storeFooter{position:absolute;left:0;right:0;bottom:0;height:42px;border-top:1px solid var(--edge);padding:7px 10px;background:rgba(0,0,0,.2)}
+  /* the four Toolbox tool-apps share a scrollable card body */
+  #equipBody,#inventoryBody,#ideBody,#missionsBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
   #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
   #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
@@ -348,6 +353,8 @@
     #statusPanel{height:330px}
     #chartsPanel{height:300px}
     #terminalPanel{height:420px}
+    #storePanel{height:460px}
+    #inventoryPanel,#idePanel,#missionsPanel,#equipPanel{height:400px}
     #statusBody{overflow:auto}
     /* day-1 on mobile: terminal is the only unlocked tile → let it fill the screen for the immersive mash */
     body.intro #cockpit{min-height:100vh}
@@ -465,7 +472,6 @@
     <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <span class="tbspace"></span>
-    <button id="shopBtn" title="toolbox — gear, crafting & missions (U)">🧰 toolbox</button>
   </header>
 
   <div id="grid">
@@ -529,6 +535,24 @@
     <section class="panel" id="storePanel" data-app="store">
       <div class="head"><span class="dot"></span> STORE <span class="spacer"></span><span class="tag" id="storeBal">$0</span></div>
       <div id="storeBody"></div>
+      <div id="storeFooter"><button id="resetBtn" title="wipe your save (starts over from Day 1)">⟲ sudo rm -r /</button></div>
+    </section>
+
+    <section class="panel" id="equipPanel" data-app="equipment">
+      <div class="head"><span class="dot"></span> EQUIPMENT <span class="spacer"></span><span class="tag">equipped hardware</span></div>
+      <div id="equipBody"></div>
+    </section>
+    <section class="panel" id="inventoryPanel" data-app="inventory">
+      <div class="head"><span class="dot"></span> INVENTORY <span class="spacer"></span><span class="tag">roll &amp; stash</span></div>
+      <div id="inventoryBody"></div>
+    </section>
+    <section class="panel" id="idePanel" data-app="ide">
+      <div class="head"><span class="dot"></span> THE IDE <span class="spacer"></span><span class="tag">crafting bench</span></div>
+      <div id="ideBody"></div>
+    </section>
+    <section class="panel" id="missionsPanel" data-app="missions">
+      <div class="head"><span class="dot"></span> MISSIONS <span class="spacer"></span><span class="tag">bounty board</span></div>
+      <div id="missionsBody"></div>
     </section>
   </div>
 </div>
@@ -538,18 +562,6 @@
 <div id="memes"></div>
 <div id="startMenu"></div>
 
-<div id="shopScrim"></div>
-<aside id="shop">
-  <div id="shopHead">
-    <span class="t" id="shopTitle">🧰 TOOLBOX</span>
-    <span class="bal" id="shopBal">$0</span>
-    <span class="x" id="shopClose">✕</span>
-  </div>
-  <div id="shopBody">
-    <div id="paneToolbox"></div>
-  </div>
-  <div id="shopFooter"><button id="resetBtn" title="wipe your save">⟲ sudo rm -r /</button></div>
-</aside>
 
 <div id="hint">
   🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd> boss key
@@ -814,7 +826,11 @@
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
     {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
+    {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Toolbox",     cost:500,  unlocks:"inventory", meme:"TOOLBOX",      cat:"Getting Started", fx:()=>"reveal the Inventory — roll & stash hardware"},
+    {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",   cost:700,  unlocks:"equipment", meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipped Hardware — gear up your rig"},
+    {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",   cost:1000, unlocks:"ide",       meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch your gear"},
     {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"u_missions",kind:"unlock",emoji:"📋",name:"Mission Board",  cost:1800, unlocks:"missions",  meme:"MISSIONS",     cat:"Getting Started", fx:()=>"reveal the Mission Board — bounties for rewards"},
     {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
     {id:"coffee",  kind:"repeat",emoji:"☕",name:"Espresso Machine",base:90, growth:1.22, cat:"Hardware", fx:l=>"+"+(l*15)+" max sanity, +regen"},
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
@@ -891,12 +907,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
   const DEFAULT_WINDOWS={
-    terminal:    {x:16,   y:16,  w:540, h:340, z:1, open:true},
-    agents:      {x:568,  y:16,  w:430, h:340, z:2, open:true},
-    store:       {x:1006, y:16,  w:258, h:604, z:6, open:true},
-    status:      {x:16,   y:368, w:380, h:250, z:3, open:true},
-    deploy_mesh: {x:408,  y:368, w:300, h:250, z:4, open:true},
-    telemetry:   {x:720,  y:368, w:278, h:250, z:5, open:true},
+    terminal:    {x:16,   y:16,  w:520, h:326, z:1,  open:true},
+    agents:      {x:548,  y:16,  w:410, h:326, z:2,  open:true},
+    store:       {x:1006, y:16,  w:258, h:604, z:6,  open:true},
+    status:      {x:16,   y:354, w:330, h:264, z:3,  open:true},
+    deploy_mesh: {x:356,  y:354, w:290, h:264, z:4,  open:true},
+    telemetry:   {x:656,  y:354, w:340, h:264, z:5,  open:true},
+    inventory:   {x:60,   y:90,  w:430, h:430, z:7,  open:true},
+    equipment:   {x:500,  y:90,  w:380, h:300, z:8,  open:true},
+    ide:         {x:300,  y:150, w:440, h:440, z:9,  open:true},
+    missions:    {x:560,  y:200, w:430, h:340, z:10, open:true},
   };
   const cloneWindows=()=>JSON.parse(JSON.stringify(DEFAULT_WINDOWS));
   function defaults(){
@@ -905,14 +925,14 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,u_tele:0,u_globe:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,u_tele:0,u_globe:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       missions:[], sprintConfig:0, missionSeq:0,
       themeChoice:"dos",
-      unlocked:{telemetry:false,globe:false}, unlockedStats:["coding"],
+      unlocked:{telemetry:false,globe:false,inventory:false,equipment:false,ide:false,missions:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false},
       windows:cloneWindows(),
       achv:{},seenTips:{shop:false,sp:false}};
@@ -923,7 +943,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "materials","matPity","missions","sprintConfig","missionSeq",
     "themeChoice","unlocked","unlockedStats","intro","reveal","windows","achv","seenTips"];
-  function unlockAll(){ P.unlocked={telemetry:true,globe:true}; P.unlockedStats=STAT_IDS.slice(); }
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true,inventory:true,equipment:true,ide:true,missions:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -969,6 +989,10 @@ notify("#general", "10x-ing that shit 🔥");`,
         // migration: a save from before the progressive-unlock system had everything visible → keep it that way
         if(!("unlocked" in d) || !("unlockedStats" in d)) unlockAll();
         if(!P.unlocked) P.unlocked={telemetry:false,globe:false};
+        // migration: window-manager Phase 4b gated Inventory/Equipment/IDE/Missions behind purchases.
+        // Any save predating this feature lacks those keys → grandfather them ON so existing players
+        // keep the toolbox systems they already had; new saves get false from defaults() and buy in.
+        for(const k of ["inventory","equipment","ide","missions"]) if(!(k in P.unlocked)) P.unlocked[k]=true;
         if(!Array.isArray(P.unlockedStats)||!P.unlockedStats.length) P.unlockedStats=["coding"];
         // migration: saves from before the intro funnel skip it (they've already progressed)
         if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
@@ -1107,7 +1131,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
-  let shopBuilt=false,shopOpen=false,shopCards=[],catHeaderEls={};
+  let shopBuilt=false,shopCards=[],catHeaderEls={};
   let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
@@ -1141,13 +1165,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
   // unequipped candidates (filterable card list rather than a spatial grid — see the plan's
   // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
-  function buildToolbox(){
-    const body=$("#paneToolbox"); body.innerHTML=""; slotEls={}; rollEls={};
-    const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; body.appendChild(eh);
+  function buildToolbox(){   // builds the four Toolbox tool-apps: Equipment, The IDE, Missions, Inventory
+    const eqBody=$("#equipBody"), invBody=$("#inventoryBody"), ideBody=$("#ideBody"), misBody=$("#missionsBody");
+    if(!eqBody||!invBody||!ideBody||!misBody) return;
+    eqBody.innerHTML=invBody.innerHTML=ideBody.innerHTML=misBody.innerHTML=""; slotEls={}; rollEls={};
+    // Equipment app — equipped-hardware slots
+    const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; eqBody.appendChild(eh);
     for(const s of SLOTS){
       const card=document.createElement("div"); card.className="card slotCard";
       card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
-      body.appendChild(card);
+      eqBody.appendChild(card);
       const btn=card.querySelector(".buy");
       btn.addEventListener("click",e=>{ e.stopPropagation();
         const it=P.equip[s.id]; if(!it) return;
@@ -1157,8 +1184,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       });
       slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
     }
-    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Crafting Materials"; body.appendChild(mh);
-    const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; body.appendChild(matsWrap);
+    // The IDE app — crafting bench + materials
+    const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 Crafting Bench"; ideBody.appendChild(ih);
+    const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; ideBody.appendChild(ideCard);
+    const ideActions=document.createElement("div"); ideActions.id="ideActions"; ideActions.className="stashWrap"; ideBody.appendChild(ideActions);
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Crafting Materials"; ideBody.appendChild(mh);
+    const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; ideBody.appendChild(matsWrap);
     matEls={};
     for(const m of MATS){
       const card=document.createElement("div"); card.className="card matCard";
@@ -1167,38 +1198,37 @@ notify("#general", "10x-ing that shit 🔥");`,
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
-    const mbh=document.createElement("div"); mbh.className="shopCat"; mbh.id="missionCat"; body.appendChild(mbh);
-    const missionsWrap=document.createElement("div"); missionsWrap.id="missionList"; missionsWrap.className="stashWrap"; body.appendChild(missionsWrap);
+    // Missions app — bounty board
+    const mbh=document.createElement("div"); mbh.className="shopCat"; mbh.id="missionCat"; misBody.appendChild(mbh);
+    const missionsWrap=document.createElement("div"); missionsWrap.id="missionList"; missionsWrap.className="stashWrap"; misBody.appendChild(missionsWrap);
     const rerollCard=document.createElement("div"); rerollCard.className="card"; rerollCard.innerHTML=
       `<span class="em">🔄</span><div class="mid"><div class="nm">Reroll Board</div><div class="fx">Scrap every not-yet-complete mission for a fresh set of 3. Cost scales with their level — cheap early, pricier the more you've invested.</div></div>`+
       `<button class="buy" id="rerollBtn"></button>`;
-    body.appendChild(rerollCard);
+    misBody.appendChild(rerollCard);
     rerollCard.querySelector("#rerollBtn").addEventListener("click",e=>{e.stopPropagation();rerollBoard();});
-    const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 The IDE (crafting bench)"; body.appendChild(ih);
-    const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; body.appendChild(ideCard);
-    const ideActions=document.createElement("div"); ideActions.id="ideActions"; ideActions.className="stashWrap"; body.appendChild(ideActions);
-    const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; body.appendChild(rh);
+    // Inventory app — roll for hardware + stash
+    const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; invBody.appendChild(rh);
     for(const s of SLOTS){
       const card=document.createElement("div"); card.className="card";
       card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl}</div>`+
-        `<div class="fx">Gamble credits for a random ${s.lbl} — lands in the Toolbox, or equips right away if that slot is empty</div></div>`+
+        `<div class="fx">Gamble credits for a random ${s.lbl} — lands in the stash below, or equips right away if that slot is empty</div></div>`+
         `<div class="rollBtns"><button class="buy" data-n="1"></button><button class="buy" data-n="10"></button></div>`;
-      body.appendChild(card);
+      invBody.appendChild(card);
       const b1=card.querySelector('[data-n="1"]'), b10=card.querySelector('[data-n="10"]');
       b1.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,1);});
       b10.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,10);});
       rollEls[s.id]={btn1:b1,btn10:b10};
     }
-    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🧰 Toolbox stash"; body.appendChild(sh);
+    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🧰 Stash"; invBody.appendChild(sh);
     const filters=document.createElement("div"); filters.className="toolFilters";
     filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
       SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
       `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option>`+
       `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option><option value="legendary">Legendary</option></select>`;
-    body.appendChild(filters);
+    invBody.appendChild(filters);
     filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
     filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
-    const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; body.appendChild(stash);
+    const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; invBody.appendChild(stash);
     toolboxBuilt=true; renderToolbox();
   }
   function patchSummary(item){
@@ -1339,19 +1369,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
     renderAch();
   }
-  // full refresh (store + the Toolbox drawer) — used after any buy/craft/roll that can touch both
-  function renderShop(){
-    renderStore();
-    const bal=$("#shopBal"); if(bal) bal.textContent=money(P.credits)+"  ·  +"+money(MULT.passive)+"/s";
-    renderToolbox();
-  }
-  function toggleShop(force){   // opens the 🧰 Toolbox drawer (the Store is now an always-on app)
-    shopOpen=force!==undefined?force:!shopOpen;
-    if(shopOpen && !toolboxBuilt) buildToolbox();
-    $("#shop").classList.toggle("on",shopOpen);
-    $("#shopScrim").classList.toggle("on",shopOpen);
-    if(shopOpen){ renderShop(); closeThemeMenu(); }
-  }
+  // full refresh (store + the four Toolbox apps) — used after any buy/craft/roll that can touch both
+  function renderShop(){ renderStore(); renderToolbox(); }
   function allocate(id){ if(P.sp<=0) return; P.sp--; statUp(id,1); updateSPui(); save(); }
   function updateSPui(){
     if(UI.s_sp) UI.s_sp.textContent=P.sp;
@@ -1410,7 +1429,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const a of ACH){ if(!P.achv[a.id] && a.chk()){ P.achv[a.id]=1;
       toast("🏆 Achievement — "+a.name, a.em+" "+a.desc, "#ffb000");
       termLine("t-warn","🏆","achievement unlocked: "+a.name); } }
-    if(shopOpen) renderAch();
+    renderAch();
   }
   function renderAch(){
     let got=0; for(const a of ACH) if(P.achv[a.id]) got++;
@@ -1498,8 +1517,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
     {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!P.intro},
     {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.shop)},
-    {id:"deploy_mesh", panelId:"globePanel",    order:5, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
-    {id:"telemetry",   panelId:"chartsPanel",   order:6, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
+    {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
+    {id:"equipment",   panelId:"equipPanel",    order:6, emoji:"🔧", title:"Equipment",   unlocked:()=>!!P.unlocked.equipment},
+    {id:"ide",         panelId:"idePanel",      order:7, emoji:"🛠", title:"The IDE",     unlocked:()=>!!P.unlocked.ide},
+    {id:"missions",    panelId:"missionsPanel", order:8, emoji:"📋", title:"Missions",    unlocked:()=>!!P.unlocked.missions},
+    {id:"deploy_mesh", panelId:"globePanel",    order:9, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
+    {id:"telemetry",   panelId:"chartsPanel",   order:10,emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
   ];
   const APP=Object.fromEntries(APPS.map(a=>[a.id,a]));
   // window-manager Phase 2 — the floating WM unlocks at the Windows 3.1 OS tier (P.up.os>=1). Below
@@ -1534,7 +1557,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       }
     }
     if(float && topId){ const t=$("#"+APP[topId].panelId); if(t) t.classList.add("wfocus"); }
-    grid.dataset.count=float?"float":String(clamp(n,1,6));
+    grid.dataset.count=float?"float":String(clamp(n,1,10));
     if(float) renderStartMenu();
   }
   /* ---- floating-window interaction: drag, focus/z-order, minimize/close, Start Menu ---- */
@@ -2098,14 +2121,13 @@ notify("#general", "10x-ing that shit 🔥");`,
     UI.agentCount.textContent=WK.filter(w=>!w.manual&&w.task).length+"/"+Math.max(0,WK.length-1)+" agents on task";
 
     // Store is an always-on app → refresh its cards on the timer; the Toolbox drawer refreshes only when open
-    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); }
-    if(shopOpen){ shopRefresh+=dt; if(shopRefresh>=0.2){ shopRefresh=0; renderShop(); } }
-    if(UI.shopBtn) UI.shopBtn.classList.toggle("pip",!shopOpen && anyAffordable());
+    // Store + Toolbox apps are on-screen tiles/windows → refresh their cards on the timer
+    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); }
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
   function cacheUI(){   // cache per-frame DOM refs once (avoids ~13 querySelector calls per frame)
-    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","shopBtn","spStat","themeLabel","themeMenu"]) UI[id]=$("#"+id);
+    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","spStat","themeLabel","themeMenu"]) UI[id]=$("#"+id);
   }
 
   /* ============ canvas helpers ============ */
@@ -2264,27 +2286,20 @@ notify("#general", "10x-ing that shit 🔥");`,
   let hintFaded=false;
   function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
   addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ e.preventDefault(); if(themeMenuOpen){ closeThemeMenu(); return; } if(shopOpen){ toggleShop(false); return; } toggleBoss(); return; }
+    if(e.key==="Escape"){ e.preventDefault(); if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
     if(bossOn) return;
-    if(!P.intro){   // shop/theme shortcuts only apply once the intro terminal has graduated
-      if(e.key==="u"||e.key==="U"){ toggleShop(); fadeHint(); return; }
-      if(e.key==="t"||e.key==="T"){ cycleTheme(); fadeHint(); return; }
-    }
+    if(!P.intro && (e.key==="t"||e.key==="T")){ cycleTheme(); fadeHint(); return; }   // theme shortcut, once graduated
     bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn||shopOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
   function confirmReset(e){ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); }
   $("#resetBtn").addEventListener("click",confirmReset);
-  $("#shopBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(); fadeHint(); });
-  $("#shopClose").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
-  $("#shopScrim").addEventListener("click",e=>{ e.stopPropagation(); toggleShop(false); });
-  $("#shop").addEventListener("click",e=>{ e.stopPropagation(); });   // don't grind while shopping
   $("#themeLabel").addEventListener("click",e=>{ e.stopPropagation(); toggleThemeMenu(); fadeHint(); });
   $("#themeMenu").addEventListener("click",e=>{ e.stopPropagation(); });
   $("#startBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleStart(); fadeHint(); });
@@ -2311,7 +2326,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
-  buildHUD(); buildWorkers(); buildShop(); initGlobe(); initMatrix();
+  buildHUD(); buildWorkers(); buildShop(); buildToolbox(); initGlobe(); initMatrix();
   setupWindowChrome();
   applyTheme();
   applyUnlocks();
