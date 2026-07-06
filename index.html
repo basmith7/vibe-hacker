@@ -91,6 +91,8 @@
   #grid[data-count="2"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
   #grid[data-count="3"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr}
   #grid[data-count="4"]{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+  #grid[data-count="5"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
+  #grid[data-count="6"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
   .panel{position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
     background:linear-gradient(180deg,var(--panel2),var(--panel));min-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5)}
   .panel > .head{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--edge);
@@ -133,6 +135,13 @@
   #startMenu .smi.locked:hover{background:none}
   #startMenu .smi .sub{margin-left:auto;font-size:9px;color:var(--dim)}
   #startMenu .smsep{height:1px;background:var(--edge);margin:5px 2px}
+  /* status app — detail stats + level/stage HUD, relocated out of the always-on chrome */
+  .tbspace{flex:1}
+  #statusBody{position:absolute;inset:26px 0 0 0;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
+  #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
+  #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
+  #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
+  #statusPanel #hud{border:none;box-shadow:none;background:none;padding:0;flex-wrap:wrap}
   #globeWrap{position:absolute;inset:0;top:26px}
   #globe{width:100%;height:100%;display:block}
   .globe-readout{position:absolute;left:10px;bottom:8px;font-size:10px;color:var(--dim);pointer-events:none}
@@ -293,12 +302,6 @@
   .ach .fx{font-size:10px;color:var(--dim);line-height:1.25}
   .ach .chk{font-size:14px}
   /* locked panels + manual worker */
-  .lockmask{position:absolute;inset:26px 0 0 0;z-index:6;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-    background:rgba(5,7,13,.8);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);text-align:center;padding:14px}
-  .panel.locked .lockmask{display:flex}
-  .lockmask .lk{font-size:16px;letter-spacing:2px;color:var(--dim)}
-  .lockmask .lk b{color:var(--amber)}
-  .lockmask .hint{font-size:11px;color:var(--dim);max-width:82%;line-height:1.4}
   .agent.manual{border-color:rgba(0,229,255,.4);box-shadow:0 0 14px rgba(0,229,255,.12) inset}
   .agent.manual .nm{color:#eafff0!important}
   /* intro funnel: full-screen manual terminal; chrome revealed step by step */
@@ -342,8 +345,10 @@
     .panel{min-height:0}
     #globePanel{height:64vw;min-height:220px;max-height:340px}
     #agentsPanel{height:420px}
+    #statusPanel{height:330px}
     #chartsPanel{height:300px}
     #terminalPanel{height:420px}
+    #statusBody{overflow:auto}
     /* day-1 on mobile: terminal is the only unlocked tile → let it fill the screen for the immersive mash */
     body.intro #cockpit{min-height:100vh}
     body.intro #grid{flex:1 1 auto}
@@ -459,36 +464,43 @@
     </div>
     <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
-    <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
-    <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
-    <div class="stat a"><span class="k">streak 🔥</span><span class="v" id="s_streak">0</span></div>
-    <div class="stat m"><span class="k">loot 🎁</span><span class="v" id="s_loot">0</span></div>
-    <div class="stat"><span class="k">uptime</span><span class="v" id="s_up">00:00:00</span></div>
-    <div class="stat grow">
-      <span class="k">❤ sanity — <span id="s_hp">100</span>%</span>
-      <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
-    </div>
+    <span class="tbspace"></span>
     <button id="shopBtn" title="upgrades (U)">🛒 upgrades</button>
   </header>
 
-  <footer id="hud">
-    <div class="hud-block lvl">
-      <div class="hl"><span class="lv" id="hud_lv">LVL 1</span><span class="title" id="hud_title">Script Kiddie</span><span class="pct" id="hud_xppct">0%</span></div>
-      <div class="hbar xp"><i id="hud_xp"></i></div>
-    </div>
-    <div class="hud-block stg">
-      <div class="hl"><span class="lbl">📅 Stage</span><span class="stgname" id="hud_stage">Day 1: The Onboarding</span><span class="pct" id="hud_plotpct">0%</span></div>
-      <div class="hbar plot"><i id="hud_plot"></i></div>
-    </div>
-    <div class="hud-block stats" id="statChips"></div>
-  </footer>
-
   <div id="grid">
+    <section class="panel" id="statusPanel" data-app="status">
+      <div class="head"><span class="dot"></span> STATUS <span class="spacer"></span><span class="tag">character sheet</span></div>
+      <div id="statusBody">
+        <div class="statRow">
+          <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
+          <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
+          <div class="stat a"><span class="k">streak 🔥</span><span class="v" id="s_streak">0</span></div>
+          <div class="stat m"><span class="k">loot 🎁</span><span class="v" id="s_loot">0</span></div>
+          <div class="stat"><span class="k">uptime</span><span class="v" id="s_up">00:00:00</span></div>
+          <div class="stat grow">
+            <span class="k">❤ sanity — <span id="s_hp">100</span>%</span>
+            <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
+          </div>
+        </div>
+        <footer id="hud">
+          <div class="hud-block lvl">
+            <div class="hl"><span class="lv" id="hud_lv">LVL 1</span><span class="title" id="hud_title">Script Kiddie</span><span class="pct" id="hud_xppct">0%</span></div>
+            <div class="hbar xp"><i id="hud_xp"></i></div>
+          </div>
+          <div class="hud-block stg">
+            <div class="hl"><span class="lbl">📅 Stage</span><span class="stgname" id="hud_stage">Day 1: The Onboarding</span><span class="pct" id="hud_plotpct">0%</span></div>
+            <div class="hbar plot"><i id="hud_plot"></i></div>
+          </div>
+          <div class="hud-block stats" id="statChips"></div>
+        </footer>
+      </div>
+    </section>
+
     <section class="panel" id="globePanel" data-app="deploy_mesh">
       <div class="head"><span class="dot"></span> GLOBAL DEPLOY MESH <span class="spacer"></span><span class="tag" id="globeRegion">us-east-1 ⇄ ap-south-1</span></div>
       <div id="globeWrap"><canvas id="globe"></canvas></div>
       <div class="globe-readout">stage <b id="g_stage">1</b>/<span id="g_stages">28</span> · in-flight <b id="g_arcs">0</b> · streak <b id="g_streak">0</b></div>
-      <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “🌐 Go Global” in the shop to bring the deploy mesh online.</div></div>
     </section>
 
     <section class="panel" id="agentsPanel" data-app="agents">
@@ -504,7 +516,6 @@
         <div class="chart"><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
         <div class="chart"><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
       </div>
-      <div class="lockmask"><div class="lk">🔒 <b>LOCKED</b></div><div class="hint">Buy “📊 Install Telemetry” in the shop to reveal live charts.</div></div>
     </section>
 
     <section class="panel" id="terminalPanel" data-app="terminal">
@@ -878,10 +889,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
   const DEFAULT_WINDOWS={
-    terminal:    {x:16,  y:16,  w:600, h:388, z:1, open:true},
-    agents:      {x:632, y:16,  w:560, h:388, z:2, open:true},
-    deploy_mesh: {x:16,  y:420, w:600, h:250, z:3, open:true},
-    telemetry:   {x:632, y:420, w:560, h:250, z:4, open:true},
+    terminal:    {x:16,  y:16,  w:600, h:360, z:1, open:true},
+    agents:      {x:632, y:16,  w:520, h:360, z:2, open:true},
+    status:      {x:16,  y:392, w:380, h:250, z:3, open:true},
+    deploy_mesh: {x:410, y:392, w:410, h:250, z:4, open:true},
+    telemetry:   {x:836, y:392, w:420, h:250, z:5, open:true},
   };
   const cloneWindows=()=>JSON.parse(JSON.stringify(DEFAULT_WINDOWS));
   function defaults(){
@@ -1486,8 +1498,9 @@ notify("#general", "10x-ing that shit 🔥");`,
   const APPS=[
     {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
     {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
-    {id:"deploy_mesh", panelId:"globePanel",    order:3, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
-    {id:"telemetry",   panelId:"chartsPanel",   order:4, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
+    {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!P.intro},
+    {id:"deploy_mesh", panelId:"globePanel",    order:4, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
+    {id:"telemetry",   panelId:"chartsPanel",   order:5, emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
   ];
   const APP=Object.fromEntries(APPS.map(a=>[a.id,a]));
   // window-manager Phase 2 — the floating WM unlocks at the Windows 3.1 OS tier (P.up.os>=1). Below
@@ -1522,7 +1535,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       }
     }
     if(float && topId){ const t=$("#"+APP[topId].panelId); if(t) t.classList.add("wfocus"); }
-    grid.dataset.count=float?"float":String(clamp(n,1,4));
+    grid.dataset.count=float?"float":String(clamp(n,1,6));
     if(float) renderStartMenu();
   }
   /* ---- floating-window interaction: drag, focus/z-order, minimize/close, Start Menu ---- */
@@ -1585,9 +1598,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     const rb=m.querySelector('.smi[data-action="reset"]'); if(rb) rb.addEventListener("click",e=>{ e.stopPropagation(); resetLayout(); toggleStart(false); });
   }
   function applyUnlocks(){
-    const gp=$("#globePanel"), cp=$("#chartsPanel");
-    if(gp) gp.classList.toggle("locked",!P.unlocked.globe);
-    if(cp) cp.classList.toggle("locked",!P.unlocked.telemetry);
+    // stat chips visible per unlocked skill; app panels (incl. locked globe/telemetry) are shown/hidden
+    // wholesale by applyLayout — the old in-panel lockmask overlay is gone (a locked app just isn't tiled).
     if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
     applyLayout();
   }

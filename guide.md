@@ -24,11 +24,13 @@ buy your way into each app one at a time.
 
 - Fill the bar once (clear your first task) → the **$ credits** counter appears.
 - Reach **10 credits** → the **🛒 upgrades** button appears.
-- Your **first purchase** brings up the status bar and the level/stage HUD.
-- From there, apps **tile into the screen** as you unlock them: **👥 Hire an Agent** opens the
+- Your **first purchase** graduates you into the cockpit: a slim top strip (logo, OS name, credits,
+  upgrades) plus a **📟 Status** app — your character sheet (skill points, tasks, streak, loot,
+  uptime, sanity, level/stage bars, stat chips).
+- From there, more apps **tile into the screen** as you unlock them: **👥 Hire an Agent** opens the
   Agent Swarm, **📊 Install Telemetry** opens the charts, **🌐 Go Global** opens the Deploy Mesh.
   The more apps you own, the more the layout splits (tmux-style) to fit them beside the terminal.
-  (More systems become their own apps — and these tiles become draggable windows — in later updates.)
+  (Once you buy **Windows 3.1** in Upgrade OS, these tiles become draggable windows — see below.)
 
 If you've been playing a while, everything you'd already unlocked stays unlocked — the one-by-one
 funnel only gates a brand-new save.

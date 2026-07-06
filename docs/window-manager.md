@@ -17,13 +17,14 @@ gets rebuilt around windows in this plan, so patching the old mechanism first wo
 
 ## Status
 
-**Phases 1 and 2 shipped.** Phase 1 (live on `main`, 2026-07-05): day-1 single terminal → tmux-style
-tiling as apps unlock; manual mash surface split from the auto-agent swarm. Phase 2 (verified on
-`phase2-floating-wm`, 2026-07-06): owning the Windows 3.1 OS tier (`P.up.os >= 1`) flips desktop from
-tiling to a floating window manager — draggable/minimizable/closable windows, a Start Menu + Start
-button, Reset Layout, click-to-focus z-order. **Next: Phase 3 (convert Deploy Mesh/Telemetry fully +
-a Status app), then Phase 4 (split the shop drawer into Store/Equipment/Inventory/IDE/Missions apps —
-this is also where the five deferred app-unlock purchases land).** One item still deferred: the
+**Phases 1–3 shipped.** Phase 1 (live on `main`, 2026-07-05): day-1 single terminal → tmux-style
+tiling as apps unlock; manual mash split from the auto-agent swarm. Phase 2 (2026-07-06): owning the
+Windows 3.1 OS tier (`P.up.os >= 1`) flips desktop tiling into a floating window manager — draggable/
+minimizable/closable windows, Start Menu + Start button, Reset Layout, click-to-focus z-order. Phase 3
+(verified on `phase3-status-app`, 2026-07-06): the detail stats + level/stage HUD moved out of the
+always-on chrome into a **Status app** (slimming the top strip to a real taskbar); the dead lockmask
+overlay retired. **Next: Phase 4 (split the shop drawer into Store/Equipment/Inventory/IDE/Missions
+apps — this is where the four remaining deferred app-unlock purchases land).** Still deferred: the
 theme-CSS DRY pass (Phase 1 checkbox). Major design forks all decided.
 
 Treat this doc as a living, resumable record (as with `crafting-update.md`'s 7 phases) — checkboxes
@@ -296,10 +297,21 @@ under "Window manager mechanics" / "Start Menu" / "OS chrome" describes this **p
       level→OS migration, so they open straight into floating windows — intended "you own this era".)
 
 ### Phase 3 — Convert remaining gameplay panels (both modes)
-- [ ] Deploy Mesh + Telemetry become apps, preserving their existing purchase-gated lock behavior
-      (a locked pane simply isn't tiled in / is grayed in the Start Menu, instead of an in-panel lockmask)
-- [ ] Status app (statusbar detail stats + HUD level/stage/stat-chips)
-- [ ] Verify both render modes; update docs; commit + push
+**Status: complete + verified on `phase3-status-app` (2026-07-06).**
+- [x] Deploy Mesh + Telemetry lock behavior finalized: the in-panel **lockmask overlay is retired**
+      (DOM + CSS + the `.locked` toggle removed) — a locked app simply isn't tiled/windowed and is
+      greyed in the Start Menu, exactly as intended. (Both were already registered apps since Phase 1-2.)
+- [x] **Status app** (`#statusPanel`, 📟): the detail stats (skill pts / tasks / streak / loot /
+      uptime / sanity) and the whole level/stage/xp HUD + stat-chips moved out of the always-on chrome
+      into their own app. The top strip is slimmed to **brand · theme picker · ⊞ Start · credits ·
+      upgrades** (the "OS chrome" / taskbar). Tiles as the 3rd app; a window in float mode.
+      **Gate decision (judgment call, not purchase-gated):** status is always available and appears
+      the moment you graduate the intro (`unlocked: !P.intro`) — chosen over the plan's tentative
+      "status 120" gate because hiding level/XP/HP behind a purchase would starve early-game feedback.
+      So the five deferred *purchase* gates now number four (inventory/equipment/ide/missions), all in Phase 4.
+- [x] Tiling grid extended to 5–6 tiles; mobile stack given a `#statusPanel` height. Verified both
+      render modes + mobile (fresh save still hides status during intro; progressed shows 5 tiles /
+      5 windows; stats still update live; 0 JS exceptions). Docs updated.
 
 ### Phase 4 — Split the shop into apps
 - [ ] Store window (current Upgrades tab content)
