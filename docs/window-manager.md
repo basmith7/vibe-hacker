@@ -452,11 +452,22 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   would hurt a brand-new player badly. Fully relocating it out of the top strip is coupled with the
   taskbar-minimization work, so it's folded into the Win 3.1 chrome batch to decide there.
 
+**✅ Done — batch 5 (branch `playtest-batch-5`):**
+- **Win 3.1 chrome overhaul.**
+  - **Bottom taskbar** with the **⊞ Start button at the far left**, then a button per unlocked app.
+    Clicking an app focuses/reopens it; clicking the focused one minimizes it. Start moved out of the
+    top strip into this taskbar. The taskbar is a flex child, so the window canvas shrinks above it.
+  - **Resizable windows** — a bottom-right grip on every floating panel (`startResize`, sharing the
+    global pointermove/up with drag). Sizes persist in `P.windows`.
+  - **Start Menu fly-out readability** — pops UP from the taskbar; now uses theme vars + explicit
+    per-OS overrides (win31/95 gray-beveled, win10 white, dos black/green), so it reads on every look
+    instead of being a dark-blue box on a gray desktop.
+  - **Apps-only Start Menu** — dropped the "🔒 locked" placeholder rows; the Programs list shows only
+    real unlocked apps (this is the "items should not appear in the Start Menu" item).
+  - **Chunky retro scrollbars** — 16px `::-webkit-scrollbar` themed via vars, with classic
+    fff/808080 bevels under win31/95 and green-on-black under DOS.
+
 **🔜 Queued (not started):**
-- **Win 3.1 chrome:** **resizable windows**; move the **taskbar to the bottom, Start button far-left**;
-  **Start Menu fly-out** currently dark/unreadable → theme it lighter; **big chunky retro scroll bars**
-  (from ideas.md 📥); **items should not appear in the Start Menu** (from ideas.md 💡 — needs
-  clarification: likely means only *apps* belong there).
 - **Float default window arrangement** polish — a fully-unlocked save opens ~10 overlapping windows.
 - **Game speed is way too fast** — economy/pacing tuning. *Explicitly deferred: keep it fast for
   now, it's good for repeat testing.*
