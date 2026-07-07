@@ -139,6 +139,12 @@
   #startMenu .smsep{height:1px;background:var(--edge);margin:5px 2px}
   /* status app — detail stats + level/stage HUD, relocated out of the always-on chrome */
   .tbspace{flex:1}
+  /* first-time Store reveal button — appears at 10 credits, opens the Store app on click, then hides */
+  #storeBtn{display:none;align-self:center;font:inherit;font-size:10px;color:var(--amber);background:#0a1120;
+    border:1px solid #3a2f10;border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap;margin-left:6px;animation:pip 1.1s infinite}
+  #storeBtn:hover{color:#fff;border-color:var(--amber);box-shadow:0 0 12px rgba(255,176,0,.4)}
+  body.reveal-shop:not(.store-open) #storeBtn,
+  body.intro.reveal-shop:not(.store-open) #storeBtn{display:inline-flex}
   #statusBody{position:absolute;inset:26px 0 0 0;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px}
   #storeBody{position:absolute;inset:26px 0 42px 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #storeFooter{position:absolute;left:0;right:0;bottom:0;height:42px;border-top:1px solid var(--edge);padding:7px 10px;background:rgba(0,0,0,.2)}
@@ -471,6 +477,7 @@
     </div>
     <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
+    <button id="storeBtn" title="open the Store">🛒 Open Store</button>
     <span class="tbspace"></span>
   </header>
 
@@ -825,6 +832,7 @@
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
+    {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",   cost:25,   unlocks:"status",    meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your character sheet — level, stats, sanity"},
     {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
     {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Toolbox",     cost:500,  unlocks:"inventory", meme:"TOOLBOX",      cat:"Getting Started", fx:()=>"reveal the Inventory — roll & stash hardware"},
     {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",   cost:700,  unlocks:"equipment", meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipped Hardware — gear up your rig"},
@@ -925,15 +933,15 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,u_tele:0,u_globe:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       missions:[], sprintConfig:0, missionSeq:0,
       themeChoice:"dos",
-      unlocked:{telemetry:false,globe:false,inventory:false,equipment:false,ide:false,missions:false}, unlockedStats:["coding"],
-      intro:true, reveal:{credits:false,shop:false},
+      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,missions:false}, unlockedStats:["coding"],
+      intro:true, reveal:{credits:false,shop:false,store:false},
       windows:cloneWindows(),
       achv:{},seenTips:{shop:false,sp:false}};
   }
@@ -943,7 +951,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "materials","matPity","missions","sprintConfig","missionSeq",
     "themeChoice","unlocked","unlockedStats","intro","reveal","windows","achv","seenTips"];
-  function unlockAll(){ P.unlocked={telemetry:true,globe:true,inventory:true,equipment:true,ide:true,missions:true}; P.unlockedStats=STAT_IDS.slice(); }
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -993,10 +1001,15 @@ notify("#general", "10x-ing that shit 🔥");`,
         // Any save predating this feature lacks those keys → grandfather them ON so existing players
         // keep the toolbox systems they already had; new saves get false from defaults() and buy in.
         for(const k of ["inventory","equipment","ide","missions"]) if(!(k in P.unlocked)) P.unlocked[k]=true;
+        // migration: the Status app became a purchase (was free after intro) — grandfather it ON so
+        // existing players don't lose their character sheet.
+        if(!("status" in P.unlocked)) P.unlocked.status=true;
         if(!Array.isArray(P.unlockedStats)||!P.unlockedStats.length) P.unlockedStats=["coding"];
         // migration: saves from before the intro funnel skip it (they've already progressed)
         if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
         if(!P.reveal) P.reveal={credits:false,shop:false};
+        // migration: the Store now opens via a button (P.reveal.store); grandfather it from reveal.shop
+        if(P.reveal && !("store" in P.reveal)) P.reveal.store=!!P.reveal.shop;
         // migration: window-manager Phase 2 — saves predating the floating WM lack P.windows; seed it
         // (and backfill any app id missing from an older windows object) from DEFAULT_WINDOWS.
         if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
@@ -1088,8 +1101,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c) return true; } return false; }
   function isRevealed(u){
-    // "Getting Started" is the guided funnel — always visible as the roadmap, never gated.
-    if(u.cat==="Getting Started") return true;
+    if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
+    // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
+    // app-unlocks reveal progressively (at 50%-saved) so the store isn't a wall of options on day one.
+    if(u.cat==="Getting Started" && u.kind!=="unlock") return true;
     if(P.up[u.id]>0) return true;   // already invested in it — never re-hide something owned, even after spending elsewhere
     const c=upCost(u);
     if(c==null) return true;        // maxed/owned edge case
@@ -1371,7 +1386,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   // full refresh (store + the four Toolbox apps) — used after any buy/craft/roll that can touch both
   function renderShop(){ renderStore(); renderToolbox(); }
-  function allocate(id){ if(P.sp<=0) return; P.sp--; statUp(id,1); updateSPui(); save(); }
+  function allocate(id,all){ if(P.sp<=0) return; const n=all?P.sp:1; P.sp-=n; statUp(id,n); updateSPui(); save(); }   // shift-click = pour all skill points into one stat
   function updateSPui(){
     if(UI.s_sp) UI.s_sp.textContent=P.sp;
     if(UI.spStat) UI.spStat.classList.toggle("sppulse",P.sp>0);
@@ -1502,7 +1517,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       const el=document.createElement("div"); el.className="statchip";
       el.innerHTML=`<span class="em">${s.em}</span><span class="sk">${s.lbl}</span><span class="sv" style="color:${s.color}">0</span><button class="sp" title="spend a skill point">+</button>`;
       wrap.appendChild(el);
-      const plus=el.querySelector(".sp"); plus.addEventListener("click",e=>{e.stopPropagation();allocate(s.id);});
+      const plus=el.querySelector(".sp"); plus.title="spend a skill point (shift-click = all)"; plus.addEventListener("click",e=>{e.stopPropagation();allocate(s.id,e.shiftKey);});
       HUD.chip[s.id]={el,v:el.querySelector(".sv"),plus};
     });
     HUD.stage.textContent=STAGES[P.stage]||("New Game+ "+P.prestige);
@@ -1515,8 +1530,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   const APPS=[
     {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
     {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
-    {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!P.intro},
-    {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.shop)},
+    {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!!P.unlocked.status},
+    {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.store)},
     {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
     {id:"equipment",   panelId:"equipPanel",    order:6, emoji:"🔧", title:"Equipment",   unlocked:()=>!!P.unlocked.equipment},
     {id:"ide",         panelId:"idePanel",      order:7, emoji:"🛠", title:"The IDE",     unlocked:()=>!!P.unlocked.ide},
@@ -1630,6 +1645,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     b.toggle("intro", !!P.intro);
     b.toggle("reveal-credits", !!(P.reveal&&P.reveal.credits));
     b.toggle("reveal-shop", !!(P.reveal&&P.reveal.shop));
+    b.toggle("store-open", !!(P.reveal&&P.reveal.store));   // once you've opened the Store, hide the reveal button
   }
   function checkReveal(){
     if(!P.intro) return;
@@ -2061,8 +2077,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     w.code.innerHTML=lines.map(hl).join("<br>");
   }
   function tickWorker(w,dt){
-    if(!w.manual){   // auto agents "type" on their own; the manual worker's code only appears via real input (mashCode)
+    if(!w.manual){   // auto agents "type" on their own; the manual worker's code appears via real input (mashCode)…
       w.acc+=dt*(12+surge*24); let n=w.acc|0; w.acc-=n;
+      if(n>0) revealChars(w,n);
+    } else if(MULT.assist>0){   // …and Autocomplete Assist passively types it too, at its trickle rate
+      w.acc+=dt*(12+surge*24)*MULT.assist; let n=w.acc|0; w.acc-=n;
       if(n>0) revealChars(w,n);
     }
     if(w.flashT>0){ w.flashT-=dt; if(w.flashT<=0) w.el.classList.remove("win","fail","crit"); }
@@ -2303,6 +2322,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#themeLabel").addEventListener("click",e=>{ e.stopPropagation(); toggleThemeMenu(); fadeHint(); });
   $("#themeMenu").addEventListener("click",e=>{ e.stopPropagation(); });
   $("#startBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleStart(); fadeHint(); });
+  $("#storeBtn").addEventListener("click",e=>{ e.stopPropagation(); if(P.reveal){ P.reveal.store=true; applyReveal(); applyLayout(); save(); } fadeHint(); });
   $("#startMenu").addEventListener("click",e=>{ e.stopPropagation(); });
   document.addEventListener("click",e=>{
     if(themeMenuOpen && UI.themeMenu && !UI.themeMenu.contains(e.target) && e.target!==UI.themeLabel) closeThemeMenu();
