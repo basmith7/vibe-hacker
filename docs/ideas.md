@@ -5,7 +5,7 @@ it's a staging area. Things move *through* it and then leave it.
 
 ## How this works
 
-- **🌱 Still planning** — the user's thinking space. The agent may add input as indented sub-bullets
+- **💡 Ideas** — the user's thinking space. The agent may add input as indented sub-bullets
   under an idea (questions, tradeoffs, prior art in the code), but must **not** action, formalize, or
   move these. They're a conversation, not a work order.
 - **📥 Ready** — the user has blessed these; they are now the agent's to route out. Once routed, the
@@ -23,15 +23,17 @@ The agent picks the destination based on size; when in doubt, ask.
 
 ---
 
-## 🌱 Still planning
+## 💡 Ideas
 
 *(User's space. Agent comments inline as sub-bullets; does not action or move.)*
 
 * Walk me though the code. I'd like to understand the architecture better.
 * set my computer to not sleep when claude is working
+* "slack" as a purchasable item, should have insane messages about really dumb sales people storeies, and project managers saying "nothing from my end" and it should hurt productivity while its open.  
+* items shjould not appear in the start menu of win 3.1
 
 ## 📥 Ready
 
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
 
-_(nothing yet)_
+_(nothing pending — "big old scroll bars" routed to docs/window-manager.md Feedback → Win 3.1 chrome)_

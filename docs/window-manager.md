@@ -405,3 +405,33 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
 ## Feedback
 
 (Raw notes get folded into the sections above as they come in — scratchpad for whatever's next.)
+
+### Playtest feedback — 2026-07-06 (first live play of Phases 1–4)
+
+**✅ Done (branch `playtest-onboarding-fixes`, not yet merged):**
+- Shift-click a stat's **+** button now pours **all** skill points into that one stat.
+- **One-time unlocks vanish from the Store** once bought (telemetry, etc. — no more "OWNED" clutter).
+- **Fewer Store options at the start** — app-unlock cards reveal progressively (50%-saved) instead of
+  all showing at once; hire/skill stay always-visible.
+- **Character sheet is now a purchasable app** — "📟 Status Readout" (25cr) unlocks the Status app.
+- **Store reveal button** — a pulsing "🛒 Open Store" appears at 10 credits; the Store no longer
+  auto-pops-in jarringly (you click to open it the first time).
+- **Autocomplete Assist now types code**, not just advances the task bar (was a real bug).
+
+**🔜 Queued (not started):**
+- **Character-sheet layout (DOS):** stats should be a **vertical section** — lay the sheet out better.
+- **Notifications + flying text → purchasable upgrades**, and merge routine pop-ups into the terminal
+  log with **per-type on/off settings** (this also fixes toasts covering the Store in DOS). Big-ish.
+- **Telemetry rework:** stat-sheet needs **stat names**; **mouseover explainers** for failure rate,
+  sanity, and each stat; **move the credits counter into Telemetry** when available (maybe make
+  Telemetry a required first purchase) with a **credits-over-time line graph + credits/sec**.
+- **Win 3.1 chrome:** **resizable windows**; move the **taskbar to the bottom, Start button far-left**;
+  **Start Menu fly-out** currently dark/unreadable → theme it lighter; **big chunky retro scroll bars**
+  (from ideas.md 📥); **items should not appear in the Start Menu** (from ideas.md 💡 — needs
+  clarification: likely means only *apps* belong there).
+- **Float default window arrangement** polish — a fully-unlocked save opens ~10 overlapping windows.
+- **Game speed is way too fast** — economy/pacing tuning. *Explicitly deferred: keep it fast for
+  now, it's good for repeat testing.*
+- From ideas.md 💡 (user's space, not actioned): **"Slack" as a purchasable app** — unhinged messages
+  from salespeople / PMs ("nothing from my end"), hurts productivity while open. Walk-through of the
+  code. Keep the machine awake while working.
