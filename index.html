@@ -195,7 +195,18 @@
   .chart{border:1px solid var(--edge);border-radius:6px;background:#070c16;position:relative;overflow:hidden}
   .chart .ct{position:absolute;top:4px;left:7px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);z-index:2}
   .chart .cv{position:absolute;top:3px;right:7px;font-size:11px;font-weight:700;z-index:2}
+  .chart .cvsub{position:absolute;top:16px;right:7px;font-size:9px;color:var(--dim);z-index:2;font-variant-numeric:tabular-nums}
+  .chart.credits .cv{font-size:15px}
+  .chart[title],.ssRow[title]{cursor:help}
   .chart canvas{width:100%;height:100%;display:block}
+  /* stat sheet — an HTML horizontal bar list (names + values + per-stat mouseover), replaces the old
+     unlabeled canvas bars. inset leaves room for the .ct title strip up top. */
+  .statSheet .ssBars{position:absolute;inset:19px 8px 7px 8px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+  .ssRow{display:flex;align-items:center;gap:6px;font-size:9.5px;line-height:1}
+  .ssRow .ssn{flex:0 0 64px;text-transform:uppercase;letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+  .ssRow .ssbar{flex:1;height:6px;background:#0a1120;border:1px solid var(--edge);border-radius:4px;overflow:hidden}
+  .ssRow .ssbar i{display:block;height:100%;border-radius:4px;transition:width .25s}
+  .ssRow .ssv{flex:0 0 30px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--txt)}
 
   /* terminal */
   #termBody{flex:0 0 38%;min-height:0;overflow:hidden;padding:6px 9px;font-size:11px;border-top:1px solid var(--edge)}
@@ -541,12 +552,13 @@
     </section>
 
     <section class="panel" id="chartsPanel" data-app="telemetry">
-      <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag">realtime</span></div>
+      <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag" id="teleTag">$0 · +$0/s</span></div>
       <div id="chartsBody">
-        <div class="chart"><span class="ct">xp / sec</span><span class="cv" id="cv_line" style="color:var(--cyan)">0</span><canvas id="cLine"></canvas></div>
-        <div class="chart"><span class="ct">stat sheet</span><canvas id="cBar"></canvas></div>
-        <div class="chart"><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
-        <div class="chart"><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
+        <div class="chart credits" id="chCredits" title="Credits — your money. The big number is your current balance; the line is how fast you're earning it per second (task payouts + passive income), sampled over the last ~15 seconds.">
+          <span class="ct">credits</span><span class="cv" id="cv_credits" style="color:var(--green)">$0</span><span class="cvsub" id="cv_creditRate">+$0/s</span><canvas id="cLine"></canvas></div>
+        <div class="chart statSheet" id="statSheet" title="Your five skills, tallest first. Hover any row for what it does."><span class="ct">stat sheet — hover a row</span><div class="ssBars" id="ssBars"></div></div>
+        <div class="chart" id="chFail" title="Failure rate — the share of all attempted tasks that have failed. Failures cost sanity and reset your streak. Raise the stat a task uses, or your AI Model's success bonus, to push it down."><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
+        <div class="chart" id="chSanity" title="Sanity — your mental health. Failing tasks drains it; the Espresso Machine and Cooling gear refill it. At 0% you burn out: lose XP and take a forced coffee break."><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
       </div>
     </section>
 
@@ -1759,7 +1771,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function closeThemeMenu(){ toggleThemeMenu(false); }
   function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
-  function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
+  function addXp(n){ P.xp+=n; P.totalXp+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
   function addLoot(){   // pure flavor/junk — no equip value, just a small stat bump (see LOOT array)
     const item=pick(LOOT); P.loot++; const sid=pick(STAT_IDS); statUp(sid,rand(0.6,1.6));
     toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color,"grind");
@@ -2171,7 +2183,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   let saveTimer=0,autoBuyT=0,shopRefresh=0,storeRefresh=0,achTimer=0;
   function tickProgress(dt){
     P.hp=clamp(P.hp+dt*MULT.regen,0,P.hpMax);   // Espresso Machine → recovery; Caffeine-stat bonus returns as a gear patch in Phase 5
-    P.credits+=MULT.passive*dt;                                          // passive income (monitors)
+    const passiveInc=MULT.passive*dt; P.credits+=passiveInc; P.earned+=passiveInc;   // passive income (monitors) — counts toward earned so Telemetry's credits/sec includes it
     if(P.credits>P.maxCredits) P.maxCredits=P.credits;   // peak wealth — drives shop-item reveal, never decreases on spend
     P.playSecs+=dt;
     let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
@@ -2277,26 +2289,51 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ charts (stat-driven) ============ */
   const lineData=new Array(60).fill(0); const sparkData=new Array(60).fill(0);
-  let xpAccum=0, failEMA=0, vibeAngle=0, chartAcc=0;
+  let failEMA=0, vibeAngle=0, chartAcc=0, lastEarned=0;
+  // credits/sec line — repurposed from the old xp/sec line (playtest: telemetry should track credits).
+  // The readout shows both the live balance and income/sec; the panel head tag mirrors it.
   function drawLine(){
     const cv=$("#cLine");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
     const max=Math.max(1,...lineData)*1.15;
-    ctx.strokeStyle="rgba(77,140,255,.08)";ctx.lineWidth=1;
+    ctx.strokeStyle="rgba(57,255,20,.08)";ctx.lineWidth=1;
     for(let gy=0;gy<4;gy++){const y=h*gy/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
-    ctx.beginPath();lineData.forEach((v,i)=>{const x=i/(lineData.length-1)*w,y=h-(v/max)*(h-14)-7;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-    ctx.strokeStyle="#00e5ff";ctx.lineWidth=1.6;ctx.shadowColor="#00e5ff";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+    ctx.beginPath();lineData.forEach((v,i)=>{const x=i/(lineData.length-1)*w,y=h-(v/max)*(h-16)-7;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.strokeStyle="#39ff14";ctx.lineWidth=1.6;ctx.shadowColor="#39ff14";ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
     ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
-    const grd=ctx.createLinearGradient(0,0,0,h);grd.addColorStop(0,"rgba(0,229,255,.22)");grd.addColorStop(1,"rgba(0,229,255,0)");
+    const grd=ctx.createLinearGradient(0,0,0,h);grd.addColorStop(0,"rgba(57,255,20,.22)");grd.addColorStop(1,"rgba(57,255,20,0)");
     ctx.fillStyle=grd;ctx.fill();
-    $("#cv_line").textContent=fmt(lineData[lineData.length-1]);
+    const rate=lineData[lineData.length-1]||0;
+    $("#cv_credits").textContent=money(P.credits);
+    $("#cv_creditRate").textContent="+"+money(rate)+"/s";
+    const tt=$("#teleTag"); if(tt) tt.textContent=money(P.credits)+" · +"+money(rate)+"/s";
   }
-  function drawBar(){
-    const cv=$("#cBar");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+  // stat sheet — HTML horizontal bars with real names + per-stat mouseover explainers (built once,
+  // widths/values updated each tick). Replaces the old unlabeled canvas bars.
+  const STAT_EXPL={
+    coding:"Coding — your raw output. Powers coding tasks (writing code, shipping, git wrangling). Higher = faster clears and better odds on those tasks.",
+    focus:"Focus — deep work. Powers focus tasks (entering flow, inbox zero, ignoring pings).",
+    debug:"Debugging — bug-squashing. Powers debug tasks (race conditions, memory leaks, 3am prod fires).",
+    systems:"Systems — architecture & ops. Powers systems tasks (design, migrations, zero-downtime deploys).",
+    algo:"Algorithms — the hard CS. Powers algorithm tasks (complexity, data structures, optimization).",
+  };
+  let ssRowEls={};
+  function buildStatSheet(){
+    const wrap=$("#ssBars"); if(!wrap) return; wrap.innerHTML=""; ssRowEls={};
+    for(const s of STATS){
+      const row=document.createElement("div"); row.className="ssRow"; row.title=STAT_EXPL[s.id]||s.lbl;
+      row.innerHTML=`<span class="ssn" style="color:${s.color}">${s.lbl}</span>`+
+        `<span class="ssbar"><i style="background:${s.color};box-shadow:0 0 6px ${s.color}"></i></span><span class="ssv">0</span>`;
+      wrap.appendChild(row); ssRowEls[s.id]={row,bar:row.querySelector("i"),v:row.querySelector(".ssv")};
+    }
+  }
+  function renderStatSheet(){
     const shown=STATS.filter(s=>P.unlockedStats.includes(s.id));
-    const vals=shown.map(s=>P.stats[s.id]);const max=Math.max(1,...vals);
-    const n=shown.length,pad=8,gap=(w-pad*2)/n,bw=Math.min(gap*0.62,26);
-    shown.forEach((s,i)=>{const bh=(P.stats[s.id]/max)*(h-16);const x=pad+i*gap+(gap-bw)/2,y=h-bh-4;
-      ctx.fillStyle=s.color;ctx.shadowColor=s.color;ctx.shadowBlur=6;ctx.fillRect(x,y,bw,bh);ctx.shadowBlur=0;});
+    const max=Math.max(1,...shown.map(s=>P.stats[s.id]));
+    for(const s of STATS){ const el=ssRowEls[s.id]; if(!el) continue;
+      const on=P.unlockedStats.includes(s.id);
+      el.row.style.display=on?"":"none";
+      if(on){ el.bar.style.width=clamp(P.stats[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.floor(P.stats[s.id]); }
+    }
   }
   function drawSpark(){
     const cv=$("#cSpark");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
@@ -2318,9 +2355,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function tickCharts(dt){
     chartAcc+=dt;
-    if(chartAcc>=0.25){ lineData.push(xpAccum/chartAcc); lineData.shift(); xpAccum=0;
+    if(chartAcc>=0.25){
+      const dEarn=Math.max(0,P.earned-lastEarned); lastEarned=P.earned;   // income since last sample → credits/sec
+      lineData.push(dEarn/chartAcc); lineData.shift();
       sparkData.push(failEMA*100); sparkData.shift(); chartAcc=0; }
-    drawLine();drawBar();drawSpark();drawGauge(dt);
+    drawLine();renderStatSheet();drawSpark();drawGauge(dt);
   }
 
   /* ============ matrix rain ============ */
@@ -2407,8 +2446,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(el<30) return;
     const perSec=MULT.passive + MULT.workers*MULT.credit*0.8;   // rough idle rate
     const gain=Math.floor(perSec*el*MULT.offlineEff);            // efficiency while away (Modem improves this)
-    if(gain>0){ P.credits+=gain;
-      toast("🌙 Welcome back","Earned "+money(gain)+" while away ("+Math.round(el/60)+" min)","#4d8cff");
+    if(gain>0){ P.credits+=gain; P.earned+=gain;
+      toast("🌙 Welcome back","Earned "+money(gain)+" while away ("+Math.round(el/60)+" min)","#4d8cff","system");
       termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)"); }
   }
 
@@ -2417,13 +2456,14 @@ notify("#general", "10x-ing that shit 🔥");`,
   if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
-  buildHUD(); buildWorkers(); buildShop(); buildToolbox(); initGlobe(); initMatrix();
+  buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); initGlobe(); initMatrix();
   setupWindowChrome();
   applyTheme();
   applyUnlocks();
   applyReveal();
   initAch();
   if(restored) offlineEarnings();
+  lastEarned=P.earned;   // seed the credits/sec baseline AFTER offline earnings so they don't spike the first sample
   WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
   updateSPui();

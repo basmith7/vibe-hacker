@@ -137,6 +137,17 @@ mashing adds.
   is a slower, longer-term bar than the level bar. Running out of stages doesn't end anything;
   it just loops into a cosmetic "New Game+" lap counter and keeps going.
 
+## Telemetry (the charts)
+
+Bought via **📊 Install Telemetry**, the Telemetry app is your dashboard, four panels:
+- **Credits** — your live balance (big), your **income per second** (the sub-number), and a green
+  line graph of that income rate over the last ~15 seconds. The app's title bar mirrors the
+  balance + rate. Income counts task payouts *and* passive Monitor income.
+- **Stat sheet** — a labeled bar per skill, tallest first. **Hover any row** for a plain-English
+  explainer of what that stat governs.
+- **Failure rate** and **Sanity** — each is a live gauge with a **hover explainer** (what it
+  measures, what moves it, and why you should care).
+
 ## The shop
 
 Everything costs credits and falls into four sections:
