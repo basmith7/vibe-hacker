@@ -467,8 +467,14 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   - **Chunky retro scrollbars** — 16px `::-webkit-scrollbar` themed via vars, with classic
     fff/808080 bevels under win31/95 and green-on-black under DOS.
 
+**✅ Done — batch 6 (branch `playtest-batch-6`):**
+- **Float default window arrangement** — replaced the cascade (which piled the four Toolbox apps on
+  the same corner) with a non-overlapping 4-column × 3-row grid sized for the canvas above the
+  taskbar. The Store spans two rows (card-heavy) in column 4; the other nine apps take one cell each,
+  so a fully-unlocked save opens tidy. Existing saves keep their arrangement (⊞ Start → Reset Layout
+  applies the new default).
+
 **🔜 Queued (not started):**
-- **Float default window arrangement** polish — a fully-unlocked save opens ~10 overlapping windows.
 - **Game speed is way too fast** — economy/pacing tuning. *Explicitly deferred: keep it fast for
   now, it's good for repeat testing.*
 - From ideas.md 💡 (user's space, not actioned): **"Slack" as a purchasable app** — unhinged messages
