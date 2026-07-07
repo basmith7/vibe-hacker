@@ -146,6 +146,15 @@ Always visible — this is the guided path, never hidden. **Hire an Agent** (ope
 app), **Learn a New Skill**, **Install Telemetry** (opens the charts app), and **Go Global**
 (opens the Deploy Mesh app). Each app you unlock tiles into the screen beside the terminal.
 
+Two of these are pure quality-of-life:
+- **🔔 Push Notifications** — turns on the toast pop-ups (wins, finds, level-ups). You start with
+  **none** — day one is a bare terminal — and everything routine is always written to the Terminal
+  log anyway, so this is opt-in flavor, not information you'd otherwise miss. Once owned, a **🔔
+  Notifications** card appears in the Store letting you mute pop-up *types* individually (Grind &
+  Loot / Level & Stage / System & Buys); muted types keep logging to the Terminal.
+- **🎉 Hype Banners** — the flying meme text that streaks across the screen on unlocks and
+  milestones. Also purely cosmetic, and mutable from that same Notifications card once owned.
+
 ### Hardware (repeatable — each purchase gets a bit more expensive)
 | Upgrade | Effect |
 |---|---|
@@ -333,9 +342,9 @@ cosmetic lap counter for finishing all 28 stages, with no reset. IPO is the real
 ## Achievements
 
 22 achievements unlock automatically as you play, from "Hello, World" (clear one task) to
-"Serial Founder" (cash out 5 times) to "Triple Digits" (reach level 100). They show
-up as a toast the moment you earn them and live in a checklist at the bottom of the shop with a
-running completion count. If you already qualify for one when you load an old save, it's
+"Serial Founder" (cash out 5 times) to "Triple Digits" (reach level 100). If you own **Push
+Notifications** they pop as a toast the moment you earn them; either way they log to the Terminal
+and live in a checklist at the bottom of the Store with a running completion count. If you already qualify for one when you load an old save, it's
 granted silently — no spam on load.
 
 Most of the list stays **hidden** until you're close: progress-based achievements (task counts,

@@ -418,10 +418,21 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   auto-pops-in jarringly (you click to open it the first time).
 - **Autocomplete Assist now types code**, not just advances the task bar (was a real bug).
 
+**✅ Done — batch 2 (branch `playtest-batch-2`):**
+- **Notifications + flying text are now purchasable, gated, toggleable.** Day-1 is a clean terminal —
+  no toasts, no flying banners. `🔔 Push Notifications` (40cr) enables toast pop-ups; `🎉 Hype Banners`
+  (120cr) enables the flying meme text. Both live in the Store's "Getting Started" list. Every routine
+  event still writes to the **Terminal log** regardless, so muting loses nothing permanent (this is the
+  fix for toasts covering the Store in DOS — nothing pops until you opt in). Once Push Notifications is
+  owned, a **🔔 Notifications** settings card appears in the Store with per-type mute toggles:
+  **Grind & Loot / Level & Stage / System & Buys**, plus **Hype Banners** (once owned). Toasts carry a
+  `cat` bucket (`toast(t,d,col,cat)`, default `system`); `flyMeme()` is gated on `P.up.hype` + the
+  `hype` toggle. Existing saves are grandfathered ON (`hadNotify` captured before the `du` backfill).
+  Also routed the previously toast-only onboarding tips / layout-reset / theme-switch lines to the
+  Terminal, and fixed stale "press U" / "bottom bar" copy in the tips.
+
 **🔜 Queued (not started):**
 - **Character-sheet layout (DOS):** stats should be a **vertical section** — lay the sheet out better.
-- **Notifications + flying text → purchasable upgrades**, and merge routine pop-ups into the terminal
-  log with **per-type on/off settings** (this also fixes toasts covering the Store in DOS). Big-ish.
 - **Telemetry rework:** stat-sheet needs **stat names**; **mouseover explainers** for failure rate,
   sanity, and each stat; **move the credits counter into Telemetry** when available (maybe make
   Telemetry a required first purchase) with a **credits-over-time line graph + credits/sec**.

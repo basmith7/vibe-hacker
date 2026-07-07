@@ -291,6 +291,11 @@
   .card.legendary{border-color:rgba(255,176,0,.6);background:linear-gradient(180deg,#1a1408,#0a1120);box-shadow:0 0 10px rgba(255,176,0,.15) inset}
   .card.legendary .nm{color:var(--amber)}
   .shopCat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:9px 2px 1px}
+  .notifyToggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .ntog{font:inherit;font-size:10px;padding:5px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--edge);background:#0a1120;color:var(--dim)}
+  .ntog.on{color:var(--green);border-color:var(--green);box-shadow:0 0 8px rgba(57,255,20,.35)}
+  .ntog::before{content:"🔕 ";opacity:.7}
+  .ntog.on::before{content:"🔔 "}
   .card{border:1px solid var(--edge);border-radius:9px;background:#0a1120;padding:9px 11px;display:flex;gap:10px;align-items:center}
   .card.hot{border-color:rgba(57,255,20,.4)}
   .card .em{font-size:22px;filter:drop-shadow(0 0 6px rgba(0,229,255,.3))}
@@ -832,6 +837,8 @@
   const UPG=[
     {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
     {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
+    {id:"notify",  kind:"tier",  emoji:"🔔",name:"Push Notifications",cat:"Getting Started", tiers:[{cost:0},{cost:40,name:"ON"}],  fx:i=>i?"toast pop-ups are ON — mute types below in the Store":"pop-up toasts for wins & finds (routine logs still go to the Terminal)"},
+    {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",     cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
     {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",   cost:25,   unlocks:"status",    meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your character sheet — level, stats, sanity"},
     {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
     {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Toolbox",     cost:500,  unlocks:"inventory", meme:"TOOLBOX",      cat:"Getting Started", fx:()=>"reveal the Inventory — roll & stash hardware"},
@@ -933,7 +940,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,skill:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
@@ -942,6 +949,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       themeChoice:"dos",
       unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,missions:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false,store:false},
+      notify:{grind:true,progress:true,system:true,hype:true},
       windows:cloneWindows(),
       achv:{},seenTips:{shop:false,sp:false}};
   }
@@ -950,7 +958,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "materials","matPity","missions","sprintConfig","missionSeq",
-    "themeChoice","unlocked","unlockedStats","intro","reveal","windows","achv","seenTips"];
+    "themeChoice","unlocked","unlockedStats","intro","reveal","notify","windows","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -964,6 +972,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       const d=JSON.parse(raw);
       if(d && d.ver===SAVE_VER){
         const hadOs=!!(d.up && ("os" in d.up));
+        const hadNotify=!!(d.up && ("notify" in d.up));   // capture BEFORE the du backfill mutates the shared d.up ref
         for(const k of PERSIST) if(k in d) P[k]=d[k];
         // migration: 9-stat -> 5-stat merge (crafting-update Phase 1). Detect a pre-merge save by
         // the presence of any retired stat id, then fold values into the surviving 5 before the
@@ -1010,6 +1019,11 @@ notify("#general", "10x-ing that shit 🔥");`,
         if(!P.reveal) P.reveal={credits:false,shop:false};
         // migration: the Store now opens via a button (P.reveal.store); grandfather it from reveal.shop
         if(P.reveal && !("store" in P.reveal)) P.reveal.store=!!P.reveal.shop;
+        // migration: notifications (toasts) + hype banners (flying text) became purchasable features.
+        // Grandfather existing players ON so they don't suddenly lose their pop-ups; new saves start at 0
+        // (a bare day-1 terminal) and buy them in. P.notify per-type toggles default all-on from defaults().
+        if(!hadNotify){ P.up.notify=1; P.up.hype=1; }
+        if(!P.notify||typeof P.notify!=="object") P.notify={grind:true,progress:true,system:true,hype:true};
         // migration: window-manager Phase 2 — saves predating the floating WM lack P.windows; seed it
         // (and backfill any app id missing from an older windows object) from DEFAULT_WINDOWS.
         if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
@@ -1133,6 +1147,11 @@ notify("#general", "10x-ing that shit 🔥");`,
         :"click the OS name (top-left) to switch looks anytime";
       toast("🖥 New OS installed — "+t.name, msg, "#00e5ff");
       termLine("t-git","🖥","upgraded OS → "+t.name);
+    } else if(u.id==="notify"||u.id==="hype"){
+      P.up[u.id]++;
+      termLine("t-git","🔔","enabled "+u.name);
+      if(u.id==="hype") flyMeme("HYPE MODE ✨");
+      toast("🔔 "+u.name+" enabled", u.fx(1), "#00e5ff", "system");
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
       if(u.id==="hire"){ recompute(); buildWorkers(); applyLayout(); } else recompute();   // first hire = agents app tiles in
@@ -1146,7 +1165,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
-  let shopBuilt=false,shopCards=[],catHeaderEls={};
+  let shopBuilt=false,shopCards=[],catHeaderEls={},notifyToggleEls={};
+  // the mutable notification types surfaced as toggles once Push Notifications is bought (see toast()/flyMeme())
+  const NOTIFY_TOGGLES=[
+    {id:"grind",   lbl:"Grind & Loot"},
+    {id:"progress",lbl:"Level & Stage"},
+    {id:"system",  lbl:"System & Buys"},
+    {id:"hype",    lbl:"Hype Banners"},
+  ];
   let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; achEls={}; catHeaderEls={}; let cat=null;
@@ -1166,6 +1192,20 @@ notify("#general", "10x-ing that shit 🔥");`,
       body.appendChild(card);
       const btn=card.querySelector(".buy"); btn.addEventListener("click",e=>{e.stopPropagation();buy(u);});
       shopCards.push({u,card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn});
+    }
+    // notification settings — only shown once Push Notifications is bought; mute types you don't want.
+    // Everything muted here still logs to the Terminal, so nothing is truly lost.
+    const nc=document.createElement("div"); nc.className="shopCat"; nc.id="notifyCat"; nc.style.marginTop="14px"; nc.textContent="🔔 Notifications"; body.appendChild(nc);
+    const nCard=document.createElement("div"); nCard.className="card"; nCard.id="notifyCard";
+    nCard.innerHTML=`<span class="em">🔔</span><div class="mid"><div class="nm">Notification types</div>`+
+      `<div class="fx">Toggle which pop-ups you get — muted types still log to the Terminal.</div>`+
+      `<div class="notifyToggles"></div></div>`;
+    body.appendChild(nCard);
+    const nWrap=nCard.querySelector(".notifyToggles");
+    for(const t of NOTIFY_TOGGLES){
+      const b=document.createElement("button"); b.className="ntog"; b.dataset.id=t.id; b.textContent=t.lbl;
+      b.addEventListener("click",e=>{ e.stopPropagation(); P.notify[t.id]=(P.notify[t.id]===false); renderStore(); save(); });
+      nWrap.appendChild(b); notifyToggleEls[t.id]=b;
     }
     // achievements section
     const ah=document.createElement("div"); ah.className="shopCat"; ah.id="achCat"; ah.style.marginTop="14px"; body.appendChild(ah);
@@ -1382,6 +1422,13 @@ notify("#general", "10x-ing that shit 🔥");`,
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
     for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
+    // notification settings appear only after Push Notifications is owned; the Hype toggle only after Hype Banners
+    const nCat=$("#notifyCat"), nCard=$("#notifyCard"), showNotify=P.up.notify>=1;
+    if(nCat) nCat.style.display=showNotify?"":"none";
+    if(nCard) nCard.style.display=showNotify?"":"none";
+    if(showNotify) for(const t of NOTIFY_TOGGLES){ const b=notifyToggleEls[t.id]; if(!b) continue;
+      b.style.display=(t.id==="hype"&&P.up.hype<1)?"none":"";
+      b.classList.toggle("on", P.notify[t.id]!==false); }
     renderAch();
   }
   // full refresh (store + the four Toolbox apps) — used after any buy/craft/roll that can touch both
@@ -1442,7 +1489,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function initAch(){ for(const a of ACH){ if(!P.achv[a.id] && a.chk()) P.achv[a.id]=1; } }   // silent grant on load
   function checkAch(){
     for(const a of ACH){ if(!P.achv[a.id] && a.chk()){ P.achv[a.id]=1;
-      toast("🏆 Achievement — "+a.name, a.em+" "+a.desc, "#ffb000");
+      toast("🏆 Achievement — "+a.name, a.em+" "+a.desc, "#ffb000", "progress");
       termLine("t-warn","🏆","achievement unlocked: "+a.name); } }
     renderAch();
   }
@@ -1483,8 +1530,13 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ toasts ============ */
+  // Toasts are a *purchased* feature (Push Notifications, P.up.notify) so day-1 is a clean terminal.
+  // Everything routine is also written to the Terminal log via termLine, so muting a type loses nothing
+  // permanent. `cat` buckets a toast into a mutable type (grind / progress / system); default = system.
   const toasts=$("#toasts");
-  function toast(t,d,col){
+  function toast(t,d,col,cat){
+    if(!P.up.notify) return;                          // not bought yet → no pop-ups
+    if(P.notify && P.notify[cat||"system"]===false) return;   // this type muted in the Store settings
     const div=document.createElement("div"); div.className="toast";
     div.style.borderLeftColor=col||"#39ff14";
     div.innerHTML=`<div class="tt">${t}</div><div class="td">${d}</div>`;
@@ -1497,6 +1549,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ meme banner ============ */
   const memes=$("#memes");
   function flyMeme(txt){
+    if(!P.up.hype || (P.notify && P.notify.hype===false)) return;   // Hype Banners is a purchased, mutable feature
     const el=document.createElement("div"); el.className="meme"; const col=pick(MEME_COLORS);
     el.textContent=txt||pick(MEMES); el.style.color=col; el.style.top=rand(14,78)+"%";
     memes.appendChild(el);
@@ -1589,7 +1642,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const w=P.windows[id]||(P.windows[id]={...DEFAULT_WINDOWS[id]});
     w.open=true; bringToFront(id); applyLayout(); save();
   }
-  function resetLayout(){ P.windows=cloneWindows(); applyLayout(); save(); toast("🔄 Layout reset","windows back to their default arrangement","#00e5ff"); }
+  function resetLayout(){ P.windows=cloneWindows(); applyLayout(); save(); termLine("t-info","🔄","layout reset — windows back to their default arrangement"); toast("🔄 Layout reset","windows back to their default arrangement","#00e5ff","system"); }
   let drag=null;
   function startDrag(id,el,head,e){
     if(!wmFloat()||e.button!==0||e.target.closest(".wctl")) return;
@@ -1676,7 +1729,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const un=unlockedThemes(); if(un.length<2) return;
     const i=un.findIndex(t=>t.id===P.themeChoice);
     const t=un[(i+1)%un.length];
-    pickTheme(t.id); toast("🎨 Switched look", t.name, "#c77dff");
+    pickTheme(t.id); termLine("t-info","🎨","switched look → "+t.name); toast("🎨 Switched look", t.name, "#c77dff","system");
   }
   let themeMenuOpen=false;
   function renderThemeMenu(){
@@ -1695,7 +1748,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function addXp(n){ P.xp+=n; P.totalXp+=n; xpAccum+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
   function addLoot(){   // pure flavor/junk — no equip value, just a small stat bump (see LOOT array)
     const item=pick(LOOT); P.loot++; const sid=pick(STAT_IDS); statUp(sid,rand(0.6,1.6));
-    toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color);
+    toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color,"grind");
     termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
   }
   function salvageValue(item){ return Math.round(item.ilvl*2)+1; }
@@ -1714,17 +1767,17 @@ notify("#general", "10x-ing that shit 🔥");`,
       let worst=0; for(let i=1;i<P.toolbox.length;i++) if(P.toolbox[i].ilvl<P.toolbox[worst].ilvl) worst=i;
       const gone=P.toolbox.splice(worst,1)[0], refund=salvageValue(gone);
       P.credits+=refund;
-      toast("🧰 Toolbox full","Auto-scrapped "+gone.name+" (Lv "+gone.ilvl+") → +"+money(refund),"#5b6b86");
+      toast("🧰 Toolbox full","Auto-scrapped "+gone.name+" (Lv "+gone.ilvl+") → +"+money(refund),"#5b6b86","grind");
       termLine("t-dim","♻","toolbox full, auto-scrapped "+gone.name+" for "+money(refund));
     }
   }
   function dropHardware(){   // real gear — see addHardwareItem() for the equip-or-stash rule
     const slotId=pick(SLOTS.filter(s=>slotUnlocked(s.id))).id, item=rollItem(slotId);
     if(addHardwareItem(item)==="equipped"){
-      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")","#4d8cff");
+      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")","#4d8cff","grind");
       termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[slotId].lbl+" (Lv "+item.ilvl+")");
     } else {
-      toast("🧰 Found gear","+1 "+item.name+" (Lv "+item.ilvl+") → Toolbox","#4d8cff");
+      toast("🧰 Found gear","+1 "+item.name+" (Lv "+item.ilvl+") → Toolbox","#4d8cff","grind");
       termLine("t-git","🧰","stashed "+item.name+" (Lv "+item.ilvl+") in Toolbox");
     }
   }
@@ -1782,7 +1835,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       P.credits-=c; addHardwareItem(rollItem(slotId)); did++;
     }
     if(did>0){
-      toast("🎲 Rolled Hardware","Bought "+did+"× "+SLOT[slotId].lbl+" roll"+(did>1?"s":""),"#c77dff");
+      toast("🎲 Rolled Hardware","Bought "+did+"× "+SLOT[slotId].lbl+" roll"+(did>1?"s":""),"#c77dff","grind");
       termLine("t-git","🎲","rolled "+did+"× "+SLOT[slotId].lbl);
     }
     save(); renderShop();
@@ -1812,17 +1865,17 @@ notify("#general", "10x-ing that shit 🔥");`,
     materialAttempt("hotfix",0.5,stat==="debug");                // Debugging tasks
     materialAttempt("refactor",0.5,stat==="systems");            // Systems tasks
     if(materialAttempt("revert",0.03,true)){
-      toast("⏪ Found: Revert Commit","A rare material — strips an item back to Stock","#5b6b86");
+      toast("⏪ Found: Revert Commit","A rare material — strips an item back to Stock","#5b6b86","grind");
       termLine("t-git","⏪","found a Revert Commit");
     }
     if(materialAttempt("merge",0.02,P.level>=40)){               // late-game gate
-      toast("🔗 Found: Feature Branch Merge","A rare material — adds a patch slot (up to 4)","#39ff14");
+      toast("🔗 Found: Feature Branch Merge","A rare material — adds a patch slot (up to 4)","#39ff14","grind");
       termLine("t-git","🔗","found a Feature Branch Merge");
     }
     const milestone=1000;   // Full Rewrite is deterministic off P.loc crossing a milestone, not RNG+pity
     if(Math.floor(P.loc/milestone)>Math.floor(locBefore/milestone)){
       P.materials.rewrite=(P.materials.rewrite||0)+1;
-      toast("📦 Found: Full Rewrite","LOC milestone hit — rerolls every patch on an item","#ffb000");
+      toast("📦 Found: Full Rewrite","LOC milestone hit — rerolls every patch on an item","#ffb000","grind");
       termLine("t-git","📦","LOC milestone → found a Full Rewrite");
     }
   }
@@ -1973,7 +2026,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const gain=2+Math.floor(P.level/8); P.sp+=gain;
     const nt=titleFor();
     if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");   // big banner only on rank-up, not every level
-    toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000");
+    toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000","progress");
     termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
     HUD.title.textContent=nt; updateSPui(); save();
   }
@@ -1984,7 +2037,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     else name=STAGES[P.stage];
     P.hp=P.hpMax;
     celebrate("📅 "+name,"#00e5ff"); flyMeme("NEW STAGE");
-    toast("📅 New stage unlocked",name+" · difficulty ↑","#00e5ff");
+    toast("📅 New stage unlocked",name+" · difficulty ↑","#00e5ff","progress");
     termLine("t-info","▶","═══ "+name+" ═══"); addXp(Math.round(30*(1+P.stage*.1)));
     HUD.stage.textContent=name; save();
   }
@@ -1992,7 +2045,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     P.burnouts++; const lost=Math.round(P.xp*0.4); P.xp=Math.max(0,P.xp-lost);
     P.hp=Math.round(P.hpMax*0.6); P.streak=0;   // Caffeine stat-dock retired with Phase 1; returns as a gear-patch downside in Phase 5
     celebrate("🔥 BURNOUT","#ff2b5e"); flashHp();
-    toast("🔥 BURNOUT","Mental-health day forced · -"+lost+" XP","#ff2b5e");
+    toast("🔥 BURNOUT","Mental-health day forced · -"+lost+" XP","#ff2b5e","progress");
     termLine("t-bad","☠","BURNOUT — sanity hit zero. -"+lost+" XP, coffee break enforced"); save();
   }
 
@@ -2053,7 +2106,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       P.hp=clamp(P.hp+2,0,P.hpMax);
       w.el.classList.add(crit>1?"crit":"win"); w.flashT=0.6; spawnArc(crit>1?"#ffb000":"#39ff14");
       termLine("t-ok","✓",w.a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+xp+"xp  +"+money(cr));
-      if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color);
+      if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color,"grind");
       if(Math.random()<.16){ if(Math.random()<.7) dropHardware(); else addLoot(); }
       grantMaterials(stat,locBefore);
       progressMissions(stat);
@@ -2063,7 +2116,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2*MULT.xp));
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); flashHp();
       termLine("t-bad","✗",w.a.name+" FAILED ‹"+name+"›  -"+dmg+" HP  (streak reset)");
-      toast("💥 "+name+" failed","-"+dmg+" HP · "+s.lbl+" too low","#ff2b5e");
+      toast("💥 "+name+" failed","-"+dmg+" HP · "+s.lbl+" too low","#ff2b5e","grind");
       if(P.hp<=0) burnout();
     }
     w.task=null; w.cooldown=rand(0.4,1.0);
@@ -2112,8 +2165,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(P.up.autoAlloc && P.sp>0){ while(P.sp>0){ let lo=STAT_IDS[0]; for(const id of STAT_IDS) if(P.stats[id]<P.stats[lo])lo=id; statUp(lo,1); P.sp--; } }
     if(P.up.autoBuy){ autoBuyT+=dt; if(autoBuyT>=1.2){ autoBuyT=0; autoBuyCheapest(); } }
     // onboarding nudges (once each)
-    if(!P.seenTips.sp && P.sp>0){ P.seenTips.sp=true; toast("✦ You earned a skill point!","Spend it on a stat with the + buttons in the bottom bar — higher stats clear tasks faster & more reliably.","#00e5ff"); }
-    if(!P.seenTips.shop && anyAffordable()){ P.seenTips.shop=true; toast("🛒 You can afford an upgrade!","Open the shop (🛒 top-right, or press U) to spend credits and speed everything up.","#ffb000"); }
+    if(!P.seenTips.sp && P.sp>0){ P.seenTips.sp=true;
+      termLine("t-info","✦","you earned a skill point — spend it with the + buttons on a stat (higher stats clear tasks faster & more reliably)");
+      toast("✦ You earned a skill point!","Spend it on a stat with the + buttons — higher stats clear tasks faster & more reliably.","#00e5ff","system"); }
+    if(!P.seenTips.shop && anyAffordable()){ P.seenTips.shop=true;
+      termLine("t-info","🛒","you can afford an upgrade — open the Store to spend credits and speed everything up");
+      toast("🛒 You can afford an upgrade!","Open the Store to spend credits and speed everything up.","#ffb000","system"); }
     // achievements (throttled)
     achTimer+=dt; if(achTimer>=1){ achTimer=0; checkAch(); }
 
