@@ -328,12 +328,19 @@ the ability to display tier 1's look.
 
 Upgrade OS isn't just a reskin. On **MS-DOS** (the first tier), your apps are **tiled** — they split
 the screen automatically as you unlock them (tmux-style). The moment you buy **Windows 3.1** (or own
-any later tier), the desktop **unbolts into real windows**: drag any app by its title bar, minimize
-or close it (both tuck it into the **⊞ Start** menu in the top-left), and click a window to bring it
-to front. **⊞ Start** reopens anything you've closed and has a **Reset Layout** option to snap
-everything back to defaults. Your window positions are saved. This is desktop-only — on phones the
-layout stays a simple stack whatever OS you're on. Note that **prestige resets your OS to DOS**, so
-cashing out drops you back to the tiled layout until you buy your way back up to Windows 3.1.
+any later tier), the desktop **unbolts into real windows**:
+- **Drag** any window by its title bar; **resize** it from the grip in its bottom-right corner.
+- **Minimize / close** it (the – and ✕ in its title bar) to tuck it onto the **taskbar**.
+- A **taskbar runs along the bottom**, with the **⊞ Start** button at the far left and a button for
+  every app. Click an app's taskbar button to focus it (or reopen it if minimized); click the
+  focused one to minimize it back down.
+- **⊞ Start** opens a Programs menu listing your unlocked apps, plus a **Reset Layout** option to
+  snap everything back to defaults.
+
+Window positions and sizes are saved, and the Start Menu / taskbar restyle themselves to match
+whichever OS look you're wearing. This is desktop-only — on phones the layout stays a simple stack
+whatever OS you're on. Note that **prestige resets your OS to DOS**, so cashing out drops you back to
+the tiled layout until you buy your way back up to Windows 3.1.
 
 ## Prestige (IPO / Equity)
 

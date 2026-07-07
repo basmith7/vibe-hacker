@@ -55,6 +55,14 @@
   #matrix{position:fixed;inset:0;z-index:0;opacity:.16;pointer-events:none}
   #cockpit{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;padding:8px;gap:8px}
 
+  /* ---- chunky retro scrollbars ("big old scroll bars") — themed via vars; win31/95 get classic bevels ---- */
+  *{scrollbar-width:auto;scrollbar-color:var(--edge) var(--panel)}
+  ::-webkit-scrollbar{width:16px;height:16px}
+  ::-webkit-scrollbar-track{background:var(--panel);border:1px solid var(--edge)}
+  ::-webkit-scrollbar-thumb{background:var(--edge);border:3px solid var(--panel);border-radius:3px;min-height:30px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--dim)}
+  ::-webkit-scrollbar-corner{background:var(--panel)}
+
   /* status bar */
   #statusbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;border:1px solid var(--edge);
     background:linear-gradient(180deg,#0c1526,#070b14);border-radius:8px;padding:6px 8px;box-shadow:0 0 24px rgba(0,229,255,.06) inset}
@@ -121,20 +129,38 @@
     border:1px solid var(--edge);border-radius:3px;background:#0a1120;color:var(--dim)}
   .wctl button:hover{color:#fff;border-color:var(--cyan)}
   .wctl .wclose:hover{color:var(--red);border-color:var(--red)}
-  /* Start button (in the top strip / taskbar) + Start Menu */
-  #startBtn{align-self:center;font:inherit;font-size:10px;color:var(--cyan);background:#0a1120;
-    border:1px solid var(--edge);border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap;display:none;margin-right:2px}
+  /* resize grip (bottom-right corner) — only interactive in floating-window mode */
+  .wresize{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:5;display:none;
+    background:linear-gradient(135deg,transparent 46%,var(--edge) 46%,var(--edge) 58%,transparent 58%,transparent 72%,var(--edge) 72%,var(--edge) 84%,transparent 84%)}
+  body.wm-float .wresize{display:block}
+  /* ---------- Windows 3.1+ bottom taskbar: Start button (far-left) + one button per app ---------- */
+  #taskbar{display:none;align-items:center;gap:6px;flex:none;height:38px;padding:4px 6px;
+    border:1px solid var(--edge);border-radius:8px;background:linear-gradient(180deg,#0c1526,#070b14);
+    box-shadow:0 0 24px rgba(0,229,255,.06) inset}
+  body.wm-float #taskbar{display:flex}
+  #startBtn{font:inherit;font-size:12px;font-weight:700;color:var(--cyan);background:#0a1120;
+    border:1px solid var(--edge);border-radius:6px;padding:6px 12px;cursor:pointer;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:5px;flex:none}
   #startBtn:hover{color:#fff;border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.35)}
-  body.wm-float #startBtn{display:inline-flex;align-items:center;gap:5px}
-  #startMenu{position:fixed;left:8px;top:50px;z-index:210;min-width:216px;
-    background:linear-gradient(180deg,#0c1526,#070b14);border:1px solid var(--edge);border-radius:8px;
-    box-shadow:0 14px 34px rgba(0,0,0,.65);padding:6px;display:none;flex-direction:column;gap:2px}
+  #startBtn.open{color:#fff;border-color:var(--cyan);box-shadow:0 0 12px rgba(0,229,255,.45) inset}
+  #taskbarApps{display:flex;align-items:center;gap:4px;flex:1;min-width:0;overflow:hidden}
+  .tbapp{font:inherit;font-size:11px;color:var(--dim);background:#0a1120;border:1px solid var(--edge);
+    border-radius:6px;padding:5px 9px;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;
+    max-width:150px;overflow:hidden}
+  .tbapp .tbn{overflow:hidden;text-overflow:ellipsis}
+  .tbapp:hover{color:var(--txt);border-color:var(--cyan)}
+  .tbapp.open{color:var(--txt)}
+  .tbapp.active{color:#eafff0;border-color:var(--cyan);background:rgba(0,229,255,.12);box-shadow:0 0 10px rgba(0,229,255,.2) inset}
+  .tbapp:not(.open){opacity:.62}
+  /* Start Menu — pops UP from the taskbar's bottom-left. Uses theme vars so it reads in every OS look. */
+  #startMenu{position:fixed;left:6px;bottom:46px;z-index:210;min-width:220px;
+    background:var(--panel2);border:1px solid var(--edge);border-radius:8px;
+    box-shadow:0 -8px 34px rgba(0,0,0,.55);padding:6px;display:none;flex-direction:column;gap:2px}
   #startMenu.open{display:flex}
   #startMenu .smhead{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);padding:4px 9px 6px}
-  #startMenu .smi{display:flex;align-items:center;gap:9px;font-size:12px;color:var(--txt);padding:7px 9px;border-radius:5px;cursor:pointer;text-align:left;background:none;border:none;font-family:inherit;width:100%}
-  #startMenu .smi:hover{background:rgba(0,229,255,.12)}
-  #startMenu .smi.locked{color:var(--dim);cursor:default}
-  #startMenu .smi.locked:hover{background:none}
+  #startMenu .smi{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--txt);padding:8px 10px;border-radius:5px;cursor:pointer;text-align:left;background:none;border:none;font-family:inherit;width:100%}
+  #startMenu .smi:hover{background:var(--cyan);color:#05070d}
+  #startMenu .smi:hover .sub{color:#05070d}
   #startMenu .smi .sub{margin-left:auto;font-size:9px;color:var(--dim)}
   #startMenu .smsep{height:1px;background:var(--edge);margin:5px 2px}
   /* status app — detail stats + level/stage HUD, relocated out of the always-on chrome */
@@ -466,6 +492,12 @@
   :root[data-theme="win31"] .panel>.head,:root[data-theme="win31"] #shopHead{background:#000080!important;color:#fff!important;border-radius:0!important}
   :root[data-theme="win95"] .panel>.head,:root[data-theme="win95"] #shopHead{background:linear-gradient(90deg,#000080,#1084d0)!important;color:#fff!important;border-radius:0!important}
   :root[data-theme="win95"] canvas,:root[data-theme="win31"] canvas{filter:saturate(.6) contrast(1.05)}
+  /* classic beveled gray scrollbars for the retro-Windows looks */
+  :root[data-theme="win31"] ::-webkit-scrollbar-track,:root[data-theme="win95"] ::-webkit-scrollbar-track{background:#dfdfdf;border:0}
+  :root[data-theme="win31"] ::-webkit-scrollbar-thumb,:root[data-theme="win95"] ::-webkit-scrollbar-thumb{
+    background:#c3c3c3;border:2px solid;border-color:#fff #808080 #808080 #fff;border-radius:0}
+  :root[data-theme="win31"] ::-webkit-scrollbar-thumb:hover,:root[data-theme="win95"] ::-webkit-scrollbar-thumb:hover{background:#c9c9c9}
+  :root[data-theme="win31"] ::-webkit-scrollbar-corner,:root[data-theme="win95"] ::-webkit-scrollbar-corner{background:#dfdfdf}
   :root[data-theme="win31"] #shopHead .t,:root[data-theme="win95"] #shopHead .t,
   :root[data-theme="win31"] .panel>.head .tag,:root[data-theme="win95"] .panel>.head .tag{color:#fff!important;text-shadow:none!important}
 
@@ -493,6 +525,33 @@
   :root[data-theme="spaceage"] .panel,:root[data-theme="spaceage"] #statusbar,:root[data-theme="spaceage"] #hud,:root[data-theme="spaceage"] #shop{
     box-shadow:0 0 30px rgba(150,90,255,.22) inset,0 8px 40px rgba(0,0,0,.6)!important;border-color:#4a2c8f!important}
   :root[data-theme="spaceage"] canvas{filter:saturate(1.35) brightness(1.08) hue-rotate(-12deg)}
+
+  /* ---- taskbar + Start Menu, themed per OS look so the fly-out reads on every desktop ----
+     (float mode is only reachable at win31+, but the player can pick any unlocked look while there) */
+  :root[data-theme="win31"] #taskbar,:root[data-theme="win95"] #taskbar,
+  :root[data-theme="win31"] #startMenu,:root[data-theme="win95"] #startMenu{
+    background:#c3c3c3!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important;box-shadow:none!important}
+  :root[data-theme="win31"] #startBtn,:root[data-theme="win95"] #startBtn,
+  :root[data-theme="win31"] .tbapp,:root[data-theme="win95"] .tbapp{
+    background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
+  :root[data-theme="win31"] .tbapp.active,:root[data-theme="win95"] .tbapp.active{border-color:#808080 #fff #fff #808080!important;background:#b6b6b6!important}
+  :root[data-theme="win31"] #startMenu .smi,:root[data-theme="win95"] #startMenu .smi{color:#000!important}
+  :root[data-theme="win31"] #startMenu .smi:hover,:root[data-theme="win95"] #startMenu .smi:hover{background:#000080!important;color:#fff!important}
+  :root[data-theme="win31"] #startMenu .smi:hover .sub,:root[data-theme="win95"] #startMenu .smi:hover .sub{color:#fff!important}
+
+  :root[data-theme="win10"] #taskbar,:root[data-theme="win10"] #startMenu{background:#fff!important;border:1px solid #d5dee8!important;border-radius:4px!important;box-shadow:0 1px 4px rgba(0,0,0,.14)!important}
+  :root[data-theme="win10"] #startBtn,:root[data-theme="win10"] .tbapp{background:#fff!important;color:#1b2733!important;border:1px solid #cdd7e3!important;border-radius:4px!important;box-shadow:none!important;text-shadow:none!important}
+  :root[data-theme="win10"] .tbapp.active{border-color:#0078d7!important;color:#0078d7!important}
+  :root[data-theme="win10"] #startMenu .smi{color:#1b2733!important}
+  :root[data-theme="win10"] #startMenu .smi:hover{background:#0078d7!important;color:#fff!important}
+  :root[data-theme="win10"] #startMenu .smi:hover .sub{color:#fff!important}
+
+  :root[data-theme="dos"] #taskbar,:root[data-theme="dos"] #startMenu{background:#000!important;border-color:#1c5a1c!important;border-radius:0!important;box-shadow:none!important}
+  :root[data-theme="dos"] #startBtn,:root[data-theme="dos"] .tbapp{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
+  :root[data-theme="dos"] .tbapp.active{background:#003a00!important}
+  :root[data-theme="dos"] #startMenu .smi{color:#39ff66!important}
+  :root[data-theme="dos"] #startMenu .smi:hover{background:#39ff66!important;color:#000!important}
+  :root[data-theme="dos"] #startMenu .smi:hover .sub{color:#000!important}
 </style>
 </head>
 <body>
@@ -505,7 +564,6 @@
       <span class="sub" id="themeLabel" title="click to change look" tabindex="0">career sim v6.0.0</span>
       <div id="themeMenu"></div>
     </div>
-    <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <button id="storeBtn" title="open the Store">🛒 Open Store</button>
     <span class="tbspace"></span>
@@ -592,6 +650,12 @@
       <div class="head"><span class="dot"></span> MISSIONS <span class="spacer"></span><span class="tag">bounty board</span></div>
       <div id="missionsBody"></div>
     </section>
+  </div>
+  <!-- Windows 3.1+ desktop taskbar (float mode only): Start button far-left, then a button per
+       running/available app. Lives as the last flex child so the grid canvas shrinks above it. -->
+  <div id="taskbar">
+    <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
+    <div id="taskbarApps"></div>
   </div>
 </div>
 
@@ -1652,7 +1716,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
     if(float && topId){ const t=$("#"+APP[topId].panelId); if(t) t.classList.add("wfocus"); }
     grid.dataset.count=float?"float":String(clamp(n,1,10));
-    if(float) renderStartMenu();
+    if(float){ renderStartMenu(); renderTaskbar(); }
   }
   /* ---- floating-window interaction: drag, focus/z-order, minimize/close, Start Menu ---- */
   function focusWindow(id){
@@ -1669,7 +1733,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     w.open=true; bringToFront(id); applyLayout(); save();
   }
   function resetLayout(){ P.windows=cloneWindows(); applyLayout(); save(); termLine("t-info","🔄","layout reset — windows back to their default arrangement"); toast("🔄 Layout reset","windows back to their default arrangement","#00e5ff","system"); }
-  let drag=null;
+  let drag=null, rez=null;
   function startDrag(id,el,head,e){
     if(!wmFloat()||e.button!==0||e.target.closest(".wctl")) return;
     const grid=$("#grid"), gr=grid.getBoundingClientRect(), w=P.windows[id];
@@ -1678,40 +1742,84 @@ notify("#general", "10x-ing that shit 🔥");`,
     try{ head.setPointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
   }
+  function startResize(id,el,handle,e){   // drag the bottom-right grip to resize a floating window
+    if(!wmFloat()||e.button!==0) return;
+    const grid=$("#grid"), w=P.windows[id];
+    focusWindow(id);
+    rez={id,el,grid,sx:e.clientX,sy:e.clientY,w0:w.w,h0:w.h};
+    try{ handle.setPointerCapture(e.pointerId); }catch(_){}
+    e.preventDefault(); e.stopPropagation();
+  }
   addEventListener("pointermove",e=>{
+    if(rez){
+      const gr=rez.grid.getBoundingClientRect(), w=P.windows[rez.id];
+      w.w=clamp(rez.w0+(e.clientX-rez.sx),240,Math.max(240,gr.width-w.x));
+      w.h=clamp(rez.h0+(e.clientY-rez.sy),120,Math.max(120,gr.height-w.y));
+      rez.el.style.width=w.w+"px"; rez.el.style.height=w.h+"px";
+      return;
+    }
     if(!drag) return;
     const gr=drag.grid.getBoundingClientRect(), w=P.windows[drag.id];
     w.x=clamp(e.clientX-gr.left-drag.dx,0,Math.max(0,gr.width-40));
     w.y=clamp(e.clientY-gr.top-drag.dy,0,Math.max(0,gr.height-24));
     drag.el.style.left=w.x+"px"; drag.el.style.top=w.y+"px";
   });
-  addEventListener("pointerup",()=>{ if(drag){ drag=null; save(); } });
-  function setupWindowChrome(){   // inject title-bar min/close + drag/focus handlers into each app panel once
+  addEventListener("pointerup",()=>{ if(drag){ drag=null; save(); } if(rez){ rez=null; save(); } });
+  function setupWindowChrome(){   // inject title-bar min/close + resize grip + drag/focus handlers once
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
       const head=el.querySelector(".head"); if(!head||head.querySelector(".wctl")) continue;
       const ctl=document.createElement("span"); ctl.className="wctl";
-      ctl.innerHTML=`<button class="wmin" title="minimize to Start Menu">–</button><button class="wclose" title="close to Start Menu">✕</button>`;
+      ctl.innerHTML=`<button class="wmin" title="minimize to the taskbar">–</button><button class="wclose" title="close to the taskbar">✕</button>`;
       head.appendChild(ctl);
       ctl.querySelector(".wmin").addEventListener("click",e=>{ e.stopPropagation(); closeWindow(a.id); });
       ctl.querySelector(".wclose").addEventListener("click",e=>{ e.stopPropagation(); closeWindow(a.id); });
       head.addEventListener("pointerdown",e=>startDrag(a.id,el,head,e));
+      const grip=document.createElement("div"); grip.className="wresize"; grip.title="drag to resize";
+      el.appendChild(grip);
+      grip.addEventListener("pointerdown",e=>startResize(a.id,el,grip,e));
       el.addEventListener("pointerdown",()=>{ if(wmFloat()) focusWindow(a.id); }, true);
     }
   }
   let startOpen=false;
-  function toggleStart(force){ startOpen=(force!==undefined)?force:!startOpen; const m=$("#startMenu"); if(m) m.classList.toggle("open",startOpen); }
+  function toggleStart(force){ startOpen=(force!==undefined)?force:!startOpen;
+    const m=$("#startMenu"); if(m) m.classList.toggle("open",startOpen);
+    const b=$("#startBtn"); if(b) b.classList.toggle("open",startOpen);
+    if(startOpen) renderStartMenu();
+  }
   function renderStartMenu(){
     const m=$("#startMenu"); if(!m) return;
+    // Programs launcher — only real, unlocked APPS belong here (no locked placeholders, no items).
     let html=`<div class="smhead">⊞ Programs</div>`;
     for(const a of APPS){
+      if(!a.unlocked()) continue;
       const w=P.windows[a.id]||{};
-      if(a.unlocked()) html+=`<button class="smi" data-app="${a.id}"><span>${a.emoji}</span><span>${a.title}</span><span class="sub">${w.open===false?"closed":"open"}</span></button>`;
-      else html+=`<span class="smi locked"><span>${a.emoji}</span><span>${a.title}</span><span class="sub">🔒 locked</span></span>`;
+      html+=`<button class="smi" data-app="${a.id}"><span>${a.emoji}</span><span>${a.title}</span><span class="sub">${w.open===false?"":"●"}</span></button>`;
     }
     html+=`<div class="smsep"></div><button class="smi" data-action="reset"><span>🔄</span><span>Reset Layout</span></button>`;
     m.innerHTML=html;
     m.querySelectorAll(".smi[data-app]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); openWindow(b.dataset.app); toggleStart(false); }));
     const rb=m.querySelector('.smi[data-action="reset"]'); if(rb) rb.addEventListener("click",e=>{ e.stopPropagation(); resetLayout(); toggleStart(false); });
+  }
+  // bottom taskbar — one button per unlocked app; the top-most (focused) window is highlighted.
+  // clicking the active app minimizes it; clicking a closed/background app opens & focuses it.
+  function renderTaskbar(){
+    const wrap=$("#taskbarApps"); if(!wrap) return;
+    let topId=null,topZ=-1;
+    for(const a of APPS){ if(!a.unlocked()) continue; const w=P.windows[a.id]; if(w&&w.open!==false&&(w.z||1)>topZ){ topZ=w.z||1; topId=a.id; } }
+    wrap.innerHTML="";
+    for(const a of APPS){ if(!a.unlocked()) continue;
+      const w=P.windows[a.id]||{}, open=w.open!==false, active=(a.id===topId);
+      const b=document.createElement("button");
+      b.className="tbapp"+(open?" open":"")+(active?" active":"");
+      b.innerHTML=`<span>${a.emoji}</span><span class="tbn">${a.title}</span>`;
+      b.title=open?(active?a.title+" — click to minimize":a.title+" — click to bring to front"):a.title+" — click to open";
+      b.addEventListener("click",e=>{ e.stopPropagation();
+        const cur=P.windows[a.id];
+        if(cur&&cur.open!==false&&a.id===topId) closeWindow(a.id);   // active window → minimize to the bar
+        else openWindow(a.id);                                       // closed/background → open & focus
+      });
+      wrap.appendChild(b);
+    }
   }
   function applyUnlocks(){
     // stat chips visible per unlocked skill; app panels (incl. locked globe/telemetry) are shown/hidden
