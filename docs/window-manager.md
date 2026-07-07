@@ -439,10 +439,20 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   scoped to `#statusPanel` so it applies in both tiling and floating modes; the mobile media query
   still overrides to its compact grid on tiny screens.
 
+**✅ Done — batch 4 (branch `playtest-batch-4`):**
+- **Telemetry reworked.** The old xp/sec line became a **Credits** panel: live balance (big), income
+  **/sec**, and a green line graph of that rate over ~15s (the app title bar mirrors it). `P.earned`
+  now also accrues passive + offline income so the rate is honest. The **stat sheet** is now an HTML
+  horizontal bar list with **real stat names + values** (replacing the unlabeled canvas bars), and
+  **every row has a mouseover explainer** of what that stat governs. **Failure rate** and **Sanity**
+  charts each gained a hover explainer too (native `title` tooltips; `cursor:help`).
+- **Judgment call on "move the credits counter into Telemetry / make Telemetry a required first
+  purchase":** I surfaced credits *richly* in Telemetry but **kept the status-bar counter** — pulling
+  the single most important number out of the always-on chrome (and gating it behind a purchase)
+  would hurt a brand-new player badly. Fully relocating it out of the top strip is coupled with the
+  taskbar-minimization work, so it's folded into the Win 3.1 chrome batch to decide there.
+
 **🔜 Queued (not started):**
-- **Telemetry rework:** stat-sheet needs **stat names**; **mouseover explainers** for failure rate,
-  sanity, and each stat; **move the credits counter into Telemetry** when available (maybe make
-  Telemetry a required first purchase) with a **credits-over-time line graph + credits/sec**.
 - **Win 3.1 chrome:** **resizable windows**; move the **taskbar to the bottom, Start button far-left**;
   **Start Menu fly-out** currently dark/unreadable → theme it lighter; **big chunky retro scroll bars**
   (from ideas.md 📥); **items should not appear in the Start Menu** (from ideas.md 💡 — needs
