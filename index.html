@@ -153,7 +153,21 @@
   #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
   #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
   #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
-  #statusPanel #hud{border:none;box-shadow:none;background:none;padding:0;flex-wrap:wrap}
+  /* Status app = the character sheet: level/stage on top, then the skills as a readable VERTICAL
+     list (one stat per full-width row) instead of a cramped wrapping strip. Scoped to #statusPanel so
+     it applies in every WM mode; the mobile media query still overrides to a grid on tiny screens. */
+  #statusPanel #hud{border:none;box-shadow:none;background:none;padding:0;flex-direction:column;flex-wrap:nowrap;gap:9px}
+  #statusPanel .hud-block{width:100%;min-width:0;flex:none}
+  #statusPanel .hud-block.stats{flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:5px;
+    border-left:none;border-top:1px solid var(--edge);padding:9px 0 0;margin-top:1px}
+  #statusPanel .hud-block.stats::before{content:"◈ Skills";display:block;font-size:9px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+  #statusPanel .statchip{width:100%;min-width:0;gap:9px;padding:5px 9px;
+    border:1px solid rgba(22,35,61,.55);border-radius:6px;background:rgba(255,255,255,.015)}
+  #statusPanel .statchip .em{font-size:15px}
+  #statusPanel .statchip .sk{font-size:10.5px;letter-spacing:.4px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #statusPanel .statchip .sv{font-size:16px}
+  #statusPanel .statchip .sp{width:22px;height:22px;font-size:15px}
   #globeWrap{position:absolute;inset:0;top:26px}
   #globe{width:100%;height:100%;display:block}
   .globe-readout{position:absolute;left:10px;bottom:8px;font-size:10px;color:var(--dim);pointer-events:none}

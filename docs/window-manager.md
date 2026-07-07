@@ -431,8 +431,15 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   Also routed the previously toast-only onboarding tips / layout-reset / theme-switch lines to the
   Terminal, and fixed stale "press U" / "bottom bar" copy in the tips.
 
+**✅ Done — batch 3 (branch `playtest-batch-3`):**
+- **Character-sheet layout — skills are now a vertical section.** The Status app reads like a real
+  character sheet: meta stats (skill pts / tasks / streak / loot / uptime) up top, sanity bar, then
+  level+title / stage, then a **◈ Skills** header over a full-width **one-stat-per-row vertical list**
+  (emoji · name · big colored value · `+` button), instead of the old cramped wrapping strip. CSS-only,
+  scoped to `#statusPanel` so it applies in both tiling and floating modes; the mobile media query
+  still overrides to its compact grid on tiny screens.
+
 **🔜 Queued (not started):**
-- **Character-sheet layout (DOS):** stats should be a **vertical section** — lay the sheet out better.
 - **Telemetry rework:** stat-sheet needs **stat names**; **mouseover explainers** for failure rate,
   sanity, and each stat; **move the credits counter into Telemetry** when available (maybe make
   Telemetry a required first purchase) with a **credits-over-time line graph + credits/sec**.
