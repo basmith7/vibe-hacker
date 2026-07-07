@@ -30,10 +30,9 @@ The agent picks the destination based on size; when in doubt, ask.
 * Walk me though the code. I'd like to understand the architecture better.
 * set my computer to not sleep when claude is working
 * "slack" as a purchasable item, should have insane messages about really dumb sales people storeies, and project managers saying "nothing from my end" and it should hurt productivity while its open.  
-* items shjould not appear in the start menu of win 3.1
 
 ## 📥 Ready
 
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
 
-_(nothing pending — "big old scroll bars" routed to docs/window-manager.md Feedback → Win 3.1 chrome)_
+* items shjould not appear in the start menu of win 3.1 until they are purchased
