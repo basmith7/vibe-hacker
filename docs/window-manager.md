@@ -474,13 +474,18 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   so a fully-unlocked save opens tidy. Existing saves keep their arrangement (⊞ Start → Reset Layout
   applies the new default).
 
+**✅ Done — batch 7 (branch `w3-taskbar-merge`):**
+- **Win 3.1+ title strip merged into the taskbar.** In float mode the top `#statusbar` is hidden and
+  its bits fold into the one bottom bar via `syncChrome(float)` (relocates only on a mode change, using
+  stable anchors so it's idempotent): the **brand + OS-name/theme switcher** sit next to ⊞ Start on the
+  left, and a right-hand **system tray** holds **⚙ · ? · $credits · clock**. Added a live **clock**
+  (`tickClock`, HH:MM, 15s interval) — this is the far-right "system tray clock" spot, with room to add
+  a **volume** control later when sound lands (W6). The theme menu flips to open **upward** from the
+  bottom bar. Tiling/DOS keeps the original top strip (syncChrome restores it on shrink < 820px too).
+  This **resolves the deferred "move credits out of the top strip"** decision from the Telemetry batch:
+  in float they live in the tray; in tiling they stay in the top strip.
+
 **🔜 Queued (not started):**
-- **Win 3.1+ — merge the top title strip into the taskbar (routed from `ideas.md` 📥).** In floating
-  mode, fold the top `#statusbar` (brand/OS-name) into the bottom taskbar so there's a single bar, and
-  move the **credits counter to the bottom-right**, next to a **new clock** (add the clock). Leave room
-  to add a **volume level** there later if/when sound lands. This is the natural place to finally
-  resolve the deferred "move credits out of the top strip" decision from the Telemetry batch — do it
-  here, in the taskbar, rather than in Telemetry. Tiling/DOS mode keeps the top strip as-is.
 - **Game speed is way too fast** — economy/pacing tuning. *Explicitly deferred: keep it fast for
   now, it's good for repeat testing.*
 - From ideas.md 💡 (user's space, not actioned): **"Slack" as a purchasable app** — unhinged messages

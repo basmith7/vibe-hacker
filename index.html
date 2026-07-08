@@ -164,6 +164,18 @@
   .tbapp.open{color:var(--txt)}
   .tbapp.active{color:#eafff0;border-color:var(--cyan);background:rgba(0,229,255,.12);box-shadow:0 0 10px rgba(0,229,255,.2) inset}
   .tbapp:not(.open){opacity:.62}
+  /* system tray (right side of the taskbar) — brand/credits/⚙/? fold in here in float, plus the clock */
+  #tbTray{display:flex;align-items:center;gap:8px;flex:none;margin-left:6px}
+  #tbClock{font-size:12px;font-variant-numeric:tabular-nums;color:var(--txt);white-space:nowrap;padding:0 2px}
+  /* float mode = one merged bar: hide the top strip, fold its bits into the taskbar, compact them to fit */
+  body.wm-float #statusbar{display:none}
+  body.wm-float #taskbar .brand{border-right:1px solid var(--edge);padding-right:9px;margin-right:0}
+  body.wm-float #taskbar .brand .logo{font-size:12px}
+  body.wm-float #taskbar .brand .sub{font-size:10px}
+  body.wm-float #taskbar .stat.credits{padding:0 4px;min-width:0;flex:none;border-right:none;justify-content:center}
+  body.wm-float #taskbar .stat.credits .k{font-size:8px}
+  body.wm-float #taskbar .stat.credits .v{font-size:13px}
+  body.wm-float #themeMenu{top:auto;bottom:calc(100% + 8px)}   /* opens upward from the bottom bar */
   /* Start Menu — pops UP from the taskbar's bottom-left. Uses theme vars so it reads in every OS look. */
   #startMenu{position:fixed;left:6px;bottom:46px;z-index:210;min-width:220px;
     background:var(--panel2);border:1px solid var(--edge);border-radius:8px;
@@ -576,7 +588,9 @@
   :root[data-theme="win31"] #startMenu,:root[data-theme="win95"] #startMenu{
     background:#c3c3c3!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important;box-shadow:none!important}
   :root[data-theme="win31"] #startBtn,:root[data-theme="win95"] #startBtn,
-  :root[data-theme="win31"] .tbapp,:root[data-theme="win95"] .tbapp{
+  :root[data-theme="win31"] .tbapp,:root[data-theme="win95"] .tbapp,
+  :root[data-theme="win31"] #taskbar #setBtn,:root[data-theme="win95"] #taskbar #setBtn,
+  :root[data-theme="win31"] #taskbar #helpBtn,:root[data-theme="win95"] #taskbar #helpBtn{
     background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
   :root[data-theme="win31"] .tbapp.active,:root[data-theme="win95"] .tbapp.active{border-color:#808080 #fff #fff #808080!important;background:#b6b6b6!important}
   :root[data-theme="win31"] #startMenu .smi,:root[data-theme="win95"] #startMenu .smi{color:#000!important}
@@ -584,14 +598,14 @@
   :root[data-theme="win31"] #startMenu .smi:hover .sub,:root[data-theme="win95"] #startMenu .smi:hover .sub{color:#fff!important}
 
   :root[data-theme="win10"] #taskbar,:root[data-theme="win10"] #startMenu{background:#fff!important;border:1px solid #d5dee8!important;border-radius:4px!important;box-shadow:0 1px 4px rgba(0,0,0,.14)!important}
-  :root[data-theme="win10"] #startBtn,:root[data-theme="win10"] .tbapp{background:#fff!important;color:#1b2733!important;border:1px solid #cdd7e3!important;border-radius:4px!important;box-shadow:none!important;text-shadow:none!important}
+  :root[data-theme="win10"] #startBtn,:root[data-theme="win10"] .tbapp,:root[data-theme="win10"] #taskbar #setBtn,:root[data-theme="win10"] #taskbar #helpBtn{background:#fff!important;color:#1b2733!important;border:1px solid #cdd7e3!important;border-radius:4px!important;box-shadow:none!important;text-shadow:none!important}
   :root[data-theme="win10"] .tbapp.active{border-color:#0078d7!important;color:#0078d7!important}
   :root[data-theme="win10"] #startMenu .smi{color:#1b2733!important}
   :root[data-theme="win10"] #startMenu .smi:hover{background:#0078d7!important;color:#fff!important}
   :root[data-theme="win10"] #startMenu .smi:hover .sub{color:#fff!important}
 
   :root[data-theme="dos"] #taskbar,:root[data-theme="dos"] #startMenu{background:#000!important;border-color:#1c5a1c!important;border-radius:0!important;box-shadow:none!important}
-  :root[data-theme="dos"] #startBtn,:root[data-theme="dos"] .tbapp{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
+  :root[data-theme="dos"] #startBtn,:root[data-theme="dos"] .tbapp,:root[data-theme="dos"] #taskbar #setBtn,:root[data-theme="dos"] #taskbar #helpBtn{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important}
   :root[data-theme="dos"] .tbapp.active{background:#003a00!important}
   :root[data-theme="dos"] #startMenu .smi{color:#39ff66!important}
   :root[data-theme="dos"] #startMenu .smi:hover{background:#39ff66!important;color:#000!important}
@@ -715,6 +729,8 @@
   <div id="taskbar">
     <button id="startBtn" title="Start Menu — open any app" aria-label="Start menu — open any app" aria-haspopup="menu">⊞ Start</button>
     <div id="taskbarApps" role="toolbar" aria-label="Open apps"></div>
+    <!-- system tray: the top strip's brand/credits/⚙/? fold in here in float mode (see syncChrome), plus a clock -->
+    <div id="tbTray"><span id="tbClock" title="local time" aria-label="Clock">--:--</span></div>
   </div>
 </div>
 
@@ -1809,10 +1825,32 @@ notify("#general", "10x-ing that shit 🔥");`,
     w.w=clamp(w.w,240,Math.max(240,grid.clientWidth)); w.h=clamp(w.h,120,Math.max(120,grid.clientHeight));
     w.x=clamp(w.x,0,Math.max(0,grid.clientWidth-80)); w.y=clamp(w.y,0,Math.max(0,grid.clientHeight-34));
   }
+  // In float mode the top strip merges into the taskbar: fold the brand, credits, and ⚙/? into it
+  // (brand next to Start, the rest into the right-hand tray beside the clock). Only relocates on a
+  // mode change; moves relative to stable anchors (#taskbarApps, #storeBtn) so it's safe & idempotent.
+  let chromeFloat=null;
+  function syncChrome(float){
+    if(chromeFloat===float) return; chromeFloat=float;
+    const sb=$("#statusbar"), tb=$("#taskbar"), tray=$("#tbTray"), apps=$("#taskbarApps");
+    const brand=$(".brand"), credits=$("#statusbar .stat.credits")||$(".stat.credits");
+    const setB=$("#setBtn"), helpB=$("#helpBtn"), clock=$("#tbClock"), storeBtn=$("#storeBtn");
+    if(!sb||!tb||!tray||!brand||!credits) return;
+    if(float){
+      tb.insertBefore(brand, apps);              // taskbar: [Start] [brand] [apps…] [tray]
+      tray.append(setB, helpB, credits, clock);  // tray: ⚙ ? $credits clock  (clock far right)
+    } else {
+      sb.insertBefore(credits, storeBtn);        // restore the top strip's original order
+      sb.insertBefore(brand, credits);
+      sb.append(setB, helpB);
+    }
+  }
+  function tickClock(){ const c=$("#tbClock"); if(!c) return; const d=new Date();
+    c.textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
   function applyLayout(){   // tiling (tmux) below Win3.1; floating windows at/above it
     const grid=$("#grid"); if(!grid) return;
     const float=wmFloat();
     document.body.classList.toggle("wm-float", float);
+    syncChrome(float);
     let n=0, topId=null, topZ=-1;
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
       const unlocked=a.unlocked();
@@ -2756,6 +2794,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   cacheUI();
   buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); initGlobe(); initMatrix();
   ambientTint(); setInterval(ambientTint, 5*60*1000);   // seasonal/time-of-day wash, drifts every 5 min
+  tickClock(); setInterval(tickClock, 15*1000);         // taskbar clock (float mode)
   setupWindowChrome();
   applyTheme();
   applySettings();   // reduce-motion + ambient prefs take effect before the first frame

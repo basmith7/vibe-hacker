@@ -336,9 +336,11 @@ the screen automatically as you unlock them (tmux-style). The moment you buy **W
 any later tier), the desktop **unbolts into real windows**:
 - **Drag** any window by its title bar; **resize** it from the grip in its bottom-right corner.
 - **Minimize / close** it (the – and ✕ in its title bar) to tuck it onto the **taskbar**.
-- A **taskbar runs along the bottom**, with the **⊞ Start** button at the far left and a button for
-  every app. Click an app's taskbar button to focus it (or reopen it if minimized); click the
-  focused one to minimize it back down.
+- A **taskbar runs along the bottom** and becomes your one and only bar — the top strip folds into
+  it: **⊞ Start** at the far left, then the **VIBE//HACKER** brand + OS-name (click it to switch
+  looks), a button for **every app**, and a right-hand tray with **⚙ settings · ? help · your
+  credits · a clock**. Click an app's taskbar button to focus it (or reopen it if minimized); click
+  the focused one to minimize it back down.
 - **⊞ Start** opens a Programs menu listing your unlocked apps, plus a **Reset Layout** option to
   snap everything back to defaults.
 
