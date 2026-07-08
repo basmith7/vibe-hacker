@@ -35,4 +35,7 @@ The agent picks the destination based on size; when in doubt, ask.
 
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
 
-* items shjould not appear in the start menu of win 3.1 until they are purchased
+_(nothing pending — batch routed 2026-07-07: espresso/assist→gear and achievements-as-app → todo.md;
+title-bar/taskbar merge + credits/clock bottom-right → window-manager.md queued. Two were already
+shipped: "start menu only shows purchased apps" = playtest-batch-5's apps-only Start Menu; "better
+default window layout" = playtest-batch-6's non-overlapping grid.)_

@@ -475,6 +475,12 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
   applies the new default).
 
 **🔜 Queued (not started):**
+- **Win 3.1+ — merge the top title strip into the taskbar (routed from `ideas.md` 📥).** In floating
+  mode, fold the top `#statusbar` (brand/OS-name) into the bottom taskbar so there's a single bar, and
+  move the **credits counter to the bottom-right**, next to a **new clock** (add the clock). Leave room
+  to add a **volume level** there later if/when sound lands. This is the natural place to finally
+  resolve the deferred "move credits out of the top strip" decision from the Telemetry batch — do it
+  here, in the taskbar, rather than in Telemetry. Tiling/DOS mode keeps the top strip as-is.
 - **Game speed is way too fast** — economy/pacing tuning. *Explicitly deferred: keep it fast for
   now, it's good for repeat testing.*
 - From ideas.md 💡 (user's space, not actioned): **"Slack" as a purchasable app** — unhinged messages
