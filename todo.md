@@ -27,7 +27,10 @@ scheduled work. (Game speed is wanted sooner but sequenced in W5 — sequence �
 - [ ] **[W6·M]** Per-era **sound**: DOS beeps, the Windows 95 startup chime, modern UI blips (mute toggle).
 - [ ] **[W6·M]** Era-appropriate fonts embedded (currently system fonts).
 - [ ] **[W6·M]** CRT curvature / boot sequence animation when the OS "upgrades".
-- [ ] **[W1·S]** Seasonal / time-of-day palettes.
+- [x] **[W1·S]** Seasonal / time-of-day palettes — `#ambient` overlay (`ambientTint()`, drifts every
+      5 min) washes a subtle time-of-day sky glow (top) + seasonal horizon glow (bottom) over the
+      cockpit. `screen` blend so it reads on the dark themes without hazing center content; layers on
+      top of any OS look. *(A future Settings toggle — W2 — could gate it.)*
 
 ## Gameplay depth
 *(Stat synergies/set bonuses and milestone bosses were absorbed into [crafting-update.md](docs/crafting-update.md)
