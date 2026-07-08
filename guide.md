@@ -397,6 +397,16 @@ the Store appears at 10 credits, and reaching it is quick enough that waiting is
 | `Esc` / `` ` `` | Boss key — hide behind a fake spreadsheet |
 | `⟲ sudo rm -r /` (bottom of the Store app) | Wipe your save and start over |
 
+## Settings
+
+The **⚙ button** (top-right, next to **?**) opens a Settings panel — preferences saved with your run:
+- **Number format** — how big numbers read: `1.2K` (abbreviated, default), `1,234` (full, with
+  commas), or `1.2e6` (scientific past a million).
+- **Reduce motion** — `System` (follow your OS setting), `Off`, or `On`. When on, it stops the matrix
+  rain, skips the flying banners and screen flashes, and near-zeroes animations.
+- **Ambient time/season tint** — toggle the subtle time-of-day / seasonal glow on or off.
+- **Lock OS look** — stop the **Auto-Buyer** from ever switching your OS theme on you.
+
 ## A few tips
 
 - **Machine tiers are the biggest lever.** They multiply everything at once, so when you can
