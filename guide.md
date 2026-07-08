@@ -324,6 +324,10 @@ lock in that look forever: **click the OS name** (top-left, next to the logo) an
 menu of every look you've *ever* unlocked and switch back to it. Owning tier 4 doesn't cost you
 the ability to display tier 1's look.
 
+Layered on top of whatever look you pick is a very subtle **ambient tint** that drifts with your
+local **time of day** (cool at night, warm at dawn/dusk, neutral at midday) and nudges with the
+**season** — a faint mood glow at the screen's edges, not a recolor, so your OS look stays intact.
+
 ### Windows (the desktop)
 
 Upgrade OS isn't just a reskin. On **MS-DOS** (the first tier), your apps are **tiled** — they split

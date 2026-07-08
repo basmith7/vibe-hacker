@@ -53,6 +53,10 @@
     mix-blend-mode:multiply;
   }
   #matrix{position:fixed;inset:0;z-index:0;opacity:.16;pointer-events:none}
+  /* ambient wash — a gentle time-of-day sky glow (top) + seasonal horizon glow (bottom), see ambientTint().
+     `screen` reads as soft coloured light over the dark OS themes the game mostly lives in, and only tints
+     the edges so center content keeps its contrast. Sits just under the scanline/vignette layer. */
+  #ambient{position:fixed;inset:0;z-index:58;pointer-events:none;mix-blend-mode:screen;transition:background 4s ease}
   #cockpit{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;padding:8px;gap:8px}
 
   /* ---- chunky retro scrollbars ("big old scroll bars") — themed via vars; win31/95 get classic bevels ---- */
@@ -586,6 +590,7 @@
 </head>
 <body>
 <canvas id="matrix"></canvas>
+<div id="ambient"></div>
 
 <div id="cockpit">
   <header id="statusbar">
@@ -2524,6 +2529,23 @@ notify("#general", "10x-ing that shit 🔥");`,
     drawLine();renderStatSheet();drawSpark();drawGauge(dt);
   }
 
+  /* ============ ambient time-of-day + season tint ============ */
+  // A soft-light wash over the whole cockpit, tinted by the local hour (deep-night blue → dawn warmth →
+  // cool morning → neutral midday → golden hour → evening purple) and nudged by the season. Very subtle;
+  // it reads as mood, not a recolor, so it layers on top of any OS theme. Drifts every few minutes.
+  const ambientEl=$("#ambient");
+  function ambientTint(){
+    if(!ambientEl) return;
+    const d=new Date(), h=d.getHours(), m=d.getMonth();
+    const tod = h<5?[26,38,92] : h<8?[255,150,100] : h<11?[188,214,255] : h<16?[212,214,218]
+              : h<19?[255,168,80] : h<22?[120,84,170] : [26,38,92];
+    const season = (m===11||m<=1)?[80,120,210] : m<=4?[96,190,120] : m<=7?[255,198,120] : [226,138,66];
+    const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+    ambientEl.style.background=
+      `linear-gradient(180deg, ${rgba(tod,.17)} 0%, transparent 46%),`+
+      `radial-gradient(130% 80% at 50% 112%, ${rgba(season,.16)} 0%, transparent 60%)`;
+  }
+
   /* ============ matrix rain ============ */
   const mcv=$("#matrix");let mCols,mYs,mFont=14;
   const GLYPHS="アイウエオカキクケコ01<>{}[]$#/*+=;クサ日本ヲabcdef".split("");
@@ -2624,6 +2646,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   recompute();
   cacheUI();
   buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); initGlobe(); initMatrix();
+  ambientTint(); setInterval(ambientTint, 5*60*1000);   // seasonal/time-of-day wash, drifts every 5 min
   setupWindowChrome();
   applyTheme();
   applyUnlocks();
