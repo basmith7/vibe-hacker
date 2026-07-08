@@ -41,6 +41,11 @@
   *{box-sizing:border-box}
   html,body{height:100%}
   *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  /* a11y: a visible keyboard-focus ring (only for keyboard nav, never mouse) on every focusable control.
+     (reduce-motion is handled by the Settings panel via body.reduce-motion so the user's override wins
+     over the OS pref — no blanket prefers-reduced-motion media query here on purpose.) */
+  :focus{outline:none}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:2px;border-radius:3px}
   body{
     margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.35;
     overflow:hidden;cursor:crosshair;text-shadow:0 0 4px rgba(0,229,255,.15);touch-action:manipulation;
@@ -613,14 +618,14 @@
   <header id="statusbar">
     <div class="brand">
       <span class="logo">◈ VIBE//HACKER</span>
-      <span class="sub" id="themeLabel" title="click to change look" tabindex="0">career sim v6.0.0</span>
+      <span class="sub" id="themeLabel" title="click to change look" tabindex="0" role="button" aria-haspopup="menu" aria-label="Change theme / OS look">career sim v6.0.0</span>
       <div id="themeMenu"></div>
     </div>
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <button id="storeBtn" title="open the Store">🛒 Open Store</button>
     <span class="tbspace"></span>
-    <button id="setBtn" title="settings">⚙</button>
-    <button id="helpBtn" title="controls &amp; shortcuts (press ?)">?</button>
+    <button id="setBtn" title="settings" aria-label="Settings">⚙</button>
+    <button id="helpBtn" title="controls &amp; shortcuts (press ?)" aria-label="Controls and keyboard shortcuts">?</button>
   </header>
 
   <div id="grid">
@@ -678,7 +683,7 @@
       <div class="head"><span class="dot"></span> TERMINAL <span class="spacer"></span><span class="tag">~/career/main</span></div>
       <div id="terminalBody">
         <div id="manualWrap"></div>
-        <div id="termBody"></div>
+        <div id="termBody" role="log" aria-label="Build &amp; activity log"></div>
       </div>
     </section>
 
@@ -708,18 +713,18 @@
   <!-- Windows 3.1+ desktop taskbar (float mode only): Start button far-left, then a button per
        running/available app. Lives as the last flex child so the grid canvas shrinks above it. -->
   <div id="taskbar">
-    <button id="startBtn" title="Start Menu — open any app">⊞ Start</button>
-    <div id="taskbarApps"></div>
+    <button id="startBtn" title="Start Menu — open any app" aria-label="Start menu — open any app" aria-haspopup="menu">⊞ Start</button>
+    <div id="taskbarApps" role="toolbar" aria-label="Open apps"></div>
   </div>
 </div>
 
 <div id="flash"></div>
-<div id="toasts"></div>
-<div id="memes"></div>
-<div id="startMenu"></div>
+<div id="toasts" role="status" aria-live="polite" aria-atomic="false"></div>
+<div id="memes" aria-hidden="true"></div>
+<div id="startMenu" role="menu" aria-label="Programs"></div>
 
 <div id="helpOverlay" class="modalScrim">
-  <div id="helpCard" class="modalCard">
+  <div id="helpCard" class="modalCard" role="dialog" aria-modal="true" aria-label="Controls and keyboard shortcuts">
     <h3>⌨ Controls</h3>
     <div class="hsub">click / tap anywhere to grind — the rest is optional</div>
     <table>
@@ -737,7 +742,7 @@
 </div>
 
 <div id="settingsOverlay" class="modalScrim">
-  <div id="setCard" class="modalCard">
+  <div id="setCard" class="modalCard" role="dialog" aria-modal="true" aria-label="Settings">
     <h3>⚙ Settings</h3>
     <div class="hsub">preferences — saved with your run</div>
     <div id="setRows"></div>
@@ -746,7 +751,7 @@
 </div>
 
 <div id="welcomeBack" class="modalScrim">
-  <div id="wbCard" class="modalCard">
+  <div id="wbCard" class="modalCard" role="dialog" aria-modal="true" aria-label="Welcome back — offline summary">
     <h3>🌙 Welcome back</h3>
     <div class="hsub" id="wbSub">While your agents kept grinding…</div>
     <div class="wbrow"><span class="wbk">⏱ Time away</span><span class="wbv" id="wbTime">—</span></div>
@@ -1882,7 +1887,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
       const head=el.querySelector(".head"); if(!head||head.querySelector(".wctl")) continue;
       const ctl=document.createElement("span"); ctl.className="wctl";
-      ctl.innerHTML=`<button class="wmin" title="minimize to the taskbar">–</button><button class="wclose" title="close to the taskbar">✕</button>`;
+      ctl.innerHTML=`<button class="wmin" title="minimize to the taskbar" aria-label="Minimize ${a.title}">–</button><button class="wclose" title="close to the taskbar" aria-label="Close ${a.title}">✕</button>`;
       head.appendChild(ctl);
       ctl.querySelector(".wmin").addEventListener("click",e=>{ e.stopPropagation(); closeWindow(a.id); });
       ctl.querySelector(".wclose").addEventListener("click",e=>{ e.stopPropagation(); closeWindow(a.id); });

@@ -129,9 +129,12 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] **[W8·M]** Move save to IndexedDB (bigger, structured) while keeping the cookie/localStorage fallback.
 - [ ] **[W8·L]** Real offline via a service worker (installable PWA).
 - [ ] **[W5·M]** Unit tests for the economy math (success/credit/cost formulas).
-- [ ] **[W2·M]** Reduced-motion + accessibility pass (contrast, focus states, ARIA on shop).
-      *(Reduce-motion toggle already shipped with the Settings panel — matrix off, banners/flash skipped,
-      anims near-zeroed. Remaining: keyboard focus states, ARIA roles/labels, and a contrast audit.)*
+- [x] **[W2·M]** Reduced-motion + accessibility pass — reduce-motion toggle (Settings), a keyboard
+      `:focus-visible` ring on all controls, ARIA labels on icon-only buttons (⚙/?/⊞ Start/window
+      min-close), `role="dialog" aria-modal` on the three modals, `role="log"` terminal, and a polite
+      `aria-live` toast region. *Deliberately not done:* full tab-to-every-card keyboard nav (the game
+      is click-driven — huge scope) and a palette contrast overhaul (the low-contrast neon/DOS look is
+      intentional; a high-contrast theme would be a better answer than recolouring the existing ones).
 
 ## Silly / stretch
 - [ ] **[stretch·L]** Leaderboard (opt-in) of levels / net worth.
