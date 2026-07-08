@@ -264,6 +264,25 @@
   #hint b{color:var(--green)}
   #hint kbd{background:#0e1830;border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:#eafff0}
 
+  /* controls / keyboard-shortcuts help overlay (toggled by ? or the ? button; Esc / scrim / button close) */
+  #helpBtn{align-self:center;font:inherit;font-size:12px;font-weight:700;line-height:1;color:var(--dim);background:#0a1120;
+    border:1px solid var(--edge);border-radius:50%;width:22px;height:22px;cursor:pointer;flex:none;padding:0}
+  #helpBtn:hover{color:#fff;border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
+  #helpOverlay{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px}
+  #helpOverlay.open{display:flex}
+  #helpCard{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;max-width:460px;width:100%;
+    max-height:82vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);padding:16px 18px}
+  #helpCard h3{margin:0;font-size:14px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase}
+  #helpCard .hsub{color:var(--dim);font-size:11px;margin:3px 0 12px}
+  #helpCard table{width:100%;border-collapse:collapse;font-size:12px}
+  #helpCard td{padding:6px 4px;border-bottom:1px solid var(--edge);vertical-align:top}
+  #helpCard tr:last-child td{border-bottom:none}
+  #helpCard td.k{white-space:nowrap;width:1%;padding-right:16px;color:var(--txt)}
+  #helpCard kbd{background:var(--panel);border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--txt);font-family:var(--mono);font-size:11px;white-space:nowrap}
+  #helpCard .hd{color:var(--dim)}
+  #helpCard .hclose{margin-top:14px;width:100%;font:inherit;font-size:11px;color:var(--dim);background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:9px;cursor:pointer}
+  #helpCard .hclose:hover{color:#fff;border-color:var(--cyan)}
+
   /* progress-quest HUD */
   #hud{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;border:1px solid var(--edge);
     background:linear-gradient(180deg,#0c1526,#070b14);border-radius:8px;padding:7px 10px;box-shadow:0 0 24px rgba(255,43,214,.06) inset}
@@ -552,6 +571,17 @@
   :root[data-theme="dos"] #startMenu .smi{color:#39ff66!important}
   :root[data-theme="dos"] #startMenu .smi:hover{background:#39ff66!important;color:#000!important}
   :root[data-theme="dos"] #startMenu .smi:hover .sub{color:#000!important}
+
+  /* controls help card, themed per OS look (reachable in every mode, incl. DOS the default) */
+  :root[data-theme="win31"] #helpCard,:root[data-theme="win95"] #helpCard{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
+  :root[data-theme="win31"] #helpCard kbd,:root[data-theme="win95"] #helpCard kbd,:root[data-theme="win31"] #helpCard .hclose,:root[data-theme="win95"] #helpCard .hclose{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
+  :root[data-theme="win31"] #helpCard h3,:root[data-theme="win95"] #helpCard h3,:root[data-theme="win31"] #helpCard td.k,:root[data-theme="win95"] #helpCard td.k{color:#000!important}
+  :root[data-theme="win10"] #helpCard{background:#fff!important;color:#1b2733!important;border:1px solid #d5dee8!important;border-radius:6px!important}
+  :root[data-theme="win10"] #helpCard kbd,:root[data-theme="win10"] #helpCard .hclose{background:#f4f7fb!important;color:#1b2733!important;border:1px solid #cdd7e3!important}
+  :root[data-theme="win10"] #helpCard h3{color:#0078d7!important}
+  :root[data-theme="dos"] #helpCard{background:#000!important;color:#39ff66!important;border-color:#1c5a1c!important;border-radius:0!important}
+  :root[data-theme="dos"] #helpCard kbd,:root[data-theme="dos"] #helpCard .hclose{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important}
+  :root[data-theme="dos"] #helpCard h3,:root[data-theme="dos"] #helpCard td.k{color:#39ff66!important}
 </style>
 </head>
 <body>
@@ -567,6 +597,7 @@
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <button id="storeBtn" title="open the Store">🛒 Open Store</button>
     <span class="tbspace"></span>
+    <button id="helpBtn" title="controls &amp; shortcuts (press ?)">?</button>
   </header>
 
   <div id="grid">
@@ -664,9 +695,27 @@
 <div id="memes"></div>
 <div id="startMenu"></div>
 
+<div id="helpOverlay">
+  <div id="helpCard">
+    <h3>⌨ Controls</h3>
+    <div class="hsub">click / tap anywhere to grind — the rest is optional</div>
+    <table>
+      <tr><td class="k"><kbd>any key</kbd> / <kbd>click</kbd> / <kbd>tap</kbd></td><td class="hd">Grind — type code, advance & clear tasks</td></tr>
+      <tr><td class="k"><kbd>Shift</kbd> + click a stat's <kbd>+</kbd></td><td class="hd">Spend <b>all</b> your skill points on that one stat</td></tr>
+      <tr><td class="k"><kbd>T</kbd></td><td class="hd">Cycle through your unlocked OS looks</td></tr>
+      <tr><td class="k"><kbd>?</kbd></td><td class="hd">Show / hide this help</td></tr>
+      <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen (browser)</td></tr>
+      <tr><td class="k"><kbd>Esc</kbd> / <kbd>`</kbd></td><td class="hd">Boss key — hide the game behind a fake spreadsheet</td></tr>
+      <tr><td class="k">⊞ Start <span class="hd">(Win 3.1+)</span></td><td class="hd">Open any app · Reset Layout · click a taskbar app to focus/minimize it</td></tr>
+      <tr><td class="k">Drag title bar / corner <span class="hd">(Win 3.1+)</span></td><td class="hd">Move / resize windows</td></tr>
+    </table>
+    <button class="hclose">Close (Esc)</button>
+  </div>
+</div>
+
 
 <div id="hint">
-  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd> boss key
+  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key
 </div>
 
 <script>
@@ -1846,7 +1895,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!P.intro) return;
     P.intro=false; applyReveal(); applyUnlocks();
     let h=$("#hint"); if(!h){ h=document.createElement("div"); h.id="hint"; document.body.appendChild(h); }
-    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>F11</kbd> fullscreen · <kbd>Esc</kbd> boss key';
+    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key';
     h.style.opacity=""; hintFaded=false; setTimeout(fadeHint,10000);
     save();
   }
@@ -2510,6 +2559,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ interaction ============ */
+  let helpOpen=false;
+  function toggleHelp(force){ helpOpen=(force!==undefined)?force:!helpOpen; const o=$("#helpOverlay"); if(o) o.classList.toggle("open",helpOpen); }
   let bossOn=false;
   function toggleBoss(force){
     bossOn=force!==undefined?force:!bossOn; paused=bossOn;
@@ -2528,15 +2579,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   let hintFaded=false;
   function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
   addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ e.preventDefault(); if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
+    if(e.key==="Escape"){ e.preventDefault(); if(helpOpen){ toggleHelp(false); return; } if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
+    if(e.key==="?"){ e.preventDefault(); toggleHelp(); fadeHint(); return; }   // controls overlay
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
-    if(bossOn) return;
+    if(bossOn||helpOpen) return;   // don't grind behind the boss screen or the help overlay
     if(!P.intro && (e.key==="t"||e.key==="T")){ cycleTheme(); fadeHint(); return; }   // theme shortcut, once graduated
     bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn||helpOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -2547,6 +2599,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#startBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleStart(); fadeHint(); });
   $("#storeBtn").addEventListener("click",e=>{ e.stopPropagation(); if(P.reveal){ P.reveal.store=true; applyReveal(); applyLayout(); save(); } fadeHint(); });
   $("#startMenu").addEventListener("click",e=>{ e.stopPropagation(); });
+  $("#helpBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleHelp(); fadeHint(); });
+  $("#helpOverlay").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#helpOverlay")||e.target.classList.contains("hclose")) toggleHelp(false); });   // scrim or Close button dismisses; card clicks don't
   document.addEventListener("click",e=>{
     if(themeMenuOpen && UI.themeMenu && !UI.themeMenu.contains(e.target) && e.target!==UI.themeLabel) closeThemeMenu();
     if(startOpen){ const sm=$("#startMenu"), sb=$("#startBtn"); if(sm && !sm.contains(e.target) && e.target!==sb) toggleStart(false); }
