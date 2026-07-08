@@ -65,12 +65,11 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
       loot/crafting rather than a flat buy. Needs a migration for saves that own levels in either
       upgrade (refund credits, or grant an equivalent starter patch), plus fitting them into the
       existing `PATCH_DEFS` roll pool without warping drop odds.
-- [ ] **[W4·M]** **Achievements as a purchasable app with retroactive unlock** (routed from `ideas.md` 📥). Make
-      Achievements its own bought app (like the other apps). Until purchased, achievements **don't fire
-      at all**; the moment you buy the app, **retroactively grant every achievement already earned, all
-      at once** (silent bulk-grant, no toast spam), then track live from there. Fits "everything is
-      earned via purchase." Decide where the checklist lives once it's an app of its own (today it's a
-      section at the bottom of the Store).
+- [x] **[W4·M]** **Achievements as a purchasable app with retroactive unlock** — shipped as a full 11th
+      WM app (`achievementsPanel`, its own `DEFAULT_WINDOWS` cell, grid `data-count=11`). Gated behind a
+      new **🏆 Trophy Case** unlock (150cr, Getting Started); until owned, `initAch`/`checkAch` no-op so
+      nothing fires. Buying it retro-grants every already-earned achievement at once (silently) and moves
+      the checklist out of the Store into the app. Old saves grandfathered ON.
 - [ ] **[W7·L]** **Random events / incidents** — prod outage, viral launch, layoffs, hackathon — timed choices with risk/reward.
 - [ ] **[W7·L]** **Tech tree** for one-time perks (e.g. "Pair Programming", "TDD", "Rubber-duck Mastery").
 - [ ] **[W7·L]** Agent **personalities / specializations** (each agent better at certain stats).
