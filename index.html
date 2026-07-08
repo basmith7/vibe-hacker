@@ -2350,6 +2350,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(cv.width!==W||cv.height!==H){ cv.width=W; cv.height=H; }   // only realloc on actual resize (cheaper on mobile)
     const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w:r.width,h:r.height};
   }
+  // shorthand for the telemetry charts: resolve the canvas by id, fit it, and hand back a cleared ctx.
+  function chartCtx(id){ const {ctx,w,h}=fitCanvas($("#"+id)); ctx.clearRect(0,0,w,h); return {ctx,w,h}; }
 
   /* ============ globe ============ */
   const globeCv=$("#globe"); let globe=null;
@@ -2404,7 +2406,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   // credits/sec line — repurposed from the old xp/sec line (playtest: telemetry should track credits).
   // The readout shows both the live balance and income/sec; the panel head tag mirrors it.
   function drawLine(){
-    const cv=$("#cLine");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const {ctx,w,h}=chartCtx("cLine");
     const max=Math.max(1,...lineData)*1.15;
     ctx.strokeStyle="rgba(57,255,20,.08)";ctx.lineWidth=1;
     for(let gy=0;gy<4;gy++){const y=h*gy/4;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
@@ -2447,14 +2449,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function drawSpark(){
-    const cv=$("#cSpark");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const {ctx,w,h}=chartCtx("cSpark");
     const max=Math.max(0.001,...sparkData)*1.2;
     ctx.beginPath();sparkData.forEach((v,i)=>{const x=i/(sparkData.length-1)*w,y=h-(v/max)*(h-10)-5;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
     ctx.strokeStyle="#ff2b5e";ctx.lineWidth=1.4;ctx.shadowColor="#ff2b5e";ctx.shadowBlur=6;ctx.stroke();ctx.shadowBlur=0;
     $("#cv_spark").textContent=Math.round(failEMA*100)+"%";
   }
   function drawGauge(dt){
-    const cv=$("#cGauge");const {ctx,w,h}=fitCanvas(cv);ctx.clearRect(0,0,w,h);
+    const {ctx,w,h}=chartCtx("cGauge");
     const cx=w/2,cy=h*0.62,r=Math.min(w,h)*0.34;const val=clamp(P.hp/P.hpMax,0,1);
     const a0=Math.PI*0.85,a1=Math.PI*2.15;ctx.lineWidth=7;ctx.lineCap="round";
     ctx.strokeStyle="rgba(255,255,255,.06)";ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();

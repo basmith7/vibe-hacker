@@ -109,9 +109,9 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [x] ~~DRY the theme CSS~~ — moved to [window-manager.md](docs/window-manager.md) Phase 1: converting
       panels into windows touches every one of these selector lists anyway, so it's bundled in there
       instead of being a separate pass.
-- [ ] **[W1·S]** **Extract a chart-draw helper** — drawLine/drawSpark/drawGauge each still repeat the
-      same `$(id)` → `fitCanvas()` → `clearRect()` one-liner (drawBar is gone — the stat sheet is HTML
-      now). Small, low-value on its own; bundle it in whenever these functions are touched anyway.
+- [x] **[W1·S]** **Extract a chart-draw helper** — added `chartCtx(id)` (resolve canvas → `fitCanvas`
+      → cleared ctx); drawLine/drawSpark/drawGauge now call it instead of repeating the 3-part one-liner.
+      Globe/matrix left alone (they clear differently). Verified charts still render, zero exceptions.
 - [x] ~~Wire up or drop write-only state~~ — `P.loc`/`P.deploys`/`P.bugsFixed` become crafting
       material sources in [crafting-update.md](docs/crafting-update.md) (Phase 5), no longer dead trackers.
 - [ ] **[W8·M]** Move save to IndexedDB (bigger, structured) while keeping the cookie/localStorage fallback.
