@@ -84,7 +84,10 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
       *(credits/sec already shipped in the telemetry batch — only the XP/sec readout + the rebalance remain.)*
 - [ ] **[W7·M]** More upgrade branches (second office, cloud credits, interns).
 - [ ] **[W5·M]** Soft/hard caps + prestige resets so numbers stay meaningful.
-- [ ] **[W1·M]** Offline progress summary screen (what happened while away).
+- [x] **[W1·M]** Offline progress summary screen — returning with Cloud Sync gains now pops a
+      "🌙 Welcome back" modal (time away · credits earned · effective rate · efficiency · balance)
+      instead of a toast. Factored the help overlay into shared `.modalScrim`/`.modalCard` classes
+      (themed per OS look) and reused them here; Esc/scrim/Continue dismiss, grinding suppressed while open.
 
 ## UI / polish
 - [ ] **[W4·L]** **"Notification Center" — unify all three feeds into one purchasable system.** Right now the

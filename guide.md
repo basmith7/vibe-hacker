@@ -186,7 +186,8 @@ slots**, filled by drops. See **Hardware slots** below.
 
 ### Automation (one-time toggles)
 - **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away). Base efficiency
-  is 50%, improved by your equipped Modem (up to 90%).
+  is 50%, improved by your equipped Modem (up to 90%). When you come back, a **"Welcome back"
+  summary** shows how long you were gone, what you earned, the effective rate, and your efficiency.
 - **🎯 Auto-Allocate SP** — spends skill points for you, always on your current weakest stat.
 - **🛒 Auto-Buyer** — automatically buys the cheapest *affordable* upgrade every ~1.2 seconds
   (it'll happily buy a Rigs tier — including a new OS look — without asking, so don't be

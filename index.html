@@ -268,24 +268,30 @@
   #hint b{color:var(--green)}
   #hint kbd{background:#0e1830;border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:#eafff0}
 
-  /* controls / keyboard-shortcuts help overlay (toggled by ? or the ? button; Esc / scrim / button close) */
+  /* shared centered modal (help overlay + welcome-back summary); themed per OS look further below */
   #helpBtn{align-self:center;font:inherit;font-size:12px;font-weight:700;line-height:1;color:var(--dim);background:#0a1120;
     border:1px solid var(--edge);border-radius:50%;width:22px;height:22px;cursor:pointer;flex:none;padding:0}
   #helpBtn:hover{color:#fff;border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
-  #helpOverlay{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px}
-  #helpOverlay.open{display:flex}
-  #helpCard{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;max-width:460px;width:100%;
+  .modalScrim{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px}
+  .modalScrim.open{display:flex}
+  .modalCard{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;max-width:460px;width:100%;
     max-height:82vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.6);padding:16px 18px}
-  #helpCard h3{margin:0;font-size:14px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase}
-  #helpCard .hsub{color:var(--dim);font-size:11px;margin:3px 0 12px}
+  .modalCard h3{margin:0;font-size:14px;color:var(--cyan);letter-spacing:1px;text-transform:uppercase}
+  .modalCard .hsub{color:var(--dim);font-size:11px;margin:3px 0 12px}
+  .modalCard .hclose{margin-top:14px;width:100%;font:inherit;font-size:11px;color:var(--dim);background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:9px;cursor:pointer}
+  .modalCard .hclose:hover{color:#fff;border-color:var(--cyan)}
   #helpCard table{width:100%;border-collapse:collapse;font-size:12px}
   #helpCard td{padding:6px 4px;border-bottom:1px solid var(--edge);vertical-align:top}
   #helpCard tr:last-child td{border-bottom:none}
   #helpCard td.k{white-space:nowrap;width:1%;padding-right:16px;color:var(--txt)}
   #helpCard kbd{background:var(--panel);border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:1px 6px;color:var(--txt);font-family:var(--mono);font-size:11px;white-space:nowrap}
   #helpCard .hd{color:var(--dim)}
-  #helpCard .hclose{margin-top:14px;width:100%;font:inherit;font-size:11px;color:var(--dim);background:var(--panel);border:1px solid var(--edge);border-radius:6px;padding:9px;cursor:pointer}
-  #helpCard .hclose:hover{color:#fff;border-color:var(--cyan)}
+  /* welcome-back summary rows */
+  #wbCard .wbrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 2px;border-bottom:1px solid var(--edge);font-size:12px}
+  #wbCard .wbrow:last-of-type{border-bottom:none}
+  #wbCard .wbk{color:var(--dim)}
+  #wbCard .wbv{font-weight:700;font-variant-numeric:tabular-nums;font-size:14px}
+  #wbCard .wbv.big{font-size:18px;color:var(--green)}
 
   /* progress-quest HUD */
   #hud{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;border:1px solid var(--edge);
@@ -576,16 +582,17 @@
   :root[data-theme="dos"] #startMenu .smi:hover{background:#39ff66!important;color:#000!important}
   :root[data-theme="dos"] #startMenu .smi:hover .sub{color:#000!important}
 
-  /* controls help card, themed per OS look (reachable in every mode, incl. DOS the default) */
-  :root[data-theme="win31"] #helpCard,:root[data-theme="win95"] #helpCard{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
-  :root[data-theme="win31"] #helpCard kbd,:root[data-theme="win95"] #helpCard kbd,:root[data-theme="win31"] #helpCard .hclose,:root[data-theme="win95"] #helpCard .hclose{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
-  :root[data-theme="win31"] #helpCard h3,:root[data-theme="win95"] #helpCard h3,:root[data-theme="win31"] #helpCard td.k,:root[data-theme="win95"] #helpCard td.k{color:#000!important}
-  :root[data-theme="win10"] #helpCard{background:#fff!important;color:#1b2733!important;border:1px solid #d5dee8!important;border-radius:6px!important}
-  :root[data-theme="win10"] #helpCard kbd,:root[data-theme="win10"] #helpCard .hclose{background:#f4f7fb!important;color:#1b2733!important;border:1px solid #cdd7e3!important}
-  :root[data-theme="win10"] #helpCard h3{color:#0078d7!important}
-  :root[data-theme="dos"] #helpCard{background:#000!important;color:#39ff66!important;border-color:#1c5a1c!important;border-radius:0!important}
-  :root[data-theme="dos"] #helpCard kbd,:root[data-theme="dos"] #helpCard .hclose{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important}
-  :root[data-theme="dos"] #helpCard h3,:root[data-theme="dos"] #helpCard td.k{color:#39ff66!important}
+  /* modal cards (help + welcome-back), themed per OS look (reachable in every mode, incl. DOS the default) */
+  :root[data-theme="win31"] .modalCard,:root[data-theme="win95"] .modalCard{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
+  :root[data-theme="win31"] .modalCard kbd,:root[data-theme="win95"] .modalCard kbd,:root[data-theme="win31"] .modalCard .hclose,:root[data-theme="win95"] .modalCard .hclose{background:#c3c3c3!important;color:#000!important;border:2px solid!important;border-color:#fff #808080 #808080 #fff!important;border-radius:0!important}
+  :root[data-theme="win31"] .modalCard h3,:root[data-theme="win95"] .modalCard h3,:root[data-theme="win31"] .modalCard td.k,:root[data-theme="win95"] .modalCard td.k{color:#000!important}
+  :root[data-theme="win10"] .modalCard{background:#fff!important;color:#1b2733!important;border:1px solid #d5dee8!important;border-radius:6px!important}
+  :root[data-theme="win10"] .modalCard kbd,:root[data-theme="win10"] .modalCard .hclose{background:#f4f7fb!important;color:#1b2733!important;border:1px solid #cdd7e3!important}
+  :root[data-theme="win10"] .modalCard h3{color:#0078d7!important}
+  :root[data-theme="dos"] .modalCard{background:#000!important;color:#39ff66!important;border-color:#1c5a1c!important;border-radius:0!important}
+  :root[data-theme="dos"] .modalCard kbd,:root[data-theme="dos"] .modalCard .hclose{background:#001800!important;color:#39ff66!important;border-color:#39ff66!important;border-radius:0!important}
+  :root[data-theme="dos"] .modalCard h3,:root[data-theme="dos"] .modalCard td.k{color:#39ff66!important}
+  :root[data-theme="dos"] #wbCard .wbv.big{color:#7dff9e!important}
 </style>
 </head>
 <body>
@@ -700,8 +707,8 @@
 <div id="memes"></div>
 <div id="startMenu"></div>
 
-<div id="helpOverlay">
-  <div id="helpCard">
+<div id="helpOverlay" class="modalScrim">
+  <div id="helpCard" class="modalCard">
     <h3>⌨ Controls</h3>
     <div class="hsub">click / tap anywhere to grind — the rest is optional</div>
     <table>
@@ -715,6 +722,19 @@
       <tr><td class="k">Drag title bar / corner <span class="hd">(Win 3.1+)</span></td><td class="hd">Move / resize windows</td></tr>
     </table>
     <button class="hclose">Close (Esc)</button>
+  </div>
+</div>
+
+<div id="welcomeBack" class="modalScrim">
+  <div id="wbCard" class="modalCard">
+    <h3>🌙 Welcome back</h3>
+    <div class="hsub" id="wbSub">While your agents kept grinding…</div>
+    <div class="wbrow"><span class="wbk">⏱ Time away</span><span class="wbv" id="wbTime">—</span></div>
+    <div class="wbrow"><span class="wbk">💰 Credits earned</span><span class="wbv big" id="wbEarned">—</span></div>
+    <div class="wbrow"><span class="wbk">📈 Effective rate</span><span class="wbv" id="wbRate">—</span></div>
+    <div class="wbrow"><span class="wbk">⚙️ Offline efficiency</span><span class="wbv" id="wbEff">—</span></div>
+    <div class="wbrow"><span class="wbk">🏦 Balance now</span><span class="wbv" id="wbBal">—</span></div>
+    <button class="hclose">Continue</button>
   </div>
 </div>
 
@@ -2601,16 +2621,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   let hintFaded=false;
   function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
   addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ e.preventDefault(); if(helpOpen){ toggleHelp(false); return; } if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
+    if(e.key==="Escape"){ e.preventDefault(); if(wbOpen()){ closeWelcomeBack(); return; } if(helpOpen){ toggleHelp(false); return; } if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
     if(e.key==="?"){ e.preventDefault(); toggleHelp(); fadeHint(); return; }   // controls overlay
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
-    if(bossOn||helpOpen) return;   // don't grind behind the boss screen or the help overlay
+    if(bossOn||helpOpen||wbOpen()) return;   // don't grind behind the boss screen or a modal
     if(!P.intro && (e.key==="t"||e.key==="T")){ cycleTheme(); fadeHint(); return; }   // theme shortcut, once graduated
     bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn||helpOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -2623,12 +2643,22 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#startMenu").addEventListener("click",e=>{ e.stopPropagation(); });
   $("#helpBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleHelp(); fadeHint(); });
   $("#helpOverlay").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#helpOverlay")||e.target.classList.contains("hclose")) toggleHelp(false); });   // scrim or Close button dismisses; card clicks don't
+  $("#welcomeBack").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#welcomeBack")||e.target.classList.contains("hclose")) closeWelcomeBack(); });
   document.addEventListener("click",e=>{
     if(themeMenuOpen && UI.themeMenu && !UI.themeMenu.contains(e.target) && e.target!==UI.themeLabel) closeThemeMenu();
     if(startOpen){ const sm=$("#startMenu"), sb=$("#startBtn"); if(sm && !sm.contains(e.target) && e.target!==sb) toggleStart(false); }
   });
 
   /* ============ offline earnings ============ */
+  function wbOpen(){ const o=$("#welcomeBack"); return !!(o&&o.classList.contains("open")); }
+  function closeWelcomeBack(){ const o=$("#welcomeBack"); if(o) o.classList.remove("open"); }
+  function fmtDur(s){ s=Math.round(s); const h=s/3600|0, m=(s%3600)/60|0, sec=s%60; return h?`${h}h ${m}m` : m?`${m}m ${sec}s` : `${sec}s`; }
+  function showWelcomeBack(el,gain){
+    const set=(id,v)=>{ const e=$("#"+id); if(e) e.textContent=v; };
+    set("wbTime",fmtDur(el)); set("wbEarned","+"+money(gain)); set("wbRate","+"+money(gain/Math.max(1,el))+"/s");
+    set("wbEff",Math.round(MULT.offlineEff*100)+"%"); set("wbBal",money(P.credits));
+    const o=$("#welcomeBack"); if(o) o.classList.add("open");
+  }
   function offlineEarnings(){
     if(!P.up.offline || !P.lastReal) return;
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
@@ -2636,8 +2666,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     const perSec=MULT.passive + MULT.workers*MULT.credit*0.8;   // rough idle rate
     const gain=Math.floor(perSec*el*MULT.offlineEff);            // efficiency while away (Modem improves this)
     if(gain>0){ P.credits+=gain; P.earned+=gain;
-      toast("🌙 Welcome back","Earned "+money(gain)+" while away ("+Math.round(el/60)+" min)","#4d8cff","system");
-      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)"); }
+      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)");
+      showWelcomeBack(el,gain);   // full "while you were away" summary modal (replaces the old toast)
+    }
   }
 
   /* ============ boot ============ */
