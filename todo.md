@@ -98,7 +98,9 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] **[W2·S]** Number formatting options (scientific notation past a threshold).
 - [ ] **[W2·M]** Settings panel (reduce motion, mute, number format, theme lock).
 - [ ] **[W8·M]** Stats/graphs page: lifetime totals, best streak, time per stage.
-- [ ] **[W1·S]** Keyboard shortcuts help overlay.
+- [x] **[W1·S]** Keyboard shortcuts help overlay — `?` (or a **?** button in the top strip) toggles a
+      themed modal listing every control (grind, shift-click-all-SP, T, F11, Esc boss key, Start/drag/
+      resize). Esc / scrim / Close dismiss it; grinding is suppressed while it's open. Themed per OS look.
 - [ ] **[W8·M]** Save import/export (copy a string) + multiple save slots.
 - [ ] **[W8·M]** Better mobile shop ergonomics (sticky buy bar).
 

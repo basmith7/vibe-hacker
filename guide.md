@@ -384,8 +384,10 @@ the Store appears at 10 credits, and reaching it is quick enough that waiting is
 | Key / action | Effect |
 |---|---|
 | Mash any key / tap the screen | Drives your manual worker; surges the whole game briefly |
+| `Shift` + a stat's `+` | Spend **all** your skill points on that one stat |
 | Click the OS name (top-left) | Switch to any unlocked look |
 | `T` | Cycle through your unlocked looks |
+| `?` (or the **?** button, top-right) | Show/hide the controls overlay |
 | `F11` | Fullscreen (browser-native) |
 | `Esc` / `` ` `` | Boss key — hide behind a fake spreadsheet |
 | `⟲ sudo rm -r /` (bottom of the Store app) | Wipe your save and start over |
