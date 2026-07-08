@@ -366,11 +366,13 @@ cosmetic lap counter for finishing all 28 stages, with no reset. IPO is the real
 
 ## Achievements
 
-22 achievements unlock automatically as you play, from "Hello, World" (clear one task) to
-"Serial Founder" (cash out 5 times) to "Triple Digits" (reach level 100). If you own **Push
-Notifications** they pop as a toast the moment you earn them; either way they log to the Terminal
-and live in a checklist at the bottom of the Store with a running completion count. If you already qualify for one when you load an old save, it's
-granted silently — no spam on load.
+22 achievements track your milestones, from "Hello, World" (clear one task) to "Serial Founder"
+(cash out 5 times) to "Triple Digits" (reach level 100). They live in their own **🏆 Achievements**
+app — a checklist with a running completion count — unlocked by buying **Trophy Case** from the
+Store's Getting Started list. **Nothing is tracked until you buy it**; the moment you do, every
+achievement you've *already* earned is granted at once (silently), and from then on new ones unlock
+as you play (popping a toast if you own **Push Notifications**, and always logging to the Terminal).
+Old saves keep their trophy case automatically.
 
 Most of the list stays **hidden** until you're close: progress-based achievements (task counts,
 level thresholds, streaks, etc.) only appear once you're **75% of the way there**, so the panel
