@@ -57,6 +57,9 @@
      `screen` reads as soft coloured light over the dark OS themes the game mostly lives in, and only tints
      the edges so center content keeps its contrast. Sits just under the scanline/vignette layer. */
   #ambient{position:fixed;inset:0;z-index:58;pointer-events:none;mix-blend-mode:screen;transition:background 4s ease}
+  /* reduce-motion (Settings → Reduce motion, or the OS pref): kill the rain + near-zero all anims/transitions */
+  body.reduce-motion #matrix{display:none!important}
+  body.reduce-motion *,body.reduce-motion *::before,body.reduce-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.06s!important}
   #cockpit{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;padding:8px;gap:8px}
 
   /* ---- chunky retro scrollbars ("big old scroll bars") — themed via vars; win31/95 get classic bevels ---- */
@@ -269,9 +272,16 @@
   #hint kbd{background:#0e1830;border:1px solid var(--edge);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:#eafff0}
 
   /* shared centered modal (help overlay + welcome-back summary); themed per OS look further below */
-  #helpBtn{align-self:center;font:inherit;font-size:12px;font-weight:700;line-height:1;color:var(--dim);background:#0a1120;
+  #helpBtn,#setBtn{align-self:center;font:inherit;font-size:12px;font-weight:700;line-height:1;color:var(--dim);background:#0a1120;
     border:1px solid var(--edge);border-radius:50%;width:22px;height:22px;cursor:pointer;flex:none;padding:0}
-  #helpBtn:hover{color:#fff;border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
+  #setBtn{margin-left:5px;font-size:13px}
+  #helpBtn:hover,#setBtn:hover,#helpBtn.open,#setBtn.open{color:#fff;border-color:var(--cyan);box-shadow:0 0 10px rgba(0,229,255,.3)}
+  /* settings rows + segmented controls (theme-agnostic: buttons use inherit/currentColor, not --panel) */
+  #setCard .setRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid var(--edge);font-size:12px}
+  #setCard .setRow:last-of-type{border-bottom:none}
+  #setCard .seg{display:flex;gap:4px;flex-shrink:0}
+  #setCard .seg button{font:inherit;font-size:10.5px;padding:5px 9px;border-radius:6px;cursor:pointer;border:1px solid var(--edge);background:transparent;color:inherit;opacity:.5}
+  #setCard .seg button.on{opacity:1;border-color:var(--green);color:var(--green);box-shadow:0 0 8px rgba(57,255,20,.25)}
   .modalScrim{position:fixed;inset:0;z-index:220;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:20px}
   .modalScrim.open{display:flex}
   .modalCard{background:var(--panel2);border:1px solid var(--edge);border-radius:10px;max-width:460px;width:100%;
@@ -609,6 +619,7 @@
     <div class="stat g credits"><span class="k">$ credits</span><span class="v" id="s_credits">$0</span></div>
     <button id="storeBtn" title="open the Store">🛒 Open Store</button>
     <span class="tbspace"></span>
+    <button id="setBtn" title="settings">⚙</button>
     <button id="helpBtn" title="controls &amp; shortcuts (press ?)">?</button>
   </header>
 
@@ -725,6 +736,15 @@
   </div>
 </div>
 
+<div id="settingsOverlay" class="modalScrim">
+  <div id="setCard" class="modalCard">
+    <h3>⚙ Settings</h3>
+    <div class="hsub">preferences — saved with your run</div>
+    <div id="setRows"></div>
+    <button class="hclose">Close (Esc)</button>
+  </div>
+</div>
+
 <div id="welcomeBack" class="modalScrim">
   <div id="wbCard" class="modalCard">
     <h3>🌙 Welcome back</h3>
@@ -761,7 +781,8 @@
   const rand=(a,b)=>a+Math.random()*(b-a);
   const pick=a=>a[(Math.random()*a.length)|0];
   const clamp=(v,a,b)=>v<a?a:v>b?b:v;
-  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const systemReduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let reduceMotion=systemReduce;   // effective flag; overridden by the Settings panel via applySettings()
   const fmt=n=>Math.floor(n).toLocaleString("en-US");
   const UI={};   // cached DOM refs for the per-frame hot loop (populated in cacheUI)
   let bodyFont="ui-monospace,monospace";   // canvas font family, refreshed on theme change
@@ -1019,7 +1040,11 @@
     {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
     {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
   ];
-  function money(n){ n=Math.floor(n); if(n<1000) return "$"+n;
+  function money(n){ n=Math.floor(n);
+    const f=P.settings&&P.settings.numFormat;                                  // number-format setting (Settings panel)
+    if(f==="full") return "$"+n.toLocaleString("en-US");                       // 1,234,567
+    if(f==="sci" && n>=1e6) return "$"+n.toExponential(2);                     // 1.23e+6 (past a threshold)
+    if(n<1000) return "$"+n;
     const u=["","K","M","B","T","Qa","Qi","Sx"]; let i=0; while(n>=1000&&i<u.length-1){n/=1000;i++;}
     return "$"+(n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n))+u[i]; }
 
@@ -1117,6 +1142,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,missions:false}, unlockedStats:["coding"],
       intro:true, reveal:{credits:false,shop:false,store:false},
       notify:{grind:true,progress:true,system:true,hype:true},
+      settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
       windows:cloneWindows(),
       achv:{},seenTips:{shop:false,sp:false}};
   }
@@ -1125,7 +1151,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "materials","matPity","missions","sprintConfig","missionSeq",
-    "themeChoice","unlocked","unlockedStats","intro","reveal","notify","windows","achv","seenTips"];
+    "themeChoice","unlocked","unlockedStats","intro","reveal","notify","settings","windows","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true}; P.unlockedStats=STAT_IDS.slice(); }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
@@ -1191,6 +1217,9 @@ notify("#general", "10x-ing that shit 🔥");`,
         // (a bare day-1 terminal) and buy them in. P.notify per-type toggles default all-on from defaults().
         if(!hadNotify){ P.up.notify=1; P.up.hype=1; }
         if(!P.notify||typeof P.notify!=="object") P.notify={grind:true,progress:true,system:true,hype:true};
+        // migration: settings object (number format, reduce motion, ambient tint, theme lock) — backfill any missing key
+        if(!P.settings||typeof P.settings!=="object") P.settings=defaults().settings;
+        else { const ds=defaults().settings; for(const k in ds) if(!(k in P.settings)) P.settings[k]=ds[k]; }
         // migration: window-manager Phase 2 — saves predating the floating WM lack P.windows; seed it
         // (and backfill any app id missing from an older windows object) from DEFAULT_WINDOWS.
         if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
@@ -1329,7 +1358,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     renderShop(); save();
   }
   function autoBuyCheapest(){ let best=null,bc=Infinity;
-    for(const u of UPG){ if(u.cat==="Automation") continue; const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
+    for(const u of UPG){ if(u.cat==="Automation") continue;
+      if(u.id==="os" && P.settings && P.settings.themeLock) continue;   // "Lock OS look" keeps the auto-buyer from switching your theme
+      const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
     if(best) buy(best);
   }
   let shopBuilt=false,shopCards=[],catHeaderEls={},notifyToggleEls={};
@@ -1676,6 +1707,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   function celebrate(text,color){
     const el=document.createElement("div"); el.className="levelup"; el.style.color=color; el.textContent=text;
     document.body.appendChild(el);
+    if(reduceMotion){   // gentle fade, no zoom or screen flash
+      el.animate([{opacity:0},{opacity:1,offset:.2},{opacity:1,offset:.8},{opacity:0}],{duration:1400,easing:"ease"}).onfinish=()=>el.remove();
+      return;
+    }
     el.animate([{opacity:0,transform:"translate(-50%,-50%) scale(.5)"},
       {opacity:1,transform:"translate(-50%,-50%) scale(1.06)",offset:.22},
       {opacity:1,transform:"translate(-50%,-50%) scale(1)",offset:.72},
@@ -1716,6 +1751,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ meme banner ============ */
   const memes=$("#memes");
   function flyMeme(txt){
+    if(reduceMotion) return;   // flying banners are the most motion-heavy effect — suppress under reduce-motion
     if(!P.up.hype || (P.notify && P.notify.hype===false)) return;   // Hype Banners is a purchased, mutable feature
     const el=document.createElement("div"); el.className="meme"; const col=pick(MEME_COLORS);
     el.textContent=txt||pick(MEMES); el.style.color=col; el.style.top=rand(14,78)+"%";
@@ -2588,7 +2624,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function frame(now){
     requestAnimationFrame(frame);                 // schedule FIRST so nothing can kill the loop
-    let dt=(now-last)/1000;last=now;dt=Math.min(0.05,dt);if(reduce)dt*=0.5;
+    let dt=(now-last)/1000;last=now;dt=Math.min(0.05,dt);if(reduceMotion)dt*=0.5;
     surge+=(1-surge)*Math.min(1,dt*1.4);
     const total=P.tasksDone+P.tasksFailed; const inst=total?P.tasksFailed/total:0;
     failEMA+=(inst-failEMA)*Math.min(1,dt*0.5);
@@ -2603,6 +2639,41 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ interaction ============ */
   let helpOpen=false;
   function toggleHelp(force){ helpOpen=(force!==undefined)?force:!helpOpen; const o=$("#helpOverlay"); if(o) o.classList.toggle("open",helpOpen); }
+  /* settings panel — number format, reduce motion, ambient tint, theme lock. Segmented controls;
+     values compared by identity so booleans/strings both work. applySettings() makes them take effect. */
+  const SETTINGS=[
+    {id:"numFormat",   label:"Number format",                        opts:[["short","1.2K"],["full","1,234"],["sci","1.2e6"]]},
+    {id:"reduceMotion",label:"Reduce motion",                        opts:[["system","System"],["off","Off"],["on","On"]]},
+    {id:"ambient",     label:"Ambient time/season tint",             opts:[[true,"On"],[false,"Off"]]},
+    {id:"themeLock",   label:"Lock OS look (Auto-Buyer won't switch)",opts:[[true,"On"],[false,"Off"]]},
+  ];
+  function applySettings(){
+    const s=P.settings||{};
+    reduceMotion = s.reduceMotion==="system" ? systemReduce : s.reduceMotion==="on";
+    document.body.classList.toggle("reduce-motion", reduceMotion);
+    const amb=$("#ambient"); if(amb) amb.style.display=(s.ambient===false)?"none":"";
+  }
+  function renderSettings(){
+    const wrap=$("#setRows"); if(!wrap) return; wrap.innerHTML="";
+    for(const st of SETTINGS){
+      const row=document.createElement("div"); row.className="setRow";
+      row.innerHTML=`<span class="setk">${st.label}</span>`;
+      const seg=document.createElement("div"); seg.className="seg";
+      for(const [val,lbl] of st.opts){
+        const b=document.createElement("button"); b.textContent=lbl;
+        if(P.settings[st.id]===val) b.classList.add("on");
+        b.addEventListener("click",e=>{ e.stopPropagation(); P.settings[st.id]=val; applySettings(); renderSettings(); save(); });
+        seg.appendChild(b);
+      }
+      row.appendChild(seg); wrap.appendChild(row);
+    }
+  }
+  let settingsOpen=false;
+  function toggleSettings(force){ settingsOpen=(force!==undefined)?force:!settingsOpen;
+    const o=$("#settingsOverlay"); if(o) o.classList.toggle("open",settingsOpen);
+    const b=$("#setBtn"); if(b) b.classList.toggle("open",settingsOpen);
+    if(settingsOpen) renderSettings();
+  }
   let bossOn=false;
   function toggleBoss(force){
     bossOn=force!==undefined?force:!bossOn; paused=bossOn;
@@ -2621,16 +2692,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   let hintFaded=false;
   function fadeHint(){ if(hintFaded)return; hintFaded=true; const h=$("#hint"); if(h){h.style.opacity="0";setTimeout(()=>h.remove(),900);} }
   addEventListener("keydown",e=>{
-    if(e.key==="Escape"){ e.preventDefault(); if(wbOpen()){ closeWelcomeBack(); return; } if(helpOpen){ toggleHelp(false); return; } if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
+    if(e.key==="Escape"){ e.preventDefault(); if(wbOpen()){ closeWelcomeBack(); return; } if(settingsOpen){ toggleSettings(false); return; } if(helpOpen){ toggleHelp(false); return; } if(themeMenuOpen){ closeThemeMenu(); return; } if(startOpen){ toggleStart(false); return; } toggleBoss(); return; }
     if(e.key==="?"){ e.preventDefault(); toggleHelp(); fadeHint(); return; }   // controls overlay
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
-    if(bossOn||helpOpen||wbOpen()) return;   // don't grind behind the boss screen or a modal
+    if(bossOn||helpOpen||wbOpen()||settingsOpen) return;   // don't grind behind the boss screen or a modal
     if(!P.intro && (e.key==="t"||e.key==="T")){ cycleTheme(); fadeHint(); return; }   // theme shortcut, once graduated
     bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()||settingsOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -2644,6 +2715,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   $("#helpBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleHelp(); fadeHint(); });
   $("#helpOverlay").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#helpOverlay")||e.target.classList.contains("hclose")) toggleHelp(false); });   // scrim or Close button dismisses; card clicks don't
   $("#welcomeBack").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#welcomeBack")||e.target.classList.contains("hclose")) closeWelcomeBack(); });
+  $("#setBtn").addEventListener("click",e=>{ e.stopPropagation(); toggleSettings(); fadeHint(); });
+  $("#settingsOverlay").addEventListener("click",e=>{ e.stopPropagation(); if(e.target===$("#settingsOverlay")||e.target.classList.contains("hclose")) toggleSettings(false); });
   document.addEventListener("click",e=>{
     if(themeMenuOpen && UI.themeMenu && !UI.themeMenu.contains(e.target) && e.target!==UI.themeLabel) closeThemeMenu();
     if(startOpen){ const sm=$("#startMenu"), sb=$("#startBtn"); if(sm && !sm.contains(e.target) && e.target!==sb) toggleStart(false); }
@@ -2680,6 +2753,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   ambientTint(); setInterval(ambientTint, 5*60*1000);   // seasonal/time-of-day wash, drifts every 5 min
   setupWindowChrome();
   applyTheme();
+  applySettings();   // reduce-motion + ambient prefs take effect before the first frame
   applyUnlocks();
   applyReveal();
   initAch();

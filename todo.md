@@ -101,8 +101,12 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
       Store): the new direction is one umbrella "Notification Center" purchase, with type-filtering
       pulled out as its own paid upgrade rather than a free setting. Decide how the terminal log's
       always-on status reconciles with being gated (it's currently the day-1 immersive surface).
-- [ ] **[W2·S]** Number formatting options (scientific notation past a threshold).
-- [ ] **[W2·M]** Settings panel (reduce motion, mute, number format, theme lock).
+- [x] **[W2·S]** Number formatting options — Settings → Number format: `1.2K` / `1,234` / `1.2e6`
+      (scientific past a million). `money()` honors `P.settings.numFormat`.
+- [x] **[W2·M]** Settings panel — ⚙ button opens a themed modal (reuses `.modalCard`) with segmented
+      controls for number format, reduce motion (System/Off/On), ambient tint, and OS-look lock
+      (blocks the Auto-Buyer from switching themes). Persisted in `P.settings`; `applySettings()` applies.
+      *(Mute deferred to W6 when sound lands — nothing to mute yet.)*
 - [ ] **[W8·M]** Stats/graphs page: lifetime totals, best streak, time per stage.
 - [x] **[W1·S]** Keyboard shortcuts help overlay — `?` (or a **?** button in the top strip) toggles a
       themed modal listing every control (grind, shift-click-all-SP, T, F11, Esc boss key, Start/drag/
@@ -126,6 +130,8 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] **[W8·L]** Real offline via a service worker (installable PWA).
 - [ ] **[W5·M]** Unit tests for the economy math (success/credit/cost formulas).
 - [ ] **[W2·M]** Reduced-motion + accessibility pass (contrast, focus states, ARIA on shop).
+      *(Reduce-motion toggle already shipped with the Settings panel — matrix off, banners/flash skipped,
+      anims near-zeroed. Remaining: keyboard focus states, ARIA roles/labels, and a contrast audit.)*
 
 ## Silly / stretch
 - [ ] **[stretch·L]** Leaderboard (opt-in) of levels / net worth.
