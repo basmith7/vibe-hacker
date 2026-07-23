@@ -34,6 +34,7 @@ The agent picks the destination based on size; when in doubt, ask.
 ## 📥 Ready
 
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
+* much later in the process, i want mini games. rogue, bbs adventure game, solitare, etc. 
 
 _(nothing pending — batch routed 2026-07-07: espresso/assist→gear and achievements-as-app → todo.md;
 title-bar/taskbar merge + credits/clock bottom-right → window-manager.md queued. Two were already
