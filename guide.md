@@ -378,8 +378,9 @@ local **time of day** (cool at night, warm at dawn/dusk, neutral at midday) and 
 ### Windows (the desktop)
 
 Upgrade OS isn't just a reskin. On **MS-DOS** (the first tier), your apps are **tiled** — they split
-the screen automatically as you unlock them (tmux-style). The moment you buy **Windows 3.1** (or own
-any later tier), the desktop **unbolts into real windows**:
+the screen automatically as you unlock them (tmux-style). Each newly unlocked app **wipes open** like
+a fresh tmux split, and the panes already on screen slide into their new cells to make room. The
+moment you buy **Windows 3.1** (or own any later tier), the desktop **unbolts into real windows**:
 - **Drag** any window by its title bar; **resize** it from the grip in its bottom-right corner.
 - **Minimize / close** it (the – and ✕ in its title bar) to tuck it onto the **taskbar**.
 - A **taskbar runs along the bottom** and becomes your one and only bar — the top strip folds into
@@ -472,7 +473,8 @@ The **⚙ button** (top-right, next to **?**) opens a Settings panel — prefere
 - **Number format** — how big numbers read: `1.2K` (abbreviated, default), `1,234` (full, with
   commas), or `1.2e6` (scientific past a million).
 - **Reduce motion** — `System` (follow your OS setting), `Off`, or `On`. When on, it stops the matrix
-  rain, skips the flying banners and screen flashes, and near-zeroes animations.
+  rain, skips the flying banners and screen flashes, drops the pane-spawn wipe in tiled mode, and
+  near-zeroes animations.
 - **Ambient time/season tint** — toggle the subtle time-of-day / seasonal glow on or off.
 - **Lock OS look** — stop the **Auto-Buyer** from ever switching your OS theme on you.
 

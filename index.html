@@ -115,6 +115,17 @@
   #grid[data-count="6"]{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
   #grid[data-count="7"],#grid[data-count="8"]{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr}
   #grid[data-count="9"],#grid[data-count="10"],#grid[data-count="11"]{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr)}
+  /* pane spawn (tiled mode only): a newly unlocked app wipes open like a tmux split, while the panes
+     already on screen FLIP-slide from their old cells into their new ones. Driven by applyLayout. */
+  .panel.spawn{animation:tmuxWipe .26s cubic-bezier(.2,.8,.2,1) both}
+  .panel.spawn::after{content:"";position:absolute;inset:0;pointer-events:none;border:1px solid var(--green);
+    border-radius:8px;animation:tmuxFlash .5s ease-out both}
+  @keyframes tmuxWipe{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  @keyframes tmuxFlash{0%{opacity:1;box-shadow:0 0 18px rgba(57,255,20,.55) inset}100%{opacity:0;box-shadow:none}}
+  .panel.flip{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+  body.reduce-motion .panel.spawn{animation:none!important}
+  body.reduce-motion .panel.spawn::after{display:none!important}
+  body.reduce-motion .panel.flip{transition:none!important}
   .panel{position:relative;border:1px solid var(--edge);border-radius:8px;overflow:hidden;
     background:linear-gradient(180deg,var(--panel2),var(--panel));min-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.4),0 8px 30px rgba(0,0,0,.5)}
   .panel > .head{display:flex;align-items:center;gap:8px;padding:5px 9px;border-bottom:1px solid var(--edge);
@@ -1988,12 +1999,55 @@ notify("#general", "10x-ing that shit 🔥");`,
     document.documentElement.style.zoom=(z===1?"":String(z));
     return true;
   }
+  /* ---- pane spawn animation (tiled mode). `tiledSeen` is the set of apps that were tiled on the
+     previous tiling pass; null until the first one, so boot and save-restore never animate. We only
+     animate a pass that *gained* panes and lost none — that skips the resize listener (which calls
+     applyLayout constantly with an unchanged set) and prestige reset (which drops back to
+     terminal-only; those panes just vanish, as before). ---- */
+  let tiledSeen=null;
+  function snapPanes(){   // rects of the currently-tiled panels, taken BEFORE applyLayout mutates them
+    const m=new Map();
+    for(const a of APPS){ const el=$("#"+a.panelId); if(el&&el.style.display!=="none") m.set(a.id,el.getBoundingClientRect()); }
+    return m;
+  }
+  function playSpawn(first,vis){
+    for(const a of APPS){
+      const el=$("#"+a.panelId); if(!el) continue;
+      if(!vis.has(a.id)){ el.classList.remove("spawn","flip"); continue; }
+      if(!first.has(a.id)){   // brand-new pane — wipe it open
+        el.classList.add("spawn");
+        // two animations run (the wipe on the panel, the flash on its ::after) and both bubble here —
+        // wait for the longer one so the flash isn't cut short.
+        el.addEventListener("animationend",function h(e){ if(e.animationName!=="tmuxFlash") return;
+          el.classList.remove("spawn"); el.removeEventListener("animationend",h); });
+        continue;
+      }
+      // survivor — FLIP it from its old cell to its new one. Rects are zoom-scaled by fitScale while
+      // transforms are in unzoomed CSS px, so the translation (but not the scale ratios) divides out.
+      const p=first.get(a.id), n=el.getBoundingClientRect();
+      const dx=(p.left-n.left)/uiZoom, dy=(p.top-n.top)/uiZoom;
+      const sx=n.width?p.width/n.width:1, sy=n.height?p.height/n.height:1;
+      if(Math.abs(dx)<.5&&Math.abs(dy)<.5&&Math.abs(sx-1)<.005&&Math.abs(sy-1)<.005) continue;
+      el.classList.remove("flip");
+      el.style.transformOrigin="top left";
+      el.style.transform=`translate(${dx}px,${dy}px) scale(${sx},${sy})`;
+      void el.offsetWidth;                       // commit the inverted position before transitioning
+      el.classList.add("flip");
+      requestAnimationFrame(()=>{ el.style.transform=""; });
+      el.addEventListener("transitionend",()=>{ el.classList.remove("flip"); el.style.transformOrigin=""; },{once:true});
+    }
+  }
   function applyLayout(){   // tiling (tmux) below Win3.1; floating windows at/above it
     const grid=$("#grid"); if(!grid) return;
+    // defaults() leaves P.windows null for boot to seed (it runs before fitScale), and doPrestige
+    // rebuilds P from defaults() — so re-seed here rather than throw on the post-IPO relayout.
+    if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
     const float=wmFloat();
+    const first=(!float&&tiledSeen&&!reduceMotion)?snapPanes():null;
     document.body.classList.toggle("wm-float", float);
     syncChrome(float);
     let n=0, topId=null, topZ=-1;
+    const vis=new Set();
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
       const unlocked=a.unlocked();
       const w=P.windows[a.id]||(P.windows[a.id]=defaultWindow(a.id));
@@ -2009,12 +2063,18 @@ notify("#general", "10x-ing that shit 🔥");`,
       } else {
         el.style.display=unlocked?"":"none"; el.style.order=a.order;
         el.style.left=el.style.top=el.style.width=el.style.height=el.style.zIndex="";
-        if(unlocked) n++;
+        if(unlocked){ n++; vis.add(a.id); }
       }
     }
     if(float && topId){ const t=$("#"+APP[topId].panelId); if(t) t.classList.add("wfocus"); }
     grid.dataset.count=float?"float":String(clamp(n,1,11));
-    if(float){ renderStartMenu(); renderTaskbar(); }
+    if(float){ renderStartMenu(); renderTaskbar(); tiledSeen=null; }
+    else {
+      const gained=first&&[...vis].some(id=>!first.has(id));
+      const lost=first&&[...first.keys()].some(id=>!vis.has(id));
+      if(gained&&!lost) playSpawn(first,vis);
+      tiledSeen=vis;
+    }
     fitBench();
   }
   /* ---- floating-window interaction: drag, focus/z-order, minimize/close, Start Menu ---- */
