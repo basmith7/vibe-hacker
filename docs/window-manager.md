@@ -25,9 +25,11 @@ minimizable/closable windows, Start Menu + Start button, Reset Layout, click-to-
 (slimming the top strip to a real taskbar); dead lockmask retired. Phase 4 shipped in two chunks: **4a**
 (the Store became a `#storePanel` app that tiles in at 10 credits) and **4b** (Equipment/Inventory/
 IDE/Missions became purchase-gated apps and the shop drawer was fully retired). **The whole shop is
-now apps; there is no drawer.** **Next: Phase 5 (onboarding + economy tuning; also a polish pass on
-the float-mode default window arrangement) and Phase 6 (per-era window chrome + the deferred theme-CSS
-DRY).** Major forks all decided.
+now apps; there is no drawer.** **Next: Phase 5 (onboarding + economy tuning) and Phase 6 (per-era window
+chrome + the deferred theme-CSS DRY).** Major forks all decided. The float-mode default-arrangement
+polish that was parked in Phase 5 is **done** (2026-09-14, `os-gates`): `WIN_LAYOUT`/`defaultWindows()`
+replaced the hardcoded pixel table with grid units scaled to the live canvas, weighted so card-heavy
+apps (Store, Status, and the IDE crafting bench) get more rows than the at-a-glance ones.
 
 Treat this doc as a living, resumable record (as with `crafting-update.md`'s 7 phases) — checkboxes
 are the source of truth for where to pick back up, not a spec frozen at t=0.
@@ -352,6 +354,7 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
       tiling + float windows; full Phase 1–3 + 4a regression; 0 exceptions. Docs updated.
 
 ### Phase 5 — Onboarding integration & economy tuning
+- [x] ~~Polish the float-mode default window arrangement~~ — done 2026-09-14 (see Status).
 - [ ] Nail the purchase-one-by-one funnel end-to-end (day-1 terminal → Store → each app's unlock);
       retune the new app-unlock costs/order against real play (this is where the Phase-1 economy
       numbers get their playtest pass)
@@ -378,9 +381,11 @@ doesn't hit the launcher problem the *tool* apps do. Hence 4a (Store) shipped al
 - **Prestige cosmetic perk** (user thread, 2026-07-05): prestige resets `P.up.os`→DOS and drops you
   back to tmux (accepted). Open: should *something* cosmetic survive as a prestige reward — a kept
   font, a badge, a retained theme unlock? Nice-to-have, not a blocker; slot into Phase 6 if pursued.
-- Do later OS eras (Win95→Win10→NEON→STARSHIP) each shift the paradigm again (e.g. Win95 adds the
-  taskbar/dock, OSX-era adds a dock) or are they pure cosmetic reskins of the same floating WM? Ties
-  into the Phase 6 "later-era navigation shifts" bullet.
+- ~~Do later OS eras (Win95→Win10→NEON→STARSHIP) each shift the paradigm again or are they pure
+  cosmetic reskins?~~ **Partly answered (2026-09-14, `os-gates` branch):** they're no longer *just*
+  reskins — each tier now opens a hardware slot, raises the agent cap, and unlocks Automation items
+  (table in `guide.md` "OS gates"). Whether later eras also shift the *UI* paradigm (taskbar/dock)
+  is still the Phase 6 "later-era navigation shifts" bullet.
 - ~~Does `missions` auto-open on first Sprint Config, or start open from minute one?~~ **Moot** —
   missions is now a normal purchase-gated app like the rest (full-gates decision).
 - Minimize vs close — **decided (user, 2026-07-05)**: for the Win3.1 era, identical behavior — both
