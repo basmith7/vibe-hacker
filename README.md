@@ -28,13 +28,16 @@ progression is real and auto-saves.
   filterable stash where you compare candidates, equip, or decommission for credits + materials.
   Stage gear in **🛠 The IDE** to spend those materials on **patches** (Stock → Modded →
   Custom-Built → rare **Legendary Build** uniques). A rotating **📋 Mission Board** biases what you
-  earn and pays out bonus materials, Sprint Config, and the occasional item. Two endgame slots —
-  ❄️ Cooling and 🔮 Neural Interface — unlock at level 60 and the final OS tier. Level-ups grant
+  earn and pays out bonus materials, Sprint Config, and the occasional item. You start with three
+  slots (RAM, CPU, Hard Drive); each OS tier opens another, ending with ❄️ Cooling and 🔮 Neural
+  Interface on the last two. Level-ups grant
   **skill points** you spend on any stat via the `+` buttons.
 - **Prestige** — once you hit Lv 10 you can **IPO / cash out** for **Equity**, a permanent global XP &
   credit multiplier, and start a fresh, stronger run. Plus **22 achievements** that unlock as you play.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** in the shop to move your rig through computing
-  history: **MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS**. Each purchase
+  history: **MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS**. The OS is the
+  game's milestone ladder: it caps how many agents you can run (DOS is single-tasking), opens hardware
+  slots one tier at a time, and gates Cloud Sync and the auto-buyers. Each purchase
   switches your look immediately — but click the OS name (top-left) anytime to switch back to any look
   you've already unlocked. And it's more than a reskin: on **MS-DOS** your apps are **tiled** (tmux-style),
   but buying **Windows 3.1** unbolts them into **real draggable windows** with a **⊞ Start** menu to
@@ -48,7 +51,7 @@ future-ideas backlog.
 - **Mash any key / tap** — grind faster
 - **Click the OS name** (top-left) — switch to any look you've unlocked
 - **`U`** — open the upgrade shop · **`T`** — cycle your unlocked looks
-- **`F11`** — fullscreen (browser native)
+- **`F11`** — fullscreen · turns on the 🎧 **Deep Work** bonus (+25% XP, +25% credits, +50% sanity regen) while you stay fullscreen
 - **`Esc`** / **`` ` ``** — boss key (hide behind a fake spreadsheet)
 - **`⟲ sudo rm -r /`** (bottom of the shop panel) — wipe your save
 

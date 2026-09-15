@@ -157,6 +157,12 @@ Always visible — this is the guided path, never hidden. **Hire an Agent** (ope
 app), **Learn a New Skill**, **Install Telemetry** (opens the charts app), and **Go Global**
 (opens the Deploy Mesh app). Each app you unlock tiles into the screen beside the terminal.
 
+**Hire an Agent is capped by your OS.** Your operating system decides how many agents it can run
+at once — MS-DOS is single-tasking, so it runs **1** agent; Windows 3.1 (cooperative multitasking)
+runs **2**; Windows 95 (preemptive) runs **4**; Windows 10 runs **6**; NEON//OS and STARSHIP run
+the full **7**. When you hit the cap the buy button turns into a **🔒 Win 3.1**-style lock naming
+the OS you need — buy that in **Upgrade OS** (Rigs) and the next hire opens up.
+
 Two of these are pure quality-of-life:
 - **🔔 Push Notifications** — turns on the toast pop-ups (wins, finds, level-ups). You start with
   **none** — day one is a bare terminal — and everything routine is always written to the Terminal
@@ -185,6 +191,9 @@ slots**, filled by drops. See **Hardware slots** below.
   it just takes effect" pattern as the other two.
 
 ### Automation (one-time toggles)
+Automation is OS-gated too (see **OS gates** below): **Cloud Sync needs Windows 95**, and both
+**Auto-Allocate SP** and **Auto-Buyer need Windows 10**. Locked cards still show in the Store with
+a 🔒 button naming the OS, so you always know what you're saving toward.
 - **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away). Base efficiency
   is 50%, improved by your equipped Modem (up to 90%). When you come back, a **"Welcome back"
   summary** shows how long you were gone, what you earned, the effective rate, and your efficiency.
@@ -236,10 +245,27 @@ when you buy it:
   underneath. The bar is a soft-pity meter: every task that *could* drop that material nudges the
   bar forward even when it doesn't, so a long unlucky streak is smoothed out instead of possible
   forever — a full bar guarantees the next one.
-- **🛠 The IDE (crafting bench)** — a single dedicated staging slot for "the item you're
-  currently working on." Send a stash item here with **→ IDE**; while it's staged you can spend
-  materials + credits on it (see **Patches & crafting** below), then either **Equip** it or send
-  it **↩ Toolbox** back to the stash.
+- **🛠 The IDE (crafting bench)** — one **socket** in the middle of the app holding "the item
+  you're currently working on," with your six crafting materials ringed around it. **Drag** an item
+  onto the socket from the Inventory stash or straight off an equipped slot, or use its **→ IDE**
+  button. The ring runs **clockwise from the top**, in the order you'd normally reach for them —
+  which is also roughly common → rare:
+
+  | # | Material | What it does |
+  |---|---|---|
+  | 1 | 📝 Commit | add a patch |
+  | 2 | 🩹 Hotfix | reroll one patch's value |
+  | 3 | 🔀 Refactor | reroll one patch's type |
+  | 4 | 📦 Full Rewrite | reroll every patch |
+  | 5 | ⏪ Revert | strip back to Stock |
+  | 6 | 🔗 Merge | add a patch slot (up to 4) |
+
+  Each orb shows **how many of that material you hold** and lights up green only when the craft is
+  actually possible; hover any orb for its exact cost and, if it's dark, *why*. The socket is
+  outlined in the item's **rarity colour** (Stock grey → Modded blue → Custom-Built cyan →
+  Legendary amber), and the item's patches are listed under the ring alongside its remaining open
+  slots. When you're done, **Equip** it or send it **↩ Toolbox**. In a very narrow window the ring
+  flattens into a plain top-to-bottom list in the same order.
 - **🎲 Roll for Hardware** — gamble credits for a random item in a specific slot instead of
   waiting on a task drop. Cost scales with your level and rises the same for every slot. Roll
   once or **×10** at a time.
@@ -301,10 +327,11 @@ instead of an item.
 
 A few systems only kick in once you're deep into a run:
 
-- **Two more Hardware slots** — ❄️ **Cooling** (unlocks at **level 60**; boosts Sanity regen) and
-  🔮 **Neural Interface** (unlocks once you own **STARSHIP OS**, the last Upgrade OS tier; its base
-  effect is a small bonus to **all 5 stats at once**, unlike every other slot which only ever
-  touches its own single effect).
+- **Hardware slots open with your OS** — you start with just **RAM, CPU, and Hard Drive**; every
+  Upgrade OS tier opens one more (full table under **OS gates** below). The last two are the endgame
+  ones: ❄️ **Cooling** (NEON//OS; boosts Sanity regen) and 🔮 **Neural Interface** (STARSHIP OS,
+  the final tier; its base effect is a small bonus to **all 5 stats at once**, unlike every other
+  slot which only ever touches its own single effect).
 - **Item level has a ceiling** tied to your current OS tier — buying a new OS doesn't just change
   your look, it also raises the best gear you can possibly find or roll. Outgrow MS-DOS and your
   drops outgrow it too.
@@ -315,6 +342,25 @@ A few systems only kick in once you're deep into a run:
   crafted: a named item with fixed patches already on it (e.g. *Vim's Blessing*, *The ThinkPad X1
   of Legend*). Shown with a gold border and a ★ next to its level. You can still craft further
   patches onto one — it's a rare head start, not a permanently frozen item.
+
+## OS gates (Upgrade OS)
+
+**🖥️ Upgrade OS** is the spine of the game, not a reskin. Every tier changes the look (see
+**Themes**), raises the item-level ceiling, and unlocks real capability:
+
+| OS tier | Cost | Hardware slot opened | Agents it can run | Also unlocks |
+|---|---|---|---|---|
+| MS-DOS 6.22 | — | RAM, CPU, Hard Drive | 1 | tmux-style tiled apps |
+| Windows 3.1 | 650 | 🖥️ Monitor | 2 | draggable windows + Start menu |
+| Windows 95 | 7.5K | 📡 Modem | 4 | 🌙 Cloud Sync |
+| Windows 10 | 80K | 🎮 GPU | 6 | 🎯 Auto-Allocate SP, 🛒 Auto-Buyer |
+| NEON//OS v6 | 850K | ❄️ Cooling | 7 | — |
+| STARSHIP OS | 9.5M | 🔮 Neural Interface | 7 | — |
+
+Locked slots show as **🔒 Locked — unlocks on …** in Equipment and can't be rolled for in
+Inventory; drops never land in a slot you haven't opened. Locked Store cards keep their price
+hidden behind a **🔒 Win 95**-style button until you own that OS. Since **IPO / Cash Out** resets
+your OS to MS-DOS, every prestige run re-opens the ladder from three slots and one agent.
 
 ## Themes (Upgrade OS)
 
@@ -397,9 +443,28 @@ the Store appears at 10 credits, and reaching it is quick enough that waiting is
 | Click the OS name (top-left) | Switch to any unlocked look |
 | `T` | Cycle through your unlocked looks |
 | `?` (or the **?** button, top-right) | Show/hide the controls overlay |
-| `F11` | Fullscreen (browser-native) |
+| `F11` | Fullscreen — turns on the 🎧 **Deep Work** bonus (see below) |
 | `Esc` / `` ` `` | Boss key — hide behind a fake spreadsheet |
 | `⟲ sudo rm -r /` (bottom of the Store app) | Wipe your save and start over |
+
+## Deep Work (the fullscreen bonus)
+
+Play **fullscreen** and you earn **🎧 Deep Work**: **+25% XP, +25% credits, and +50% sanity regen**,
+for as long as you stay fullscreen. No browser chrome, no tabs, no distractions — the game pays you
+for actually focusing.
+
+It costs nothing and there's nothing to buy; it's a reward for how you play. A green **DEEP WORK**
+pill appears at the top of the screen while it's active (click it to drop back out of fullscreen),
+and the Terminal logs when it engages and when it breaks. Both routes work: `F11` browser-chrome
+fullscreen *and* a real fullscreen request. Leaving fullscreen removes the bonus immediately.
+
+## Display scaling
+
+The interface is designed for **1920×1080**. On a bigger screen — 1440p, 4K, anything past the
+reference — the whole UI **scales up** to keep text and controls at their intended size instead of
+shrinking into a corner, so a 4K display shows the same tidy layout, just larger. Below 1920 the
+layout stays fluid and simply fits fewer, smaller panes, down through the phone/tablet stacked view.
+Nothing about this is a setting; it just follows your window.
 
 ## Settings
 

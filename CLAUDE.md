@@ -14,7 +14,7 @@ no bundler, no `npm install`.
 
 | File | What it's for |
 |---|---|
-| `index.html` | The entire game. Single `<script>` IIFE, ~2,150 lines. |
+| `index.html` | The entire game. Single `<script>` IIFE, ~2,850 lines. |
 | `README.md` | Player-facing project overview (what the game is, controls, license). |
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
 | `todo.md` | Standing backlog of future ideas (formalized, but not commitments). Root, because it's the primary agent-facing worklist. |
@@ -66,15 +66,19 @@ reveal polish) — see its "Backlog absorbed" section.
 
 - All game state lives in one object, `P`, built by `defaults()`. `PERSIST` is the array of `P`
   keys that actually get saved (via `save()`, to a cookie + localStorage mirror). Adding a new
-  persisted field just means adding it to both `defaults()` and `PERSIST` — if an old save doesn't
+  persisted field just means adding it to both `defaults()` and `PERSIST` — if a save doesn't
   have that key, `P` simply keeps whatever `defaults()` set for it, since `loadState()` only
-  overwrites keys that are present in the loaded JSON. Real migration code is only needed when an
-  old save's *shape* needs transforming (e.g. merging two old stats into one new one), not just for
-  brand-new fields.
-- `loadState()` detects old-format saves by presence/absence of specific keys in the raw parsed
-  JSON (not by bumping a version number), then backfills/transforms in place. Read this function
-  before adding a new migration — there's a running history of every past migration in there, each
-  commented with which phase/change it's for.
+  overwrites keys that are present in the loaded JSON.
+- **No save migrations — ever.** (User decision, 2026-09-14: the player base is the user plus
+  friends, so old saves are simply invalidated.) `SAVE_VER` is strict: a save whose `ver` doesn't
+  match boots into the **Guru Meditation** easter-egg screen (`guruMeditation()`, Amiga-style red
+  box) and is wiped on click. So whenever a change transforms an existing field's *shape* (not just
+  adds a new one), bump `SAVE_VER` and move on — don't write grandfather/backfill code. The old
+  key-sniffing migration ladder that used to live in `loadState()` was deleted for this reason.
+- **The OS tier (`P.up.os`, index into `OS_TIERS`) is the milestone spine.** It gates hardware slots
+  (`SLOTS[].os`), the agent cap (`HIRE_CAP`), Automation items (`UPG[].reqOs`), the window paradigm
+  (`wmFloat()`), item-level caps and retro item names. `osLock(u)` is the single check the Store uses;
+  when gating something new behind an OS, hang it off that rather than adding a bespoke conditional.
 - `recompute()` derives the `MULT` (multipliers: speed/xp/credit/crit/etc.) and `GEAR` (equipped-item
   patch sums) objects from current stats/upgrades/equipped hardware. Call it after anything that
   changes equipment, upgrades, or stats-in-a-way-that-matters — it's cheap, safe to over-call.
@@ -85,6 +89,28 @@ reveal polish) — see its "Backlog absorbed" section.
 - The shop UI (`buildShop()`/`renderShop()`, `buildToolbox()`/`renderToolbox()`) rebuilds its DOM
   once and then just updates text/classes on a timer — look at the existing `slotEls`/`matEls`/etc.
   caching pattern before adding a new shop section.
+- **1920×1080 is the reference resolution.** Every font size/padding/border in the CSS is a fixed px
+  value tuned for it. `fitScale()` sets a CSS `zoom` on `:root` for anything larger (capped at 3×),
+  so the logical canvas stays ~1920 wide no matter the display; below the reference it holds at 1× and
+  the fluid layout takes over. Two consequences to remember: `getBoundingClientRect()` is zoom-scaled
+  while stored window rects are not (drag/resize divide by `uiZoom`), and anything measuring the canvas
+  must run **after** `fitScale()` — which is why `defaults()` leaves `P.windows` null for boot to seed.
+- **Float-mode window defaults are computed, not hardcoded.** `WIN_LAYOUT` holds each app's slot as
+  `{c, r, h}` grid units (4 columns × 7 half-rows) and `defaultWindows()` scales that to the live
+  `#grid` size, so Reset Layout fits whatever screen the player has. Change an app's share of the
+  screen by editing its `h` — but every column's heights must still total `WIN_ROWS`.
+- **Deep Work (`syncFocusMode`) is the fullscreen bonus.** Detection needs *both* the Fullscreen API
+  and the `display-mode: fullscreen` media query — F11 only triggers the latter. Effects are applied
+  in `recompute()` behind `focusOn`, so any new multiplier gets them for free.
+- **The IDE crafting bench is a ring, not a list.** `CRAFT_ACTIONS` is the single table driving it:
+  each row carries its material, label, unit-circle `x`/`y` position, validity predicate and the
+  reason string shown when it's unavailable. `fitBench()` (a `ResizeObserver` on `#benchWrap`) sizes
+  the ellipse and the centre socket in JS and flips to a stacked `.narrow` fallback under ~270px.
+  Reordering the ring = reordering that table.
+- **New themed surfaces should carry the `card` class.** The per-era theme CSS is long repeated
+  selector lists that include `.card`, so anything given that class gets every OS look for free
+  (this is how the bench socket/orbs are themed). The catch: those rules use `!important`, so a
+  semantic colour of your own (rarity, ready state) needs `!important` too.
 
 ## Verifying changes (there is no test suite)
 
@@ -122,6 +148,10 @@ across every phase of this project:
   later with zero other context.
 
 ## Known, deliberate simplifications (not bugs)
+
+- OS-locked Store cards still *reveal* on the normal 50%-saved rule and just show a 🔒 button, so a
+  player can see a thing they can't buy yet. Intentional: it's the roadmap. The Equipment app does the
+  same for locked slots.
 
 - Legendary Build items aren't patch-locked — Commit/Hotfix/Refactor/Revert all still work on them,
   so a Reverted Legendary keeps its unique name with 0 patches. Accepted tradeoff, not an oversight.

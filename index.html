@@ -130,6 +130,22 @@
   #manualWrap{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
   #manualWrap .agent{flex:1;border:none;border-radius:0;background:transparent}
 
+  /* ---------- Deep Work badge (fullscreen bonus) ---------- */
+  #focusBadge{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:900;display:none;
+    align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:10.5px;letter-spacing:.6px;
+    border:1px solid var(--green);color:var(--green);background:rgba(10,17,32,.82);
+    box-shadow:0 0 14px rgba(57,255,20,.28);cursor:pointer}
+  body.focusmode #focusBadge{display:flex;animation:focusPulse 3.2s ease-in-out infinite}
+  #focusBadge b{color:#eafff0}
+  @keyframes focusPulse{50%{box-shadow:0 0 22px rgba(57,255,20,.5)}}
+  @media (prefers-reduced-motion:reduce){body.focusmode #focusBadge{animation:none}}
+  body.reduce-motion #focusBadge{animation:none!important}
+  /* ---------- Guru Meditation (stale-save easter egg) ---------- */
+  body.guru>*:not(#guru){display:none!important}
+  #guru{position:fixed;inset:0;background:#000;color:#f00;font-family:"Courier New",Courier,monospace;font-size:clamp(14px,1.8vw,24px);z-index:99999;cursor:pointer;padding:18px}
+  #guru .guruBox{border:6px solid #f00;padding:14px 0;text-align:center;line-height:1.6;animation:guruBlink 1.4s steps(1) infinite}
+  @keyframes guruBlink{50%{border-color:#000}}
+  @media (prefers-reduced-motion:reduce){#guru .guruBox{animation:none}}
   /* ---------- floating window manager (Windows 3.1+ era: P.up.os>=1, desktop only) ---------- */
   body.wm-float #grid{display:block;position:relative;overflow:hidden;gap:0}
   body.wm-float .panel{position:absolute;border-radius:6px;box-shadow:0 10px 34px rgba(0,0,0,.62),0 0 0 1px rgba(0,0,0,.55)}
@@ -390,11 +406,6 @@
   .matCard .nm .lv{color:var(--amber)}
   .pity{margin-top:5px;height:3px;border-radius:2px;background:#0d1526;overflow:hidden}
   .pity i{display:block;height:100%;width:0%;background:var(--cyan);box-shadow:0 0 6px rgba(0,229,255,.5);transition:width .2s}
-  .craftCard{padding:7px 10px}
-  .craftCard .em{font-size:16px}
-  .craftCard .nm{font-size:11.5px}
-  .craftCard .fx{font-size:9.5px}
-  .craftCard .buy{padding:6px 10px;font-size:10px}
   .card.legendary{border-color:rgba(255,176,0,.6);background:linear-gradient(180deg,#1a1408,#0a1120);box-shadow:0 0 10px rgba(255,176,0,.15) inset}
   .card.legendary .nm{color:var(--amber)}
   .shopCat{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin:9px 2px 1px}
@@ -414,6 +425,56 @@
     border:1px solid var(--green);color:var(--green);background:rgba(57,255,20,.08)}
   .card .buy:hover:not(:disabled){background:rgba(57,255,20,.2);box-shadow:0 0 12px rgba(57,255,20,.3)}
   .card .buy:disabled{border-color:var(--edge);color:var(--dim);background:#0a1120;cursor:not-allowed}
+  /* ---------- The IDE crafting bench: the staged item sits in the middle, the six crafting
+       materials ring it clockwise from the top in the order you'd reach for them (which is also
+       common → rare). fitBench() sizes the ellipse in JS; below ~270px the ring flattens into a
+       plain list via .narrow so it still works in a skinny window or on mobile. ---------- */
+  .benchHint{font-size:9.5px;color:var(--dim);text-align:center;margin:1px 0 3px;letter-spacing:.3px}
+  .benchRing{position:relative;margin:0 auto}
+  .benchCore{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:var(--core);height:var(--coreH);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px;
+    text-align:center;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  .benchCore .cEm{font-size:20px;line-height:1}
+  .benchCore .cNm{font-size:10.5px;font-weight:700;color:var(--txt)!important;line-height:1.2;max-height:2.4em;overflow:hidden}
+  .benchCore .cSub{font-size:9px;color:var(--dim);line-height:1.25}
+  .benchCore[data-rarity="modded"]{border-color:var(--blue)!important}
+  .benchCore[data-rarity="modded"] .cNm{color:var(--blue)!important}
+  .benchCore[data-rarity="custom-built"]{border-color:var(--cyan)!important}
+  .benchCore[data-rarity="custom-built"] .cNm{color:var(--cyan)!important}
+  .benchCore[data-rarity="legendary"]{border-color:var(--amber)!important;box-shadow:0 0 16px rgba(255,176,0,.22) inset}
+  .benchCore[data-rarity="legendary"] .cNm{color:var(--amber)!important}
+  .benchCore.empty{border-style:dashed!important}
+  .benchCore.dragover{border-color:var(--green)!important;border-style:solid!important;box-shadow:0 0 18px rgba(57,255,20,.35) inset}
+  .orb{position:absolute;left:50%;top:50%;width:var(--orb);font:inherit;cursor:pointer;
+    transform:translate(-50%,-50%) translate(calc(var(--rx) * var(--x)),calc(var(--ry) * var(--y)));
+    display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 3px;
+    border-radius:10px;color:var(--dim)}
+  .orb .oEm{font-size:17px;line-height:1;filter:drop-shadow(0 0 6px rgba(0,229,255,.3))}
+  .orb .oNm{font-size:9px;font-weight:700;color:var(--txt)!important;line-height:1.1;text-align:center}
+  .orb .oSub{font-size:8px;line-height:1.1;text-align:center;opacity:.85}
+  .orb .oCt{position:absolute;top:-6px;right:-6px;min-width:15px;padding:1px 3px;border-radius:8px;
+    font-size:8.5px;font-weight:700;background:var(--panel2);border:1px solid var(--edge);color:var(--txt)}
+  .orb .oOrd{position:absolute;top:-6px;left:-6px;width:14px;height:14px;border-radius:50%;font-size:8px;
+    line-height:13px;background:var(--panel2);border:1px solid var(--edge);color:var(--dim)}
+  .orb.ready{border-color:var(--green)!important;color:var(--green)!important;box-shadow:0 0 10px rgba(57,255,20,.18)}
+  .orb.ready .oCt{border-color:var(--green)!important;color:var(--green)!important}
+  .orb.ready:hover{background:rgba(57,255,20,.1);box-shadow:0 0 14px rgba(57,255,20,.35)}
+  .orb:disabled{cursor:not-allowed;opacity:.42}
+  .bench.narrow .benchRing{width:auto!important;height:auto!important;display:flex;flex-direction:column;gap:7px}
+  .bench.narrow .benchCore{position:static;transform:none;width:auto;height:auto;min-height:74px;order:-1}
+  .bench.narrow .orb{position:static;transform:none;width:auto;flex-direction:row;gap:8px;padding:7px 10px;text-align:left}
+  .bench.narrow .orb .oNm,.bench.narrow .orb .oSub{text-align:left}
+  .bench.narrow .orb .oSub{flex:1}
+  .bench.narrow .orb .oCt,.bench.narrow .orb .oOrd{position:static}
+  .benchMods{display:flex;flex-direction:column;gap:3px;margin-top:7px}
+  .modRow{display:flex;gap:8px;align-items:baseline;font-size:10px;padding:4px 8px;border-radius:6px}
+  .modRow .mN{color:var(--dim);flex:1;min-width:0}
+  .modRow .mV{font-weight:700;color:var(--cyan)!important}
+  .modRow .mT{font-size:8.5px;color:var(--dim);opacity:.8}
+  .modRow.open{border-style:dashed!important;color:var(--dim);justify-content:center;opacity:.6}
+  .benchActs{display:flex;gap:6px;margin-top:7px}
+  .benchActs .buy{flex:1}
+  .card[draggable="true"]{cursor:grab}
   .card .buy.maxed{border-color:var(--magenta);color:var(--magenta);background:rgba(255,43,214,.08)}
   .stat.sppulse .v{color:var(--green)!important;text-shadow:0 0 8px rgba(57,255,20,.6);animation:pip 1.1s infinite}
   .card.prestige{border-color:rgba(57,255,20,.4);background:linear-gradient(180deg,#0c1a12,#0a1120)}
@@ -730,6 +791,9 @@
   </div>
   <!-- Windows 3.1+ desktop taskbar (float mode only): Start button far-left, then a button per
        running/available app. Lives as the last flex child so the grid canvas shrinks above it. -->
+  <div id="focusBadge" role="status" title="Fullscreen Deep Work bonus is active — click to leave fullscreen">
+    🎧 <span>DEEP WORK</span> <b>+25% XP · +25% credits · +50% sanity regen</b>
+  </div>
   <div id="taskbar">
     <button id="startBtn" title="Start Menu — open any app" aria-label="Start menu — open any app" aria-haspopup="menu">⊞ Start</button>
     <div id="taskbarApps" role="toolbar" aria-label="Open apps"></div>
@@ -752,7 +816,7 @@
       <tr><td class="k"><kbd>Shift</kbd> + click a stat's <kbd>+</kbd></td><td class="hd">Spend <b>all</b> your skill points on that one stat</td></tr>
       <tr><td class="k"><kbd>T</kbd></td><td class="hd">Cycle through your unlocked OS looks</td></tr>
       <tr><td class="k"><kbd>?</kbd></td><td class="hd">Show / hide this help</td></tr>
-      <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen (browser)</td></tr>
+      <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen — earns the 🎧 <b>Deep Work</b> bonus (+25% XP, +25% credits, +50% sanity regen)</td></tr>
       <tr><td class="k"><kbd>Esc</kbd> / <kbd>`</kbd></td><td class="hd">Boss key — hide the game behind a fake spreadsheet</td></tr>
       <tr><td class="k">⊞ Start <span class="hd">(Win 3.1+)</span></td><td class="hd">Open any app · Reset Layout · click a taskbar app to focus/minimize it</td></tr>
       <tr><td class="k">Drag title bar / corner <span class="hd">(Win 3.1+)</span></td><td class="hd">Move / resize windows</td></tr>
@@ -902,32 +966,36 @@
     {name:"6th agent",cost:3e6},{name:"7th agent",cost:2.6e7},
   ];
   const OS_TIERS=[   // cockpit look tiers; buying advances + auto-switches, but any owned look can be picked later
-    {id:"dos",     name:"MS-DOS 6.22",  cost:0},
-    {id:"win31",   name:"Windows 3.1",  cost:650},
-    {id:"win95",   name:"Windows 95",   cost:7500},
-    {id:"win10",   name:"Windows 10",   cost:80000},
-    {id:"neon",    name:"NEON//OS v6",  cost:850000},
-    {id:"spaceage",name:"STARSHIP OS",  cost:9500000},
+    {id:"dos",     name:"MS-DOS 6.22",  short:"DOS",      cost:0},
+    {id:"win31",   name:"Windows 3.1",  short:"Win 3.1",  cost:650},
+    {id:"win95",   name:"Windows 95",   short:"Win 95",   cost:7500},
+    {id:"win10",   name:"Windows 10",   short:"Win 10",   cost:80000},
+    {id:"neon",    name:"NEON//OS v6",  short:"NEON",     cost:850000},
+    {id:"spaceage",name:"STARSHIP OS",  short:"STARSHIP", cost:9500000},
   ];
+  // OS gates (os-gates update) — the OS ladder is the game's milestone spine, so each tier unlocks
+  // real capability, not just a reskin. HIRE_CAP = max "Hire an Agent" tier per OS (DOS is
+  // single-tasking: one agent; Win3.1 cooperative multitasking: two; Win95 preemptive: four; ...).
+  // Slot unlocks live in SLOTS[].os; Automation items carry a reqOs. osLock(u) is the one gate check.
+  const HIRE_CAP=[1,2,4,6,7,7];
 
   /* ============ Hardware slots (crafting update Phase 3 — structural only, no patches yet) ============ */
+  // os = the Upgrade OS tier (index into OS_TIERS) that opens the slot. Ordered by unlock so the
+  // Equipment app reads top-down as a roadmap. Thematic: a GUI needs a Monitor, Win95 is the
+  // dial-up era (Modem), Win10 brings the GPU, NEON needs Cooling, STARSHIP jacks in the Neural Interface.
   const SLOTS=[
-    {id:"ram",       lbl:"RAM",        em:"🧠"},
-    {id:"cpu",       lbl:"CPU",        em:"⚙️"},
-    {id:"harddrive", lbl:"Hard Drive", em:"💾"},
-    {id:"monitor",   lbl:"Monitor",    em:"🖥️"},
-    {id:"gpu",       lbl:"GPU",        em:"🎮"},
-    {id:"modem",     lbl:"Modem",      em:"📡"},
-    {id:"cooling",   lbl:"Cooling",    em:"❄️"},
-    {id:"neural",    lbl:"Neural Interface", em:"🔮"},
+    {id:"ram",       lbl:"RAM",        em:"🧠", os:0},
+    {id:"cpu",       lbl:"CPU",        em:"⚙️", os:0},
+    {id:"harddrive", lbl:"Hard Drive", em:"💾", os:0},
+    {id:"monitor",   lbl:"Monitor",    em:"🖥️", os:1},
+    {id:"modem",     lbl:"Modem",      em:"📡", os:2},
+    {id:"gpu",       lbl:"GPU",        em:"🎮", os:3},
+    {id:"cooling",   lbl:"Cooling",    em:"❄️", os:4},
+    {id:"neural",    lbl:"Neural Interface", em:"🔮", os:5},
   ];
   const SLOT=Object.fromEntries(SLOTS.map(s=>[s.id,s]));
-  // crafting update Phase 7 — endgame slots gated behind a milestone rather than always-on. This
-  // game has no boss-fight mechanic to gate behind, so "milestone" here means level/OS progression
-  // — the closest equivalent already in the game.
-  const SLOT_UNLOCK={ cooling:()=>P.level>=60, neural:()=>P.up.os>=OS_TIERS.length-1 };
-  function slotUnlocked(slotId){ const fn=SLOT_UNLOCK[slotId]; return fn?fn():true; }
-  function slotUnlockHint(slotId){ return slotId==="cooling"?"unlocks at level 60":slotId==="neural"?"unlocks on STARSHIP OS":""; }
+  function slotUnlocked(slotId){ return P.up.os>=SLOT[slotId].os; }
+  function slotUnlockHint(slotId){ return "unlocks on "+OS_TIERS[SLOT[slotId].os].name; }
   // Retro base-item flavor, indexed the same as OS_TIERS/P.up.os so your gear ages with your rig.
   const RETRO_NAMES=[
     ["Orange II","Trash-80","IBM PC/XT Clone","Turbo XT Card"],
@@ -1062,9 +1130,9 @@
     {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
     {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
     {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",       cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name:" (final look)")},
-    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
-    {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
-    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
+    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
+    {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
+    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
   ];
   function money(n){ n=Math.floor(n);
     const f=P.settings&&P.settings.numFormat;                                  // number-format setting (Settings panel)
@@ -1132,27 +1200,45 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ state + persistence (cookie, with localStorage fallback) ============ */
-  const SAVE_VER=6;
+  const SAVE_VER=7;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
   // window-manager Phase 2 — default floating-window geometry per app (relative to the #grid canvas).
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
   // Non-overlapping default desktop: a 4-column grid (306px cols) × 3 rows (210px) sized for the
   // float canvas above the taskbar. The Store spans two rows (it's card-heavy) in column 4; the other
   // nine apps take one cell each, so a fully-unlocked save opens tidy rather than a 10-window pile.
-  const DEFAULT_WINDOWS={
-    terminal:    {x:8,   y:8,   w:306, h:210, z:1,  open:true},
-    agents:      {x:322, y:8,   w:306, h:210, z:2,  open:true},
-    status:      {x:636, y:8,   w:306, h:210, z:3,  open:true},
-    store:       {x:950, y:8,   w:306, h:428, z:10, open:true},
-    deploy_mesh: {x:8,   y:226, w:306, h:210, z:4,  open:true},
-    telemetry:   {x:322, y:226, w:306, h:210, z:5,  open:true},
-    inventory:   {x:636, y:226, w:306, h:210, z:6,  open:true},
-    equipment:   {x:8,   y:444, w:306, h:210, z:7,  open:true},
-    ide:         {x:322, y:444, w:306, h:210, z:8,  open:true},
-    missions:    {x:636, y:444, w:306, h:210, z:9,  open:true},
-    achievements:{x:950, y:444, w:306, h:210, z:11, open:true},
+  // Float-mode (Win 3.1+) default layout. Expressed in grid units — column index + start row +
+  // height in half-rows — instead of hardcoded pixels, so defaultWindows() can fit it to whatever
+  // canvas the player actually has rather than assuming one screen size. Heights are weighted:
+  // the card-heavy apps (Store, Status, and especially the IDE bench) get more rows than the
+  // at-a-glance ones, so a fresh Reset Layout comes up usable instead of uniformly cramped.
+  const WIN_COLS=4, WIN_ROWS=7, WIN_GAP=8;
+  const WIN_LAYOUT={     // c = column, r = start half-row, h = height in half-rows (col totals must be WIN_ROWS)
+    terminal:    {c:0, r:0, h:3, z:1},
+    telemetry:   {c:0, r:3, h:2, z:5},
+    equipment:   {c:0, r:5, h:2, z:7},
+    agents:      {c:1, r:0, h:3, z:2},
+    deploy_mesh: {c:1, r:3, h:2, z:4},
+    missions:    {c:1, r:5, h:2, z:9},
+    status:      {c:2, r:0, h:3, z:3},
+    inventory:   {c:2, r:3, h:2, z:6},
+    achievements:{c:2, r:5, h:2, z:11},
+    store:       {c:3, r:0, h:3, z:10},
+    ide:         {c:3, r:3, h:4, z:8},   // widest content of the lot — the crafting bench ring needs the room
   };
-  const cloneWindows=()=>JSON.parse(JSON.stringify(DEFAULT_WINDOWS));
+  function defaultWindows(){
+    const g=document.getElementById("grid");
+    const gw=(g&&g.clientWidth)||1280, gh=(g&&g.clientHeight)||660;
+    const cw=(gw-WIN_GAP*(WIN_COLS+1))/WIN_COLS, rh=(gh-WIN_GAP*(WIN_ROWS+1))/WIN_ROWS;
+    const out={};
+    for(const id in WIN_LAYOUT){ const L=WIN_LAYOUT[id];
+      out[id]={ x:Math.round(WIN_GAP+L.c*(cw+WIN_GAP)), y:Math.round(WIN_GAP+L.r*(rh+WIN_GAP)),
+                w:Math.round(cw), h:Math.round(L.h*rh+(L.h-1)*WIN_GAP), z:L.z, open:true };
+    }
+    return out;
+  }
+  const defaultWindow=id=>defaultWindows()[id]||{x:8,y:8,w:306,h:210,z:1,open:true};
+  const cloneWindows=()=>defaultWindows();
   function defaults(){
     const stats={}; STAT_IDS.forEach(id=>stats[id]=rand(6,12));
     return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
@@ -1170,7 +1256,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       intro:true, reveal:{credits:false,shop:false,store:false},
       notify:{grind:true,progress:true,system:true,hype:true},
       settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
-      windows:cloneWindows(),
+      windows:null,   // seeded at boot, after fitScale() — defaults() runs before the UI zoom exists, so measuring the canvas here would be wrong
       achv:{},seenTips:{shop:false,sp:false}};
   }
   let P=defaults();
@@ -1186,114 +1272,32 @@ notify("#general", "10x-ing that shit 🔥");`,
     try{ return localStorage.getItem("vibehacker"); }catch(e){}
     return null;
   }
+  // Strict versioning (decision 2026-09-14): a save whose ver !== SAVE_VER is not migrated — loadState
+  // returns "stale" and boot shows the Guru Meditation screen, which wipes it on click. Brand-new
+  // fields still need no migration: loadState only overwrites keys present in the JSON, so P keeps
+  // whatever defaults() set for anything missing.
   function loadState(){
     const raw=readStore(); if(!raw) return false;
-    try{
-      const d=JSON.parse(raw);
-      if(d && d.ver===SAVE_VER){
-        const hadOs=!!(d.up && ("os" in d.up));
-        const hadNotify=!!(d.up && ("notify" in d.up));   // capture BEFORE the du backfill mutates the shared d.up ref
-        for(const k of PERSIST) if(k in d) P[k]=d[k];
-        // migration: 9-stat -> 5-stat merge (crafting-update Phase 1). Detect a pre-merge save by
-        // the presence of any retired stat id, then fold values into the surviving 5 before the
-        // generic per-id backfill below would otherwise hand "systems" a fresh random value.
-        const oldStats=d.stats||{};
-        if(("gitfu" in oldStats)||("arch" in oldStats)||("devops" in oldStats)||("rizz" in oldStats)||("caffeine" in oldStats)){
-          // NOTE: P.stats and oldStats are the SAME object here (the generic PERSIST copy above
-          // assigns by reference) — read every old value out before deleting any of them.
-          const newCoding=(oldStats.coding||0)+(oldStats.gitfu||0);
-          const newSystems=(oldStats.arch||0)+(oldStats.devops||0);
-          const leftover=(oldStats.rizz||0)+(oldStats.caffeine||0);   // Rizz/Caffeine retired as active stats
-          delete P.stats.gitfu; delete P.stats.arch; delete P.stats.devops; delete P.stats.rizz; delete P.stats.caffeine;
-          P.stats.coding=newCoding; P.stats.systems=newSystems;
-          P.sp=(P.sp||0)+Math.max(0,Math.floor(leftover/10));          // refund as skill points so the investment isn't lost
-          if(Array.isArray(P.unlockedStats)){
-            const remapped=new Set(["coding"]);
-            for(const id of P.unlockedStats){
-              if(id==="gitfu") remapped.add("coding");
-              else if(id==="arch"||id==="devops") remapped.add("systems");
-              else if(id==="rizz"||id==="caffeine") { /* retired, drop */ }
-              else if(STAT_IDS.includes(id)) remapped.add(id);
-            }
-            P.unlockedStats=STAT_IDS.filter(id=>remapped.has(id));
-            P.up.skill=Math.max(0,P.unlockedStats.length-1);
-          }
-        }
-        for(const id of STAT_IDS) if(!(id in P.stats)) P.stats[id]=rand(6,12);
-        const du=defaults().up; for(const k in du) if(!(k in P.up)) P.up[k]=du[k];
-        if(!P.achv||typeof P.achv!=="object") P.achv={};
-        if(!P.seenTips) P.seenTips={shop:false,sp:false};
-        // migration: a save from before the progressive-unlock system had everything visible → keep it that way
-        if(!("unlocked" in d) || !("unlockedStats" in d)) unlockAll();
-        if(!P.unlocked) P.unlocked={telemetry:false,globe:false};
-        // migration: window-manager Phase 4b gated Inventory/Equipment/IDE/Missions behind purchases.
-        // Any save predating this feature lacks those keys → grandfather them ON so existing players
-        // keep the toolbox systems they already had; new saves get false from defaults() and buy in.
-        for(const k of ["inventory","equipment","ide","missions"]) if(!(k in P.unlocked)) P.unlocked[k]=true;
-        // migration: the Status app became a purchase (was free after intro) — grandfather it ON so
-        // existing players don't lose their character sheet.
-        if(!("status" in P.unlocked)) P.unlocked.status=true;
-        // migration: Achievements became a purchasable app — grandfather it ON for existing players
-        // (they already had the achievement system) so nobody loses their trophy case.
-        if(!("achievements" in P.unlocked)) P.unlocked.achievements=true;
-        if(!Array.isArray(P.unlockedStats)||!P.unlockedStats.length) P.unlockedStats=["coding"];
-        // migration: saves from before the intro funnel skip it (they've already progressed)
-        if(!("intro" in d)){ P.intro=false; P.reveal={credits:true,shop:true}; }
-        if(!P.reveal) P.reveal={credits:false,shop:false};
-        // migration: the Store now opens via a button (P.reveal.store); grandfather it from reveal.shop
-        if(P.reveal && !("store" in P.reveal)) P.reveal.store=!!P.reveal.shop;
-        // migration: notifications (toasts) + hype banners (flying text) became purchasable features.
-        // Grandfather existing players ON so they don't suddenly lose their pop-ups; new saves start at 0
-        // (a bare day-1 terminal) and buy them in. P.notify per-type toggles default all-on from defaults().
-        if(!hadNotify){ P.up.notify=1; P.up.hype=1; }
-        if(!P.notify||typeof P.notify!=="object") P.notify={grind:true,progress:true,system:true,hype:true};
-        // migration: settings object (number format, reduce motion, ambient tint, theme lock) — backfill any missing key
-        if(!P.settings||typeof P.settings!=="object") P.settings=defaults().settings;
-        else { const ds=defaults().settings; for(const k in ds) if(!(k in P.settings)) P.settings[k]=ds[k]; }
-        // migration: window-manager Phase 2 — saves predating the floating WM lack P.windows; seed it
-        // (and backfill any app id missing from an older windows object) from DEFAULT_WINDOWS.
-        if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
-        for(const id in DEFAULT_WINDOWS) if(!P.windows[id]||typeof P.windows[id]!=="object") P.windows[id]={...DEFAULT_WINDOWS[id]};
-        // migration: backfill maxCredits from saves predating the shop-reveal-at-50%-saved system
-        if(typeof P.maxCredits!=="number") P.maxCredits=P.credits||0;
-        // migration: OS used to auto-advance with level; grandfather that era in as "purchased" so nobody regresses
-        if(!hadOs){ const LEGACY_MINS=[1,4,8,14,22,34]; let tier=0;
-          for(let i=0;i<LEGACY_MINS.length;i++) if(P.level>=LEGACY_MINS[i]) tier=i;
-          P.up.os=tier; P.themeChoice=OS_TIERS[tier].id; }
-        const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
-        if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
-        // migration: crafting-update Phase 3 — the old repeatable RAM/CPU/SSD/Monitor/GPU purchases
-        // become starter equipped items, so existing investment converts into gear instead of vanishing.
-        if(!("equip" in d)){
-          const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
-          const starter=(oldLvl,slotId,mult)=>oldLvl>0?{id:++P.itemSeq,slot:slotId,name:pick(era)+" "+SLOT[slotId].lbl,ilvl:Math.round(oldLvl*mult),rarity:"stock"}:null;
-          P.equip={
-            ram:starter(P.up.ram,"ram",6), cpu:starter(P.up.cpu,"cpu",6),
-            harddrive:starter(P.up.ssd,"harddrive",6), monitor:starter(P.up.monitors,"monitor",5),
-            gpu:starter(P.up.gpu,"gpu",6), modem:null,
-          };
-        }
-        if(!P.equip) P.equip={ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null};
-        for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
-        // migration: crafting-update Phase 4 — saves from between Phase 3 and Phase 4 have equipped
-        // items with no `id`/`rarity` (the Toolbox stash didn't exist yet); backfill both so
-        // unequip-into-Toolbox and stash filtering work on gear equipped before this update.
-        if(!Array.isArray(P.toolbox)) P.toolbox=[];
-        if(typeof P.itemSeq!=="number") P.itemSeq=0;
-        for(const s of SLOTS){ const it=P.equip[s.id]; if(it && it.id==null){ it.id=++P.itemSeq; it.rarity=it.rarity||"stock"; } }
-        // migration: crafting-update Phase 5 — items from before patches existed get an empty
-        // patches array and a maxPatches based on their ilvl, so they behave like freshly-rolled
-        // Stock items rather than crashing on undefined .patches.
-        const backfillPatches=it=>{ if(!it) return; if(!Array.isArray(it.patches)) it.patches=[]; if(typeof it.maxPatches!=="number") it.maxPatches=initialMaxPatches(it.ilvl); };
-        for(const s of SLOTS) backfillPatches(P.equip[s.id]);
-        for(const it of P.toolbox) backfillPatches(it);
-        backfillPatches(P.craftSlot);
-        if(!P.materials) P.materials={commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0};
-        if(!P.matPity) P.matPity={commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0};
-        return true;
-      }
-    }catch(e){}
-    return false;
+    let d; try{ d=JSON.parse(raw); }catch(e){ return "stale"; }
+    if(!d||typeof d!=="object") return "stale";
+    if(d.ver!==SAVE_VER){ STALE_VER=d.ver; return "stale"; }
+    for(const k of PERSIST) if(k in d) P[k]=d[k];
+    for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
+    const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
+    if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
+    return true;
+  }
+  let STALE_VER=null;
+  // Easter egg: an incompatible save boots into an Amiga-style Guru Meditation. Any click/key wipes
+  // the old save and reboots into a fresh game.
+  function guruMeditation(){
+    const el=document.createElement("div"); el.id="guru";
+    const code=String(STALE_VER==null?0:STALE_VER).padStart(8,"0")+"."+String(SAVE_VER).padStart(8,"0");
+    el.innerHTML=`<div class="guruBox"><div>Software Failure.&nbsp;&nbsp;&nbsp;Press left mouse button to continue.</div><div>Guru Meditation #${code}</div></div>`;
+    document.body.appendChild(el); document.body.classList.add("guru");
+    let armed=false; setTimeout(()=>{armed=true;},600);   // ignore the click that may have loaded the page
+    const go=()=>{ if(!armed) return; wipe(); };
+    el.addEventListener("click",go); addEventListener("keydown",go);
   }
   function save(){
     P.lastReal=Date.now();
@@ -1324,6 +1328,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     MULT.success=md.success+Math.min(0.10,modem*0.002)+GEAR.success;   // AI Model + Modem (Hardware slot) + patches all help success
     MULT.crit=Math.min(0.6,gpu*0.005+GEAR.crit);
     MULT.regen=0.5+u.coffee*0.35+GEAR.coolingRegen;   // Cooling slot (Phase 7) also boosts sanity regen
+    // Deep Work — playing fullscreen (no browser chrome, no tabs) is genuinely fewer distractions,
+    // so it pays. Ungated and free: a reward for how you play, not another thing to buy.
+    if(focusOn){ MULT.xp*=1+FOCUS.xp; MULT.credit*=1+FOCUS.credit; MULT.regen*=1+FOCUS.regen; }
     MULT.hpBonus=u.coffee*15+GEAR.sanity;
     MULT.resist=Math.min(0.5,GEAR.resist);   // failure-damage reduction from gear (old Rizz effect, returned as a patch)
     MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
@@ -1332,6 +1339,28 @@ notify("#general", "10x-ing that shit 🔥");`,
     updateHpMax();
   }
 
+  /* ---- Deep Work: a live bonus while the game is fullscreen. Two detection paths, because they
+     are genuinely different things: the Fullscreen API (document.fullscreenElement, what a script
+     or our own badge triggers) does NOT fire when the user presses F11 — that's browser-chrome
+     fullscreen, which instead makes the `display-mode: fullscreen` media query match. Watch both,
+     or F11 (the way most people do it, and what the help overlay lists) silently does nothing. ---- */
+  const FOCUS={xp:0.25,credit:0.25,regen:0.5};
+  let focusOn=false;
+  const fsQuery=(window.matchMedia?matchMedia("(display-mode: fullscreen)"):null);
+  function fullscreenNow(){ return !!document.fullscreenElement || !!(fsQuery&&fsQuery.matches); }
+  function syncFocusMode(){
+    const on=fullscreenNow();
+    if(on===focusOn) return;
+    focusOn=on; recompute();
+    document.body.classList.toggle("focusmode",on);
+    if(on){ termLine("t-git","🎧","deep work engaged — fullscreen bonus active (+25% XP, +25% credits, +50% sanity regen)");
+      toast("🎧 Deep Work","Fullscreen — +25% XP, +25% credits, +50% sanity regen","#39ff14","system"); }
+    else  { termLine("t-dim","🎧","deep work broken — fullscreen bonus off");
+      toast("🎧 Deep Work off","Back in a window — bonus removed","#5b6b86","system"); }
+  }
+  document.addEventListener("fullscreenchange",syncFocusMode);
+  if(fsQuery){ if(fsQuery.addEventListener) fsQuery.addEventListener("change",syncFocusMode); else fsQuery.addListener(syncFocusMode); }
+
   /* ============ shop / upgrades ============ */
   function upCost(u){
     if(u.kind==="repeat"){ if(u.max&&P.up[u.id]>=u.max) return null; return Math.floor(u.base*Math.pow(u.growth,P.up[u.id])); }
@@ -1339,7 +1368,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(u.kind==="skill"){ const n=P.unlockedStats.length; if(n>=STATS.length) return null; return Math.floor(u.base*Math.pow(u.growth,n-1)); }
     const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
-  function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c) return true; } return false; }
+  // OS gate for the NEXT purchase of u: returns the OS tier index it needs, or null if not locked.
+  function osLock(u){
+    let need=null;
+    if(u.id==="hire") need=HIRE_CAP.findIndex(c=>c>=P.up.hire+1);       // -1 (never) only past the last tier, which upCost already nulls
+    else if(u.reqOs!=null) need=u.reqOs;
+    return (need!=null && need>P.up.os)?need:null;
+  }
+  function osLockHint(u){ const n=osLock(u); return n==null?"":"🔒 needs "+OS_TIERS[n].name+" (Upgrade OS)"; }
+  function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c&&osLock(u)==null) return true; } return false; }
   function isRevealed(u){
     if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
     // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
@@ -1351,7 +1388,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     return P.maxCredits >= c*0.5;   // revealed once you've EVER banked half its price (peak wealth, not current balance)
   }
   function buy(u){
-    const c=upCost(u); if(c==null||P.credits<c) return;
+    const c=upCost(u); if(c==null||P.credits<c||osLock(u)!=null) return;
     P.credits-=c;
     if(P.intro) endIntro();   // first purchase ever = graduation from the intro terminal
     if(u.kind==="unlock"){
@@ -1395,7 +1432,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function autoBuyCheapest(){ let best=null,bc=Infinity;
     for(const u of UPG){ if(u.cat==="Automation") continue;
       if(u.id==="os" && P.settings && P.settings.themeLock) continue;   // "Lock OS look" keeps the auto-buyer from switching your theme
-      const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc){bc=c;best=u;} }
+      const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc&&osLock(u)==null){bc=c;best=u;} }
     if(best) buy(best);
   }
   let shopBuilt=false,shopCards=[],catHeaderEls={},notifyToggleEls={};
@@ -1466,9 +1503,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     // Equipment app — equipped-hardware slots
     const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; eqBody.appendChild(eh);
     for(const s of SLOTS){
-      const card=document.createElement("div"); card.className="card slotCard";
+      const card=document.createElement("div"); card.className="card slotCard"; card.draggable=true; card.title="Drag me onto the IDE bench socket to craft";
       card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
       eqBody.appendChild(card);
+      card.addEventListener("dragstart",e=>{ if(!P.equip[s.id]){e.preventDefault();return;} benchPayload="eq:"+s.id; e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragend",()=>{benchPayload=null;});
       const btn=card.querySelector(".buy");
       btn.addEventListener("click",e=>{ e.stopPropagation();
         const it=P.equip[s.id]; if(!it) return;
@@ -1478,11 +1517,31 @@ notify("#general", "10x-ing that shit 🔥");`,
       });
       slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
     }
-    // The IDE app — crafting bench + materials
+    // The IDE app — the crafting bench (item in the middle, materials ringed around it) + materials
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 Crafting Bench"; ideBody.appendChild(ih);
-    const ideCard=document.createElement("div"); ideCard.className="card"; ideCard.id="ideCard"; ideBody.appendChild(ideCard);
-    const ideActions=document.createElement("div"); ideActions.id="ideActions"; ideActions.className="stashWrap"; ideBody.appendChild(ideActions);
-    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Crafting Materials"; ideBody.appendChild(mh);
+    const bench=document.createElement("div"); bench.className="bench"; bench.id="benchWrap";
+    bench.innerHTML=`<div class="benchHint">socket an item, then work clockwise from the top: common → rare</div>`+
+      `<div class="benchRing" id="benchRing"><div class="benchCore card empty" id="benchCore"></div></div>`+
+      `<div class="benchActs" id="benchActs"></div><div class="benchMods" id="benchMods"></div>`;
+    ideBody.appendChild(bench);
+    const ring=bench.querySelector("#benchRing"); orbEls={};
+    CRAFT_ACTIONS.forEach((a,i)=>{
+      const b=document.createElement("button"); b.className="orb card"; b.type="button";
+      b.style.setProperty("--x",a.x); b.style.setProperty("--y",a.y);
+      b.innerHTML=`<span class="oOrd">${i+1}</span><span class="oCt">0</span><span class="oEm">${MAT[a.mat].em}</span>`+
+        `<span class="oNm">${a.lbl}</span><span class="oSub">${a.sub}</span>`;
+      b.addEventListener("click",e=>{e.stopPropagation();a.fn();});
+      ring.appendChild(b);
+      orbEls[a.act]={btn:b,ct:b.querySelector(".oCt")};
+    });
+    // the socket accepts a real drag from the Inventory stash or an equipped slot (buttons still work)
+    const core=bench.querySelector("#benchCore");
+    core.addEventListener("dragover",e=>{ if(!benchPayload) return; e.preventDefault(); core.classList.add("dragover"); });
+    core.addEventListener("dragleave",()=>core.classList.remove("dragover"));
+    core.addEventListener("drop",e=>{ e.preventDefault(); core.classList.remove("dragover"); dropOnBench(e.dataTransfer.getData("text/plain")||benchPayload); });
+    if(benchRO) benchRO.disconnect();
+    benchRO=new ResizeObserver(fitBench); benchRO.observe(bench);
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials & drop progress"; ideBody.appendChild(mh);
     const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; ideBody.appendChild(matsWrap);
     matEls={};
     for(const m of MATS){
@@ -1537,48 +1596,85 @@ notify("#general", "10x-ing that shit 🔥");`,
       wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
       return;
     }
-    wrap.innerHTML=items.map(it=>`<div class="card stashCard${it.legendary?" legendary":""}" data-id="${it.id}"><span class="em">${SLOT[it.slot].em}</span>`+
+    wrap.innerHTML=items.map(it=>`<div class="card stashCard${it.legendary?" legendary":""}" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${SLOT[it.slot].em}</span>`+
       `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
       `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
       `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
     wrap.querySelectorAll(".stashCard").forEach(card=>{
       const id=Number(card.dataset.id);
+      card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragend",()=>{benchPayload=null;});
       card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromToolbox(id);});
       card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(id);});
       card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(id);});
     });
   }
+  let orbEls={}, benchRO=null, benchPayload=null;
+  // Sizes the bench ring to the app's actual width: an ellipse a little wider than tall, with the
+  // socket sized to clear the six orbs. Below ~270px wide the ring can't read, so .narrow flattens
+  // the whole thing into a vertical list (this is also what mobile gets).
+  function fitBench(){
+    const wrap=$("#benchWrap"), ring=$("#benchRing"); if(!wrap||!ring) return;
+    const w=wrap.clientWidth||0; if(!w) return;
+    const narrow=w<270;
+    wrap.classList.toggle("narrow",narrow);
+    if(narrow){ ring.style.width=ring.style.height=""; return; }
+    const W=clamp(Math.round(Math.min(w-4,430)),266,430), H=Math.round(W*0.92);
+    const orb=Math.round(clamp(W*0.215,58,88)), rx=W*0.40, ry=H*0.37;
+    ring.style.width=W+"px"; ring.style.height=H+"px";
+    ring.style.setProperty("--rx",Math.round(rx)+"px"); ring.style.setProperty("--ry",Math.round(ry)+"px");
+    ring.style.setProperty("--orb",orb+"px");
+    // Socket fills whatever the six orbs leave behind: the four diagonals bound it horizontally,
+    // the top/bottom pair vertically. Orb height is measured rather than assumed — it depends on
+    // how the label text wraps at the current width.
+    const oh=(orbEls.add&&orbEls.add.btn.offsetHeight)||orb;
+    ring.style.setProperty("--core",Math.round(Math.max(118,(0.866*rx-orb/2)*2-16))+"px");
+    ring.style.setProperty("--coreH",Math.round(Math.max(104,(ry-oh/2)*2-14))+"px");
+  }
+  // one entry point for both drag sources: a stash item id, or "eq:<slot>" for an equipped item
+  function dropOnBench(payload){
+    if(!payload) return;
+    if(payload.startsWith("eq:")){
+      const sid=payload.slice(3), it=P.equip[sid]; if(!it) return;
+      if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
+      P.equip[sid]=null; P.craftSlot=it; recompute();
+      termLine("t-git","🛠","pulled "+it.name+" out of the rig and onto the bench");
+      save(); renderShop();
+    } else sendToCraftSlot(Number(payload));
+  }
   function renderIdeCard(){
-    const card=$("#ideCard"), actions=$("#ideActions"); if(!card||!actions) return;
+    const core=$("#benchCore"), acts=$("#benchActs"), mods=$("#benchMods"); if(!core||!acts||!mods) return;
     const it=P.craftSlot;
-    card.classList.toggle("legendary",!!(it&&it.legendary));
+    core.dataset.rarity=it?rarityOf(it):"";
+    core.classList.toggle("empty",!it);
     if(it){
-      card.innerHTML=`<span class="em">${SLOT[it.slot].em}</span><div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
-        `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
-        `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button></div>`;
-      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
-      card.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
-      const cost=craftCost(it);
-      const actionDefs=[
-        {act:"add",   lbl:"Commit (+patch)",       mat:"commit",  fn:craftAddPatch,   disabled:it.patches.length>=it.maxPatches},
-        {act:"hotfix",lbl:"Hotfix (reroll value)", mat:"hotfix",  fn:craftHotfix,     disabled:!it.patches.length},
-        {act:"refac", lbl:"Refactor (reroll type)",mat:"refactor",fn:craftRefactor,   disabled:!it.patches.length},
-        {act:"rewrite",lbl:"Full Rewrite (all)",   mat:"rewrite", fn:craftFullRewrite,disabled:!it.patches.length},
-        {act:"revert",lbl:"Revert (strip)",         mat:"revert",  fn:craftRevert,     disabled:!it.patches.length},
-        {act:"slot",  lbl:"Feature Branch Merge (+slot)",mat:"merge",fn:craftAddSlot, disabled:it.maxPatches>=4, costMult:2},
-      ];
-      actions.innerHTML=actionDefs.map(a=>{
-        const need=a.costMult?cost*a.costMult:cost, have=P.materials[a.mat]||0;
-        const afford=!a.disabled && have>=1 && P.credits>=need;
-        return `<div class="card craftCard"><span class="em">${MATS.find(m=>m.id===a.mat).em}</span>`+
-          `<div class="mid"><div class="nm">${a.lbl}</div><div class="fx">${have} ${a.mat} on hand · costs 1 + ${money(need)}</div></div>`+
-          `<button class="buy" data-act="${a.act}" ${afford?"":"disabled"}>Do</button></div>`;
-      }).join("");
-      actionDefs.forEach(a=>{ const btn=actions.querySelector(`[data-act="${a.act}"]`); if(btn) btn.addEventListener("click",e=>{e.stopPropagation();a.fn();}); });
+      core.innerHTML=`<span class="cEm">${SLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
+        `<span class="cSub">Lv ${it.ilvl} · ${SLOT[it.slot].lbl}</span>`+
+        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`;
+      acts.innerHTML=`<button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button>`;
+      acts.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
+      acts.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
+      const rows=it.patches.map(p=>{ const d=PATCH_DEFS[p.id];
+        return `<div class="modRow card"><span class="mN">${d.lbl}</span><span class="mV">${d.fmt(p.value)}</span><span class="mT">T${p.tier+1}</span></div>`; });
+      for(let i=it.patches.length;i<it.maxPatches;i++) rows.push(`<div class="modRow card open">open patch slot</div>`);
+      mods.innerHTML=rows.join("");
     } else {
-      card.innerHTML=`<span class="em">🛠</span><div class="mid"><div class="nm">Empty</div>`+
-        `<div class="fx">Send an item here from the Toolbox stash below to stage it for crafting.</div></div>`;
-      actions.innerHTML="";
+      core.innerHTML=`<span class="cEm">🛠</span><span class="cNm">Empty socket</span>`+
+        `<span class="cSub">drag hardware here from Inventory or Equipment — or use its “→ IDE” button</span>`;
+      acts.innerHTML=""; mods.innerHTML="";
+    }
+    const cost=it?craftCost(it):0;
+    for(const a of CRAFT_ACTIONS){
+      const el=orbEls[a.act]; if(!el) continue;
+      const need=cost*(a.costMult||1), have=P.materials[a.mat]||0, valid=!!it&&a.ok(it);
+      const ready=valid&&have>=1&&P.credits>=need;
+      el.ct.textContent=have;
+      el.btn.disabled=!ready;
+      el.btn.classList.toggle("ready",ready);
+      el.btn.title=MAT[a.mat].lbl+" — "+MAT[a.mat].does+(it
+        ?("\ncosts 1 "+MAT[a.mat].lbl+" + "+money(need)+" · you have "+have
+          +(valid?(have<1?"\nno "+MAT[a.mat].lbl+" on hand":(P.credits<need?"\ncan't afford the credit cost":"")):"\n"+a.why))
+        :"\nput an item in the socket first");
     }
   }
   function renderMaterials(){
@@ -1656,8 +1752,10 @@ notify("#general", "10x-ing that shit 🔥");`,
       else if(u.kind==="skill"){ s.lv.textContent=(P.unlockedStats.length)+"/"+STATS.length; }
       else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
       else { s.lv.textContent=lvl?("· "+(u.tiers[lvl].name||("T"+lvl))):""; }
-      s.fx.textContent=u.fx(lvl);
+      const lock=osLock(u);
+      s.fx.textContent=u.fx(lvl)+(lock!=null&&c!=null?" · "+osLockHint(u):"");
       if(c==null){ s.btn.textContent=(u.kind==="repeat"||u.kind==="skill")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
+      else if(lock!=null){ s.btn.textContent="🔒 "+OS_TIERS[lock].short; s.btn.disabled=true; s.btn.classList.remove("maxed"); s.card.classList.remove("hot"); }
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
     for(const cat in catHeaderEls) catHeaderEls[cat].style.display=catVisible[cat]?"":"none";
@@ -1869,6 +1967,27 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function tickClock(){ const c=$("#tbClock"); if(!c) return; const d=new Date();
     c.textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+  /* ---- Global UI scale. 1920×1080 is the reference design: every font size, padding and border
+     in the stylesheet is a fixed pixel value tuned for it. On anything bigger we scale the whole
+     interface up so it keeps its intended physical size instead of shrinking into tiny text on a
+     huge canvas (a real 4K viewport was unreadable before this). Below the reference we hold at 1×
+     and let the existing fluid layout — and the 820px mobile breakpoint — do the work; scaling
+     *down* would just make 10px text illegible.
+
+     Uses CSS `zoom` rather than `transform:scale` deliberately: zoom relayouts at the scaled size,
+     so text stays crisp and nothing is letterboxed, and media queries still evaluate against the
+     real viewport (so the mobile breakpoint is unaffected — the scale is only ever >1 on screens
+     far wider than 820px anyway). The cost is that pointer coordinates are in unscaled viewport
+     px while our stored window rects are in zoomed CSS px, so drag/resize divide by `uiZoom`. ---- */
+  const UI_REF_W=1920, UI_REF_H=1080, UI_MAX_ZOOM=3;
+  let uiZoom=1;
+  function fitScale(){
+    const z=Math.round(clamp(Math.min(innerWidth/UI_REF_W,innerHeight/UI_REF_H),1,UI_MAX_ZOOM)*100)/100;
+    if(z===uiZoom) return false;
+    uiZoom=z;
+    document.documentElement.style.zoom=(z===1?"":String(z));
+    return true;
+  }
   function applyLayout(){   // tiling (tmux) below Win3.1; floating windows at/above it
     const grid=$("#grid"); if(!grid) return;
     const float=wmFloat();
@@ -1877,7 +1996,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     let n=0, topId=null, topZ=-1;
     for(const a of APPS){ const el=$("#"+a.panelId); if(!el) continue;
       const unlocked=a.unlocked();
-      const w=P.windows[a.id]||(P.windows[a.id]={...DEFAULT_WINDOWS[a.id]});
+      const w=P.windows[a.id]||(P.windows[a.id]=defaultWindow(a.id));
       el.classList.remove("wfocus");
       if(float){
         const show=unlocked && w.open!==false;
@@ -1896,6 +2015,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(float && topId){ const t=$("#"+APP[topId].panelId); if(t) t.classList.add("wfocus"); }
     grid.dataset.count=float?"float":String(clamp(n,1,11));
     if(float){ renderStartMenu(); renderTaskbar(); }
+    fitBench();
   }
   /* ---- floating-window interaction: drag, focus/z-order, minimize/close, Start Menu ---- */
   function focusWindow(id){
@@ -1908,7 +2028,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function closeWindow(id){ if(!P.windows[id]) return; P.windows[id].open=false; applyLayout(); save(); }
   function openWindow(id){
-    const w=P.windows[id]||(P.windows[id]={...DEFAULT_WINDOWS[id]});
+    const w=P.windows[id]||(P.windows[id]=defaultWindow(id));
     w.open=true; bringToFront(id); applyLayout(); save();
   }
   function resetLayout(){ P.windows=cloneWindows(); applyLayout(); save(); termLine("t-info","🔄","layout reset — windows back to their default arrangement"); toast("🔄 Layout reset","windows back to their default arrangement","#00e5ff","system"); }
@@ -1917,7 +2037,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!wmFloat()||e.button!==0||e.target.closest(".wctl")) return;
     const grid=$("#grid"), gr=grid.getBoundingClientRect(), w=P.windows[id];
     focusWindow(id);
-    drag={id,el,grid,dx:e.clientX-(gr.left+w.x),dy:e.clientY-(gr.top+w.y)};
+    drag={id,el,grid,dx:(e.clientX-gr.left)/uiZoom-w.x,dy:(e.clientY-gr.top)/uiZoom-w.y};
     try{ head.setPointerCapture(e.pointerId); }catch(_){}
     e.preventDefault();
   }
@@ -1931,16 +2051,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   addEventListener("pointermove",e=>{
     if(rez){
-      const gr=rez.grid.getBoundingClientRect(), w=P.windows[rez.id];
-      w.w=clamp(rez.w0+(e.clientX-rez.sx),240,Math.max(240,gr.width-w.x));
-      w.h=clamp(rez.h0+(e.clientY-rez.sy),120,Math.max(120,gr.height-w.y));
+      const gw=rez.grid.clientWidth, gh=rez.grid.clientHeight, w=P.windows[rez.id];
+      w.w=clamp(rez.w0+(e.clientX-rez.sx)/uiZoom,240,Math.max(240,gw-w.x));
+      w.h=clamp(rez.h0+(e.clientY-rez.sy)/uiZoom,120,Math.max(120,gh-w.y));
       rez.el.style.width=w.w+"px"; rez.el.style.height=w.h+"px";
       return;
     }
     if(!drag) return;
     const gr=drag.grid.getBoundingClientRect(), w=P.windows[drag.id];
-    w.x=clamp(e.clientX-gr.left-drag.dx,0,Math.max(0,gr.width-40));
-    w.y=clamp(e.clientY-gr.top-drag.dy,0,Math.max(0,gr.height-24));
+    w.x=clamp((e.clientX-gr.left)/uiZoom-drag.dx,0,Math.max(0,drag.grid.clientWidth-40));
+    w.y=clamp((e.clientY-gr.top)/uiZoom-drag.dy,0,Math.max(0,drag.grid.clientHeight-24));
     drag.el.style.left=w.x+"px"; drag.el.style.top=w.y+"px";
   });
   addEventListener("pointerup",()=>{ if(drag){ drag=null; save(); } if(rez){ rez=null; save(); } });
@@ -2162,6 +2282,19 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item"},
     {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)"},
     {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)"},
+  ];
+  const MAT=Object.fromEntries(MATS.map(m=>[m.id,m]));
+  // The crafting bench ring, in the order the orbs are laid out clockwise from the top — which is
+  // both the order you'd normally reach for them (add patches → tune them → reroll wholesale →
+  // strip → expand capacity) and roughly rarest-last. x/y are unit-circle multipliers the CSS
+  // scales by the ring's radii, so changing this table moves the orbs; nothing else hardcodes them.
+  const CRAFT_ACTIONS=[
+    {act:"add",    mat:"commit",  lbl:"Commit",    sub:"+ patch",       x:0,      y:-1,   fn:craftAddPatch,    ok:it=>it.patches.length<it.maxPatches, why:"no open patch slot — Merge one on first"},
+    {act:"hotfix", mat:"hotfix",  lbl:"Hotfix",    sub:"reroll value",  x:0.866,  y:-0.5, fn:craftHotfix,      ok:it=>it.patches.length>0,             why:"nothing to reroll — Commit a patch first"},
+    {act:"refac",  mat:"refactor",lbl:"Refactor",  sub:"reroll type",   x:0.866,  y:0.5,  fn:craftRefactor,    ok:it=>it.patches.length>0,             why:"nothing to reroll — Commit a patch first"},
+    {act:"rewrite",mat:"rewrite", lbl:"Rewrite",   sub:"reroll all",    x:0,      y:1,    fn:craftFullRewrite, ok:it=>it.patches.length>0,             why:"nothing to reroll — Commit a patch first"},
+    {act:"revert", mat:"revert",  lbl:"Revert",    sub:"strip to Stock",x:-0.866, y:0.5,  fn:craftRevert,      ok:it=>it.patches.length>0,             why:"already Stock — nothing to strip"},
+    {act:"merge",  mat:"merge",   lbl:"Merge",     sub:"+ patch slot",  x:-0.866, y:-0.5, fn:craftAddSlot,     ok:it=>it.maxPatches<4,                 why:"already at the 4-slot ceiling", costMult:2},
   ];
   // Soft pity: every qualifying attempt nudges a 0..1 bar by `chance`; a hit resets it. That keeps
   // the average time-to-drop close to the naive probability while guaranteeing one once the bar
@@ -2768,7 +2901,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     fadeHint();
   });
   addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()||settingsOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
-  addEventListener("resize",()=>{ initMatrix(); applyLayout(); });   // re-clamp windows + flip tiling/float at the 820px breakpoint
+  addEventListener("resize",()=>{ fitScale(); initMatrix(); applyLayout(); });   // rescale, re-clamp windows, flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
   function confirmReset(e){ e.stopPropagation(); if(confirm("Wipe your career progress and start over from Day 1?")) wipe(); }
@@ -2811,7 +2944,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ boot ============ */
+  fitScale();   // set the UI scale before anything measures the canvas
+  { const fb=$("#focusBadge");
+    if(fb) fb.addEventListener("click",()=>{ if(document.fullscreenElement) document.exitFullscreen(); }); }
   const restored=loadState();
+  if(restored==="stale"){ guruMeditation(); return; }   // wipe-on-click; nothing else boots, and no beforeunload save can overwrite the stale file
+  // Seed the float-mode layout now that fitScale() has fixed the logical canvas size. defaults()
+  // deliberately leaves this null: it runs at IIFE-eval time, before the UI zoom is applied, so a
+  // layout measured there would be double-width on a 4K screen. A restored save brings its own
+  // arrangement; clampWindow() pulls anything out-of-bounds back in.
+  if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
   if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
@@ -2824,6 +2966,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   applyUnlocks();
   applyReveal();
   initAch(); renderAch();
+  syncFocusMode();   // a reload while already fullscreen should still carry the bonus
   if(restored) offlineEarnings();
   lastEarned=P.earned;   // seed the credits/sec baseline AFTER offline earnings so they don't spike the first sample
   WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
