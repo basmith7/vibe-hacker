@@ -72,6 +72,7 @@ export const SCENARIOS = {
     assert(Array.isArray(a.inv), "agent has inv"); assert(typeof a.sanity === "number", "agent has sanity"); assert(a.q === 0, "agent seated in queue 0");
     assert(Array.isArray(s.queues) && s.queues.length === 1 && s.queues[0].tier === 0 && s.queues[0].seats === 1, "one Backlog queue with one seat");
     assert(s.selectedAgent === 0, "selectedAgent defaults to 0");
+    assert(!("m" in s.agents[0]) && !("down" in s.agents[0]), "runtime fields must not be persisted");
   },
   // Two agents on Backlog: the hired one must earn credits idle (no typing), agent zero must not.
   async loopEarns() {

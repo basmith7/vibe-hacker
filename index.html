@@ -1323,6 +1323,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   function save(){
     P.lastReal=Date.now();
     const o={}; for(const k of PERSIST) o[k]=P[k];
+    // a.m (derived stats) and a.down (burnout flag) are runtime-only — recompute() rebuilds them.
+    // Persisting them bloats the save, which is written to document.cookie first (~4 KB cap); an
+    // oversized cookie write fails silently and readStore() prefers the cookie, so the game would
+    // boot from a stale one.
+    o.agents=P.agents.map(a=>{ const {m,down,...rest}=a; return rest; });
     const json=JSON.stringify(o);
     try{ document.cookie="vibehacker="+encodeURIComponent(json)+";path=/;max-age="+(3600*24*365)+";SameSite=Lax"; }catch(e){}
     try{ localStorage.setItem("vibehacker",json); }catch(e){}
