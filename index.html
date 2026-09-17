@@ -1075,8 +1075,7 @@
   function seatCost(q){ return Math.round(BAL.seatBase*Math.pow(BAL.seatGrowth,q.seats-1)*Math.pow(BAL.seatTierMult,q.tier)); }
   function freeSeatQueue(){ return P.queues.find((q,qi)=>q.seats>P.agents.filter(a=>a.q===qi).length)||null; }
   const UPG=[
-    {id:"hire",    kind:"hire",  emoji:"👥",name:"Hire an Agent",     cat:"Team",  fx:()=>P.agents.length+" on the team · a new hire ships with a Junior starter kit"+(freeSeatQueue()?"":" · needs a free seat")},
-    {id:"seat",    kind:"seat",  emoji:"🪑",name:"Backlog Seat",      cat:"Team",  fx:()=>"seats on the Backlog: "+P.queues[0].seats+" → "+(P.queues[0].seats+1)},
+    {id:"hire",    kind:"hire",  emoji:"👥",name:"Hire an Agent",     cat:"Team",  fx:()=>P.agents.length+" on the team · a new hire ships with a Junior starter kit"+(freeSeatQueue()?"":" · no free seat — it'll wait on the Bench")},
     {id:"notify",  kind:"tier",  emoji:"🔔",name:"Push Notifications",cat:"Getting Started", tiers:[{cost:0},{cost:40,name:"ON"}],  fx:i=>i?"toast pop-ups are ON — mute types below in the Store":"pop-up toasts for wins & finds (routine logs still go to the Terminal)"},
     {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",      cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
     {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",    cost:25,   unlocks:"status",      meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your sheet — sanity, streak, level"},
@@ -1086,10 +1085,20 @@
     {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",    cost:700,  unlocks:"equipment",   meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipment — gear up the selected agent"},
     {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",    cost:1000, unlocks:"ide",         meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch gear"},
     {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",         cost:1400, unlocks:"globe",       meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"u_queues",kind:"unlock",emoji:"📋",name:"Open the Queues app", cost:2000, unlocks:"queues", meme:"QUEUES", cat:"Getting Started", fx:()=>"reveal the Queues app — every board, its seats, and who sits where"},
     {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",        cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name+" (+hires, higher item levels)":" (final)")},
     {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",        cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
     {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",        cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest seat/hire":"reinvest credits automatically"},
   ];
+  // Phase 2 — queue + seat cards are generated from QUEUE_TIERS once at load (buildShop is build-once);
+  // isRevealed() decides which are visible. Backlog has no install card (owned day one), every tier has a seat card.
+  for(const [i,t] of QUEUE_TIERS.entries()){
+    if(i>0) UPG.push({id:"q_"+t.id, kind:"queue", tier:i, emoji:t.em, name:"Install "+t.name, cat:"Team",
+      fx:()=>ownedQueue(i)?("a tier-"+i+" board · difficulty "+t.D+" · drops up to ilvl "+Math.round(queueBandTop(ownedQueue(i)))):("a harder board (difficulty "+t.D+") with richer tickets and higher item levels")});
+    UPG.push({id:"seat_"+t.id, kind:"seat", tier:i, emoji:"🪑", name:t.name+" Seat", cat:"Team",
+      fx:()=>{ const q=ownedQueue(i); return q?("seats on "+t.name+": "+q.seats+" → "+(q.seats+1)):""; }});
+  }
+  UPG.sort((a,b)=>(a.cat==="Team")===(b.cat==="Team")?0:(a.cat==="Team"?-1:1));   // stable: keeps Team first so the Store's category order is unchanged
   function money(n){ n=Math.floor(n);
     const f=P.settings&&P.settings.numFormat;                                  // number-format setting (Settings panel)
     if(f==="full") return "$"+n.toLocaleString("en-US");                       // 1,234,567
@@ -1306,7 +1315,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   /* ============ shop / upgrades ============ */
   function upCost(u){
     if(u.kind==="hire"){ return P.agents.length>=HIRE_CAP[HIRE_CAP.length-1]?null:hireCost(); }   // OS caps are osLock()'s job, so the card shows 🔒 Win 3.1 rather than MAX
-    if(u.kind==="seat"){ return seatCost(P.queues[0]); }
+    if(u.kind==="seat"){ const q=ownedQueue(u.tier); return q?seatCost(q):null; }
+    if(u.kind==="queue"){ return ownedQueue(u.tier)?null:BAL.queueCost[u.tier]; }
     if(u.kind==="unlock"){ return P.up[u.id]>=1?null:u.cost; }
     const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
@@ -1315,7 +1325,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     let need=null;
     if(u.kind==="hire") need=HIRE_CAP.findIndex(c=>c>=P.agents.length+1);   // -1 only past the last cap, which upCost already nulls
     // A seat nobody can ever sit in is a day-one credit trap: gate it on the OS that could hire into it.
-    else if(u.kind==="seat"){ const n=HIRE_CAP.findIndex(c=>c>=P.queues[0].seats+1); need=n<0?null:n; }
+    else if(u.kind==="seat"){ const q=ownedQueue(u.tier); const n=q?HIRE_CAP.findIndex(c=>c>=q.seats+1):-1; need=n<0?null:n; }
+    else if(u.kind==="queue") need=QUEUE_TIERS[u.tier].os;
     else if(u.reqOs!=null) need=u.reqOs;
     return (need!=null && need>P.up.os)?need:null;
   }
@@ -1325,7 +1336,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
     // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
     // app-unlocks reveal progressively (at 50%-saved) so the store isn't a wall of options on day one.
-    if(u.cat==="Team") return true;
+    if(u.cat==="Team"){   // the whole Team section is the Queues app's to reveal (doc §1)
+      if(!P.unlocked.queues) return false;
+      if(u.kind==="seat") return !!ownedQueue(u.tier);
+      if(u.kind==="queue") return !!ownedQueue(u.tier-1);   // tiers install in order; hidden (never OWNED) until the previous one exists
+      return true;
+    }
     if(P.up[u.id]>0) return true;   // already invested in it — never re-hide something owned, even after spending elsewhere
     const c=upCost(u);
     if(c==null) return true;        // maxed/owned edge case
@@ -1345,14 +1361,21 @@ notify("#general", "10x-ing that shit 🔥");`,
         if(got) termLine("t-warn","🏆","trophy case opened — "+got+" achievement"+(got>1?"s":"")+" retro-unlocked");
       }
     } else if(u.kind==="hire"){
-      const q=freeSeatQueue(); if(!q){ P.credits+=c; toast("🪑 No free seat","Buy a seat first","#ffb000","system"); return; }
+      const q=freeSeatQueue(), qi=q?P.queues.indexOf(q):-1;
       const who=pick(AGENTS.filter(x=>!P.agents.some(a=>a.name===x.name)))||pick(AGENTS);
-      const a=newAgent(who,P.queues.indexOf(q)); P.agents.push(a); P.up.hire++;
-      recompute(); buildWorkers(); applyLayout(); assignTask(WK[WK.length-1]);
-      toast("👥 Hired — "+a.name,"seated on "+queueTier(q).name+" with a starter kit","#39ff14"); termLine("t-git","👥","hired "+a.name);
+      const a=newAgent(who,qi); P.agents.push(a); P.up.hire++;
+      recompute(); buildWorkers(); applyLayout(); assignTask(WK[WK.length-1]); buildQueues();
+      toast("👥 Hired — "+a.name, q?("seated on "+queueTier(q).name+" with a starter kit"):"no free seat — waiting on the Bench (seat them in the Queues app)", "#39ff14");
+      termLine("t-git","👥","hired "+a.name+(q?"":" → Bench"));
     } else if(u.kind==="seat"){
-      P.queues[0].seats++; P.up.seat++;
-      toast("🪑 New seat","Backlog now seats "+P.queues[0].seats,"#00e5ff"); termLine("t-git","🪑","added a Backlog seat");
+      const q=ownedQueue(u.tier); q.seats++; P.up.seat++; buildQueues();
+      toast("🪑 New seat",queueTier(q).name+" now seats "+q.seats,"#00e5ff"); termLine("t-git","🪑","added a "+queueTier(q).name+" seat");
+    } else if(u.kind==="queue"){
+      P.queues.push({tier:u.tier,seats:1,mods:0,configs:[]}); P.up.queue++; buildQueues();
+      const t=QUEUE_TIERS[u.tier];
+      celebrate(t.em+" "+t.name.toUpperCase()+" INSTALLED","#00e5ff"); flyMeme(t.name.toUpperCase());
+      toast(t.em+" "+t.name+" installed","difficulty "+t.D+" · one seat · seat agents in the Queues app","#00e5ff");
+      termLine("t-git",t.em,"installed the "+t.name+" board");
     } else if(u.id==="os"){
       const wasFloat=wmFloat();
       P.up.os++; const t=OS_TIERS[P.up.os];
@@ -1378,8 +1401,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     renderShop(); save();
   }
   function autoBuyCheapest(){ let best=null,bc=Infinity;
-    for(const u of UPG){ if(u.cat==="Automation") continue;
+    // Candidates (doc §1): hire only when a seat is free; a seat only when none is; next queue; OS. All must be revealed.
+    const anyFree=!!freeSeatQueue();
+    for(const u of UPG){ if(u.cat==="Automation"||!isRevealed(u)) continue;
       if(u.id==="os" && P.settings && P.settings.themeLock) continue;   // "Lock OS look" keeps the auto-buyer from switching your theme
+      if(u.kind==="hire" && !anyFree) continue;
+      if(u.kind==="seat" && anyFree) continue;
       const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc&&osLock(u)==null){bc=c;best=u;} }
     if(best) buy(best);
   }
@@ -1392,6 +1419,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"hype",    lbl:"Hype Banners"},
   ];
   let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up";
+  function buildQueues(){}   // replaced in Task 5
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -1641,7 +1669,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(revealed) catVisible[u.cat]=true;
       if(!revealed) continue;   // skip formatting hidden cards — nothing depends on it, just saves a little work
       if(u.kind==="hire"){ s.lv.textContent=P.agents.length+"/"+HIRE_CAP[P.up.os]; }
-      else if(u.kind==="seat"){ s.lv.textContent=P.queues[0].seats+" seats"; }
+      else if(u.kind==="seat"){ const q=ownedQueue(u.tier); s.lv.textContent=(q?q.seats:0)+" seats"; }
+      else if(u.kind==="queue"){ s.lv.textContent=ownedQueue(u.tier)?"✓":""; }
       else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
       else { s.lv.textContent=lvl?("· "+(u.tiers[lvl].name||("T"+lvl))):""; }
       const lock=osLock(u);
