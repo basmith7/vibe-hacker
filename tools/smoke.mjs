@@ -269,7 +269,7 @@ export const SCENARIOS = {
     assert(s0.stolen < 0.03 * s0.credits + 1, "rogue stole nothing offline");
     assert(s0.agents[3].done === 0, "benched agent did nothing");
     const rate1 = gain / 3600;   // per second, at the game's 50% offline efficiency
-    assert(rate1 < 20, "gain must be ONE ilvl-10 Backlog agent's rate (~$2–3/s at 50%), got " + rate1.toFixed(2) + "/s");
+    assert(rate1 > 1.5 && rate1 < 4.5, "gain must be ONE ilvl-10 Backlog agent's rate (~$2.9/s at 50%; two agents would be ~$5.8/s), got " + rate1.toFixed(2) + "/s");
   },
 };
 
