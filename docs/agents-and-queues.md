@@ -24,8 +24,9 @@ save-version bump with no migration; the current game stays live on `main` until
 ## Status
 
 **Design stage — nothing built.** Brainstormed 2026-09-16, adversarially reviewed and the open
-questions decided 2026-09-17. No `index.html` changes yet. Prerequisite: **model the economy skeleton in the sim first** (rate function, payout/sanity curves, drop
-bands, rederived cost ladder) before an implementation plan for Phase 1.
+questions decided 2026-09-17. No `index.html` changes yet. The economy skeleton is **modelled** (2026-09-17,
+`tools/aq-sim.mjs`, see "Balance model"): formulas, drop bands and a rederived cost ladder that hit the
+pacing targets. **Next: implementation plan for Phase 1.**
 
 Treat this doc as a living, resumable record (as with `crafting-update.md` and `window-manager.md`)
 — the phase checkboxes are the source of truth for where to pick back up.
@@ -243,14 +244,53 @@ the Mission Board (`MISSION_DEFS`, Missions app, Sprint Config); burnout as a gl
 Espresso Machine and Autocomplete Assist repeatables (Stamina/Memory and Compute cover them — or
 they survive as Tools-slot flavour items, decide in Phase 2). `SAVE_VER` bumps; no migration.
 
-## Balance model
+## Balance model — derived skeleton (2026-09-17, `tools/aq-sim.mjs`)
 
-Keep `tools/balance-sim.mjs` alive and rewrite its `rate()` for the new structure — it becomes
-*simpler*: income = Σ over seated agents of (success × payout ÷ duration) for the queue they sit
-in, plus bounty EV. Targets (user, 2026-09-16): **STARSHIP OS ≈ 5 h** with light typing; tiers reached at
-roughly 8 / 20 / 45 / 100 / 300 min (each ~2–3× the last); full crafting should be *meaningfully* faster than none
-(aim ~2×, not today's 1.3×); pure idle viable but slower; heavy typing a bonus, not a 4× lever.
-Re-validate with `tools/validate-rate.mjs` once Phase 1 is playable.
+`tools/aq-sim.mjs` is the expected-value model of *this* design (the old `balance-sim.mjs` models the
+current game and stays for reference). It runs the design-rule checks (`--checks`) and a greedy
+playthrough bot (hire/seat/queue/OS purchases by shortest time-to-afford + payback; agents reseated
+to their best queue; Configs set to the most every seated agent can run at ≥90%). These are the
+**starting numbers for Phase 1**, not final tuning — re-validate in headless Chrome once playable.
+
+**Formulas (all knobs in the `T` table at the top of the sim):**
+
+| | |
+|---|---|
+| Agent stat | `10 + ilvl_slot × 1.0 × (1 + craft × 0.6)` — Model→Quality, Memory→Stamina, Compute→Speed; Tools = `1 + 0.004·ilvl` credit mult. `craft` ∈ [0,1] = how fully patched the gear is. |
+| Success | `clamp(0.5 + (Quality/D − 1) × 1.25, 0, 0.95)` — **relative** gap (95% at Q = 1.36·D, 0% at Q = 0.6·D), so every tier feels the same. No floor. |
+| Duration | `clamp((4 + 0.3·D) / (1 + Speed/40), 1.1, 16) / (1 + 0.15·surge)` + 0.7 s cooldown. Surge from typing is small on purpose. |
+| Payout | `D^1.5 × 1.15^mods × tools` |
+| Sanity | drain/ticket = `D × 0.3 × (0.1 + 3·(1 − success))`; regen = `0.02 × Stamina`/s. Rogue when drain > regen: uptime = regen/drain, halved again by incidents. |
+| Queues | Backlog D10 → Kanban 25 → Jira 45 → PagerDuty 70 → The Roadmap 100 → Legacy Monolith 140, one per OS tier. Each Config mod: D ×(1+0.12·n), payout ×1.15ⁿ, drop band ×(1+0.12·n). Max 3 (unlimited on Legacy Monolith — not yet modelled). |
+| Drops | 10% per success; ilvl uniform in [tier D, **0.92 × next tier's D**] × mod bonus, capped by `ILVL_CAP = [30,55,85,125,175,∞]`. Band top deliberately sits *below* the next tier so uncrafted gear alone lands at ~50–70% there and crafting is what gets you to 95%. |
+| Hires / seats | hire #n = `150 × 3.2ⁿ⁻¹`; seat n on a tier-t queue = `150 × 2.2ⁿ⁻¹ × 4ᵗ`; hire cap per OS `[1,2,4,6,8,10]`; starter kit ilvl 10. |
+| Costs | OS `[0, 4K, 40K, 400K, 3M, 24M]`; queues `[0, 2K, 20K, 200K, 2M, 15M]`. **Rederived from the sim**, not the old tables. |
+
+**Design-rule checks pass:** every adjacent tier pair is reachable at 95% with crafted band-top gear
+(gear-wall rule), and for every gear level the income-maximising tier has ≥85% success — overreach
+never pays, because sanity drain (not a success floor) governs.
+
+**Pacing (time to each OS tier; kps = keypresses/sec, craft = fraction of gear fully patched):**
+
+| Scenario | Win3.1 | Win95 | Win10 | NEON | STARSHIP |
+|---|---|---|---|---|---|
+| **Reference: light typing, half-crafted** (kps 2, craft 0.5) | 5m | 17m | 42m | 1h45 | **5h06** |
+| idle, half-crafted (kps 0, craft 0.5) | 5m | 24m | 59m | 2h31 | 7h11 |
+| light typing, fully crafted (kps 2, craft 1) | 5m | 14m | 32m | 1h10 | 2h52 |
+| idle, fully crafted (kps 0, craft 1) | 5m | 21m | 48m | 1h35 | 3h34 |
+| heavy typing, fully crafted (kps 5, craft 1) | 2m | 8m | 22m | 50m | 2h10 |
+| light typing, **no crafting** (kps 2, craft 0) | 5m | 21m | 1h06 | 5h16 | never (walls at PagerDuty) |
+
+So: STARSHIP ≈ 5 h for the reference player ✓; full crafting is ~1.8× faster than half ✓ (target
+~2×); pure idle is viable at ~1.4× slower ✓; heavy typing is a ~1.3× bonus, not 4× ✓; zero crafting
+walls, which is the intended emphasis (a real player always crafts *some*).
+
+**Known model limits / follow-ups:** bounties, Red Team, rogue *types*, countermeasures and offline
+bounties aren't modelled (rogue is just uptime loss). The bot sometimes shows a negative Δ for a
+seat because Configs are set to the *weakest* seated agent's safe level — a real player would keep
+weaker agents off a juiced queue. Legacy Monolith's unlimited mods aren't modelled, so it looks
+unattractive (73 h payback) — fix when modelling the endgame. Re-specify `validate-rate.mjs` for the
+new state shape in Phase 1.
 
 ## Phased delivery
 
@@ -306,11 +346,8 @@ Decisions log below.
 | Agent zero idle | Earns nothing idle; typing only; Assist removed. |
 
 ## Still open (to be settled by the sim, not by decision)
-- Stat floor and gear coefficients (starting point: floor 10; gear = ilvl × slot coeff + patches).
-- Payout exponent, sanity drain constant `c`, regen law — must satisfy the interior-optimum and
-  gear-wall rules in "Queues" / "Item level rules".
-- How many queues/tiers total and which OS tier unlocks each; the cost ladder for OS/queues/seats/hires
-  is **rederived from the sim**, not reused from today's tables.
+- ~~Stat floor, gear coefficients, payout exponent, sanity constants, tiers, cost ladder~~ — derived, see
+  "Balance model". Still to model: bounties, Red Team, rogue types, Legacy Monolith's unlimited mods.
 - Three stats confirmed enough? (A fourth, player-only stat fed by typing was floated and parked.)
 - Keep the global player level as flavour (assumed yes: titles, achievements).
 - `ROGUE_MODES` numbers and countermeasure tiers.
