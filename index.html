@@ -1446,7 +1446,73 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"hype",    lbl:"Hype Banners"},
   ];
   let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up";
-  function buildQueues(){}   // replaced in Task 5
+  /* ============ Queues app (A&Q Phase 2) ============ */
+  // Build-once/update-on-timer like the Store: buildQueues() on structural change (buy, hire, seat, prestige),
+  // renderQueues() at 5 Hz for the % / sanity / Kill -9 readouts. Seating always goes through seatAgent().
+  const QEL={boards:[],chips:new Map()};
+  const agentLabel=a=>a===agentZero()?"you":a.name;
+  function canSeat(a,qi){ if(qi<0) return true; const q=P.queues[qi]; if(!q) return false; return a.q===qi || P.agents.filter(x=>x.q===qi).length<q.seats; }
+  function seatAgent(a,qi){
+    qi=qi<0?-1:qi|0;
+    if(!canSeat(a,qi)) return false;
+    if(a.q===qi) return true;
+    a.q=qi;
+    const w=WK[P.agents.indexOf(a)]; if(w){ w.task=null; w.elapsed=0; w.cooldown=0.3; w.el.classList.remove("win","fail","crit"); if(qi<0) assignTask(w); }   // in-flight ticket is abandoned; the Bench tile is relabelled now
+    recompute(); buildQueues(); renderAgentSheets(); renderShop(); save();
+    termLine("t-git","🪑",agentLabel(a)+(qi<0?" moved to the Bench":" seated on "+queueTier(P.queues[qi]).name));
+    return true;
+  }
+  function chipFor(a,i){
+    const c=document.createElement("div"); c.className="qchip"; c.dataset.agent=i; c.style.setProperty("--ac",a.color);
+    c.innerHTML=`<span class="dot"></span><span class="nm">${agentLabel(a)}</span><span class="pct"></span><span class="san" title="sanity"><i></i></span><button class="buy k9" data-act="kill9"></button>`;
+    c.addEventListener("click",e=>{ if(c.__dragged){ c.__dragged=false; return; } if(e.target.closest(".k9")) return; e.stopPropagation(); openPicker(i,c); });
+    c.querySelector(".k9").addEventListener("click",e=>{ e.stopPropagation(); kill9(P.agents[i]); });
+    c.addEventListener("pointerdown",e=>chipDragStart(e,i,c));
+    QEL.chips.set(i,{el:c,pct:c.querySelector(".pct"),san:c.querySelector(".san i"),k9:c.querySelector(".k9")});
+    return c;
+  }
+  function buildQueues(){
+    const body=$("#queuesBody"); if(!body) return; closePicker(); body.innerHTML=""; QEL.boards=[]; QEL.chips=new Map();
+    const boards=P.queues.map((q,qi)=>({qi,q,t:queueTier(q)})).concat([{qi:-1,q:null,t:{name:"Bench",em:"🪑",D:0}}]);
+    for(const b of boards){
+      const el=document.createElement("div"); el.className="qboard card"+(b.qi<0?" bench":""); el.dataset.q=b.qi;
+      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div><div class="qseats"></div>`;
+      const seats=el.querySelector(".qseats"), seated=P.agents.map((a,i)=>({a,i})).filter(x=>x.a.q===b.qi);
+      for(const {a,i} of seated) seats.appendChild(chipFor(a,i));
+      if(b.qi>=0) for(let k=seated.length;k<b.q.seats;k++){ const e=document.createElement("div"); e.className="qseat empty"; e.textContent="empty seat"; seats.appendChild(e); }
+      body.appendChild(el); QEL.boards.push({...b,el,meta:el.querySelector(".qmeta")});
+    }
+    renderQueues();
+  }
+  function renderQueues(){
+    if(!QEL.boards.length) return;
+    for(const b of QEL.boards){
+      if(b.qi>=0){ const n=P.agents.filter(a=>a.q===b.qi).length; b.meta.textContent=`D${b.t.D} · ${n}/${b.q.seats} seats · drops ilvl ${b.t.D}–${Math.round(queueBandTop(b.q))}`; }
+      else b.meta.textContent=P.agents.filter(a=>a.q<0).length+" benched · no tickets · full regen";
+    }
+    for(const [i,c] of QEL.chips){ const a=P.agents[i]; if(!a) continue; if(!a.m) agentMult(a);
+      const q=seatedQueue(a); c.pct.textContent=q?Math.round(a.m.chance(queueD(q))*100)+"%":"—";
+      c.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%";
+      c.el.classList.toggle("rogue",!!a.rogue);
+      if(a.rogue){ const k=kill9Cost(a); c.k9.textContent="Kill -9 "+money(k); c.k9.disabled=P.credits<k; c.k9.title="pay to restart "+agentLabel(a)+" at half sanity ("+BAL.rogueImmune+"s immunity)"; }
+    }
+    const tag=$("#queuesTag"); if(tag) tag.textContent=P.queues.length+" board"+(P.queues.length>1?"s":"")+" · "+P.agents.filter(a=>a.q<0).length+" benched";
+  }
+  function openPicker(i,anchor){
+    closePicker(); const a=P.agents[i]; if(!a.m) agentMult(a);
+    const m=document.createElement("div"); m.className="qpicker card"; m.id="qpicker";
+    const rows=P.queues.map((q,qi)=>{ const D=queueD(q), ch=a.m.chance(D), t=queueTier(q);
+      const ps=i===0?0:ch*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown);
+      return {qi, lbl:t.em+" "+t.name, sub:"★".repeat(clamp(Math.round(ch*5),1,5))+" "+Math.round(ch*100)+"%"+(i===0?" · typing only":" · "+money(ps)+"/s"), full:!canSeat(a,qi), cur:a.q===qi}; })
+      .concat([{qi:-1, lbl:"🪑 Bench", sub:"no tickets · full regen", full:false, cur:a.q<0}]);
+    m.innerHTML=rows.map(r=>`<div class="qopt${r.cur?" cur":""}${r.full?" full":""}" data-q="${r.qi}"><b>${r.lbl}</b><span>${r.full?"no free seat":r.sub}</span></div>`).join("");
+    m.addEventListener("click",e=>{ e.stopPropagation(); const o=e.target.closest(".qopt"); if(!o||o.classList.contains("full")) return; seatAgent(a,+o.dataset.q); closePicker(); });
+    anchor.appendChild(m);
+    setTimeout(()=>document.addEventListener("click",closePicker,{once:true}),0);
+  }
+  function closePicker(){ const m=$("#qpicker"); if(m) m.remove(); }
+  let qdrag=null;   // Task 6 wires chipDragStart; this no-op keeps chipFor's listener valid until then
+  function chipDragStart(e,i,c){}
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -1728,7 +1794,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed,
       rogues:P.rogues, stolen:P.stolen, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
     P=Object.assign(defaults(),keep); seedAgents();
-    recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
+    recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w)); buildQueues();   // reset drops hire/unlocks → re-tile to terminal-only
     HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
     toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% credits","#39ff14");
@@ -2322,6 +2388,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   const ROGUE_MODES={
     embezzler:{lbl:"Embezzler", em:"💸", desc:"siphons a slice of your bank every second", tick(a,dt,w){}},
   };
+  function kill9(a){}   // real one in Task 7
   function goRogue(a){
     P.rogues++; a.rogue={mode:"embezzler",t:0,stolen:0}; a.sanity=0; P.streak=0;
     const w=WK[P.agents.indexOf(a)]; if(w) w.task=null;
@@ -2475,7 +2542,7 @@ notify("#general", "10x-ing that shit 🔥");`,
 
     // Store is an always-on app → refresh its cards on the timer; the Toolbox drawer refreshes only when open
     // Store + Toolbox apps are on-screen tiles/windows → refresh their cards on the timer
-    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); renderAgentSheets(); }
+    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); renderAgentSheets(); renderQueues(); }
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
@@ -2774,7 +2841,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
   recompute();
   cacheUI();
-  buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); buildAchievements(); initGlobe(); initMatrix();
+  buildHUD(); buildWorkers(); buildShop(); buildQueues(); buildToolbox(); buildStatSheet(); buildAchievements(); initGlobe(); initMatrix();
   ambientTint(); setInterval(ambientTint, 5*60*1000);   // seasonal/time-of-day wash, drifts every 5 min
   tickClock(); setInterval(tickClock, 15*1000);         // taskbar clock (float mode)
   setupWindowChrome();

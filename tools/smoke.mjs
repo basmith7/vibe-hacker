@@ -200,6 +200,30 @@ export const SCENARIOS = {
     const qn = await ev(`document.querySelector('.agent .sheet [data-agent="1"]').closest('.sheet').querySelector('.qn').textContent`);
     assert(/bench/i.test(qn), "tile shows Bench, not Backlog: " + qn);
   },
+  // Click-to-seat: the picker lists every board with a success readout; choosing Kanban moves the agent and it works Kanban tickets.
+  async seatAgent() {
+    const kit = (k, il) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 3 });
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 30)])), inv: [], sanity: 100, q: 0, done: 0, failed: 0, rogue: null });
+      s.queues = [{ tier: 0, seats: 2, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+    assert(s0.agents[1].q === 0, "bot starts on Backlog");
+    let r = await click('#queuesBody .qchip[data-agent="1"]'); assert(r === "ok", "bot chip present"); await sleep(200);
+    const opts = await ev(`[...document.querySelectorAll('#qpicker .qopt')].map(o=>o.dataset.q+':'+o.textContent)`);
+    assert(opts.length === 3 && opts[0].startsWith("0:") && opts[1].startsWith("1:") && opts[2].startsWith("-1:"), "picker lists Backlog, Kanban, Bench: " + opts);
+    assert(/%/.test(opts[1]) && /\/s/.test(opts[1]), "Kanban row shows success % and $/s: " + opts[1]);
+    r = await click('#qpicker .qopt[data-q="1"]'); assert(r === "ok", "Kanban option clickable"); await sleep(3500);
+    const s1 = await readSave();
+    assert(s1.agents[1].q === 1, "bot now seated on Kanban");
+    assert(await ev(`!!document.querySelector('#queuesBody .qboard[data-q="1"] .qchip[data-agent="1"]')`), "chip moved to the Kanban board");
+    assert(await ev(`!document.querySelector('#qpicker')`), "picker closed after choosing");
+    await sleep(20000); const s2 = await readSave();
+    assert(s2.agents[1].done + s2.agents[1].failed >= 1, "bot works tickets on Kanban");
+    // a full board is refused: agent zero's picker greys Kanban (1 seat, taken)
+    r = await click('#queuesBody .qchip[data-agent="0"]'); await sleep(200);
+    assert(await ev(`document.querySelector('#qpicker .qopt[data-q="1"]').classList.contains('full')`), "Kanban shows as full for agent zero");
+    r = await click('#qpicker .qopt[data-q="1"]'); await sleep(500);
+    assert((await readSave()).agents[0].q === 0, "clicking a full board does nothing");
+  },
 };
 
 const name = process.argv[2];
