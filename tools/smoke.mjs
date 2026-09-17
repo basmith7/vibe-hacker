@@ -34,6 +34,8 @@ export async function type(kps, secs) {
   for (let i = 0; i < n; i++) { send("Input.dispatchKeyEvent", { type: "keyDown", key: "a", code: "KeyA", text: "a" }); send("Input.dispatchKeyEvent", { type: "keyUp", key: "a", code: "KeyA" }); await sleep(1000 / kps); }
 }
 export function assert(cond, msg) { if (!cond) throw new Error("assert: " + msg); }
+// Starter-kit item factory for fixtures: one ilvl-`il` item per gear slot key, ids 60..63.
+export const kit = (k, il = 10) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 2 });
 // Boot the game; optionally replace the save with `fixture(save)` (a function mutating the fresh save) and reload.
 export async function boot({ fixture } = {}) {
   await connect(); await send("Runtime.enable"); await send("Page.enable");
@@ -65,14 +67,17 @@ export const SCENARIOS = {
   },
   async stateShape() {
     const s = await boot();
-    assert(s.ver === 8, "SAVE_VER must be 8, got " + s.ver);
+    assert(s.ver === 9, "SAVE_VER must be 9, got " + s.ver);
     assert(Array.isArray(s.agents) && s.agents.length === 1, "fresh save has exactly one agent (you)");
     const a = s.agents[0];
     for (const k of ["model", "memory", "compute", "tools"]) assert(a.gear[k] && a.gear[k].ilvl === 10, "agent zero starter " + k + " ilvl 10");
     assert(Array.isArray(a.inv), "agent has inv"); assert(typeof a.sanity === "number", "agent has sanity"); assert(a.q === 0, "agent seated in queue 0");
+    assert(a.rogue === null, "agent zero starts not rogue (a.rogue persisted as null)");
     assert(Array.isArray(s.queues) && s.queues.length === 1 && s.queues[0].tier === 0 && s.queues[0].seats === 1, "one Backlog queue with one seat");
     assert(s.selectedAgent === 0, "selectedAgent defaults to 0");
-    assert(!("m" in s.agents[0]) && !("down" in s.agents[0]), "runtime fields must not be persisted");
+    assert(!("m" in a) && !("down" in a) && !("immune" in a), "runtime fields must not be persisted");
+    assert(s.rogues === 0 && s.stolen === 0 && !("burnouts" in s), "P.rogues/P.stolen replace P.burnouts");
+    assert(s.up.u_queues === 0 && s.up.queue === 0 && s.unlocked.queues === false, "queues unlock/counter fields present");
   },
   // Two agents on Backlog: the hired one must earn credits idle (no typing), agent zero must not.
   async loopEarns() {
@@ -147,6 +152,20 @@ export const SCENARIOS = {
     r = await click('#inventoryBody .stashCard[data-id="60"] [data-act="ide"]'); assert(r === "ok", "send to IDE");
     await sleep(3500); const s2 = await readSave();
     assert(s2.craftSlot && s2.craftSlot.item.id === 60 && s2.craftSlot.owner === 2, "craft slot holds item 60 owned by agent id 2");
+  },
+  // A benched agent (q = -1) works no tickets, regenerates sanity, and is never treated as "on Backlog".
+  async bench() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true };
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [], sanity: 20, q: -1, done: 0, failed: 0, rogue: null });
+      s.queues[0].seats = 1; }});
+    assert(s0.agents[1].q === -1, "fixture agent is benched");
+    await sleep(20000);
+    const s1 = await readSave();
+    assert(s1.agents[1].done + s1.agents[1].failed === 0, "benched agent must not work tickets");
+    assert(s1.earned === 0, "benched agent must not earn");
+    assert(s1.agents[1].sanity > 20, "benched agent regenerates sanity");
+    const qn = await ev(`document.querySelector('.agent .sheet [data-agent="1"]').closest('.sheet').querySelector('.qn').textContent`);
+    assert(/bench/i.test(qn), "tile shows Bench, not Backlog: " + qn);
   },
 };
 

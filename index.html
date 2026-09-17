@@ -21,7 +21,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="vibe hacker" />
 <meta property="og:title" content="vibe hacker // AI-agent coding cockpit" />
-<meta property="og:description" content="A fake swarm of AI agents furiously coding — secretly a persistent idle-RPG about a dev career. Levels, stats, loot, and burnout included." />
+<meta property="og:description" content="A fake swarm of AI agents furiously coding — secretly a persistent idle-RPG about a dev career. Stats, loot, and rogue agents included." />
 <meta property="og:url" content="https://basmith7.github.io/vibe-hacker/" />
 <meta property="og:image" content="https://basmith7.github.io/vibe-hacker/og.png" />
 <meta property="og:image:width" content="1200" />
@@ -765,7 +765,7 @@
           <span class="ct">credits</span><span class="cv" id="cv_credits" style="color:var(--green)">$0</span><span class="cvsub" id="cv_creditRate">+$0/s</span><canvas id="cLine"></canvas></div>
         <div class="chart statSheet" id="statSheet" title="Your own agent's three stats. Hover any row for what it does."><span class="ct">your stats — hover a row</span><div class="ssBars" id="ssBars"></div></div>
         <div class="chart" id="chFail" title="Failure rate — the share of all attempted tasks that have failed. Failures cost sanity and reset your streak. Raise your agents' Quality (the Model slot) or seat them on an easier queue to push it down."><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
-        <div class="chart" id="chSanity" title="Sanity — your own agent&#39;s mental health. Its Stamina (from the Memory slot) sets both the pool and how fast it refills; every ticket drains a little and a failed one drains a lot. At 0% the agent burns out and takes a coffee break until sanity is back to 50%."><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
+        <div class="chart" id="chSanity" title="Sanity — your own agent&#39;s mental health. Its Stamina (from the Memory slot) sets both the pool and how fast it refills; every ticket drains a little and a failed one drains a lot. At 0% the agent goes rogue — off the board and stealing from you — until sanity is back to 50% or you Kill -9 it."><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
       </div>
     </section>
 
@@ -950,7 +950,7 @@
   const AGENT_STATS=[
     {id:"quality", lbl:"Quality", em:"🎯", color:"#c77dff", expl:"Quality — success chance vs the queue's difficulty (and crit). Fed by the Model slot."},
     {id:"speed",   lbl:"Speed",   em:"⚡", color:"#00e5ff", expl:"Speed — how fast tickets clear. Fed by the Compute slot."},
-    {id:"stamina", lbl:"Stamina", em:"🧠", color:"#39ff14", expl:"Stamina — sanity pool and regen; failures drain it, zero means burnout. Fed by the Memory slot."},
+    {id:"stamina", lbl:"Stamina", em:"🧠", color:"#39ff14", expl:"Stamina — sanity pool and regen; failures drain it, zero means it goes rogue. Fed by the Memory slot."},
   ];
   const ASTAT=Object.fromEntries(AGENT_STATS.map(s=>[s.id,s])), ASTAT_IDS=AGENT_STATS.map(s=>s.id);
   const AGENT_SLOTS=[
@@ -976,6 +976,8 @@
     drainC:0.3, drainWork:0.1, drainFail:3, regenK:0.02, sanityBase:50, sanityPerStamina:2,
     drop:0.10, bandTop:0.92, starterIlvl:10,
     hireBase:150, hireGrowth:3.2, seatBase:150, seatGrowth:2.2, seatTierMult:4,
+    queueCost:[0,2000,20000,200000,2000000,15000000],   // install cost per QUEUE_TIERS index (Backlog is free/day one)
+    rogueSteal:0.00265, rogueRegen:0.5, kill9PerIlvl:8, rogueImmune:20,   // Embezzler: bank fraction stolen /s; regen mult while rogue; Kill -9 $/Σilvl; immunity s
     typeProg:0.09,   // fraction of agent zero's ticket one keypress completes (unchanged from today's mashCode)
   };
   const HIRE_CAP=[1,2,4,6,8,10];          // total agents incl. you, per OS tier
@@ -985,7 +987,7 @@
     return Math.min(ILVL_CAP[clamp(P.up.os,0,ILVL_CAP.length-1)], BAL.bandTop*next*(1+(q.mods||0)*BAL.modIlvl)); }
   function starterItem(slotId){ return {id:++P.itemSeq, slot:slotId, name:"Hand-me-down "+ASLOT[slotId].lbl, ilvl:BAL.starterIlvl, patches:[], maxPatches:2}; }
   function newAgent(who, q){
-    const a={id:++P.agentSeq, name:who.name, color:who.color, gear:{}, inv:[], sanity:100, q:q||0, done:0, failed:0};
+    const a={id:++P.agentSeq, name:who.name, color:who.color, gear:{}, inv:[], sanity:100, q:(q==null?0:q), done:0, failed:0, rogue:null};
     for(const s of AGENT_SLOTS) a.gear[s.id]=starterItem(s.id);
     return a;
   }
@@ -1064,6 +1066,11 @@
     return a.m;
   }
   const agentZero=()=>P.agents[0];
+  // Phase 2 — seating helpers. a.q === -1 is the Bench: no queue, no tickets, full-rate regen. Nothing may
+  // fall back to P.queues[0] for a benched agent (that would silently make the Bench the Backlog).
+  const seatedQueue=a=>(a.q>=0&&P.queues[a.q])||null;
+  const ownedQueue=tier=>P.queues.find(q=>q.tier===tier)||null;
+  function kill9Cost(a){ let s=0; for(const k of ASLOT_IDS){ const it=a.gear[k]; if(it) s+=it.ilvl; } return Math.round(BAL.kill9PerIlvl*s); }
   function hireCost(){ return Math.round(BAL.hireBase*Math.pow(BAL.hireGrowth,P.agents.length-1)); }
   function seatCost(q){ return Math.round(BAL.seatBase*Math.pow(BAL.seatGrowth,q.seats-1)*Math.pow(BAL.seatTierMult,q.tier)); }
   function freeSeatQueue(){ return P.queues.find((q,qi)=>q.seats>P.agents.filter(a=>a.q===qi).length)||null; }
@@ -1149,7 +1156,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ state + persistence (cookie, with localStorage fallback) ============ */
-  const SAVE_VER=8;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
+  const SAVE_VER=9;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
   // window-manager Phase 2 — default floating-window geometry per app (relative to the #grid canvas).
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
@@ -1190,16 +1197,16 @@ notify("#general", "10x-ing that shit 🔥");`,
   function defaults(){
     return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,stage:0,plot:0,plotNeed:120,prestige:0,
       tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
-      playSecs:0,burnouts:0,crits:0,
+      playSecs:0,rogues:0,stolen:0,crits:0,
       credits:0,maxCredits:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,seat:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_achv:0,u_inv:0,u_equip:0,u_ide:0,os:0,offline:0,autoBuy:0},
+      up:{hire:0,seat:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_achv:0,u_inv:0,u_equip:0,u_ide:0,u_queues:0,queue:0,os:0,offline:0,autoBuy:0},
       itemSeq:0, craftSlot:null,
       agentSeq:0, agents:null,   // seeded right after construction (newAgent needs P.itemSeq) — see below
       queues:[{tier:0,seats:1,mods:0,configs:[]}], selectedAgent:0,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       themeChoice:"dos",
-      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,achievements:false},
+      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,achievements:false,queues:false},
       intro:true, reveal:{credits:false,shop:false,store:false},
       notify:{grind:true,progress:true,system:true,hype:true},
       settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
@@ -1210,12 +1217,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   function seedAgents(){ if(!P.agents||!P.agents.length){ P.agents=[newAgent({name:"you",color:"#eafff0"},0)]; } }
   seedAgents();
   const PERSIST=["ver","level","xp","xpNeed","stage","plot","plotNeed","prestige",
-    "tasksDone","tasksFailed","streak","bestStreak","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
+    "tasksDone","tasksFailed","streak","bestStreak","deploys","bugsFixed","loc","totalXp","playSecs","rogues","stolen","crits",
     "credits","maxCredits","earned","lastReal","equity","ipos","up","itemSeq","craftSlot",
     "agentSeq","agents","queues","selectedAgent",
     "materials","matPity",
     "themeChoice","unlocked","intro","reveal","notify","settings","windows","achv","seenTips"];
-  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,achievements:true}; }
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,achievements:true,queues:true}; }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -1252,11 +1259,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   function save(){
     P.lastReal=Date.now();
     const o={}; for(const k of PERSIST) o[k]=P[k];
-    // a.m (derived stats) and a.down (burnout flag) are runtime-only — recompute() rebuilds them.
+    // a.m (derived stats) and a.immune (Kill -9 grace) are runtime-only — recompute()/the tick rebuild them.
     // Persisting them bloats the save, which is written to document.cookie first (~4 KB cap); an
     // oversized cookie write fails silently and readStore() prefers the cookie, so the game would
     // boot from a stale one.
-    o.agents=P.agents.map(a=>{ const {m,down,...rest}=a; return rest; });
+    o.agents=P.agents.map(a=>{ const {m,immune,...rest}=a; return rest; });
     const json=JSON.stringify(o);
     try{ document.cookie="vibehacker="+encodeURIComponent(json)+";path=/;max-age="+(3600*24*365)+";SameSite=Lax"; }catch(e){}
     try{ localStorage.setItem("vibehacker",json); }catch(e){}
@@ -1663,7 +1670,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const g=equityGain(); if(!canPrestige()) return;
     const keep={equity:P.equity+g, ipos:P.ipos+1, achv:P.achv, seenTips:P.seenTips,
       bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed,
-      burnouts:P.burnouts, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
+      rogues:P.rogues, stolen:P.stolen, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
     P=Object.assign(defaults(),keep); seedAgents();
     recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
     HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme();
@@ -1686,7 +1693,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"patched",em:"📝",name:"Custom Build",        desc:"Own an item with 3 patches",   chk:()=>P.agents.some(a=>[...ASLOT_IDS.map(s=>a.gear[s]),...a.inv].some(it=>it&&it.patches.length>=3)), binary:true},
     {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25,   pct:()=>P.bestStreak/25},
     {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100,  pct:()=>P.bestStreak/100},
-    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1,  binary:true},
+    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Watch an agent go rogue",      chk:()=>P.rogues>=1,    binary:true},
     {id:"crit",   em:"💥",name:"Critical Hit",        desc:"Land a critical success",      chk:()=>P.crits>=1,     binary:true},
     {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6,      pct:()=>P.earned/1e6},
     {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.up.os>=2,         pct:()=>P.up.os/2},
@@ -2254,12 +2261,18 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-info","▶","═══ "+name+" ═══"); addXp(30);
     HUD.stage.textContent=name; save();
   }
-  function burnout(a){
-    P.burnouts++; a.down=true; a.sanity=0; P.streak=0;
-    celebrate("🔥 "+a.name.toUpperCase()+" BURNED OUT","#ff2b5e"); if(a===agentZero()) flashHp();
-    toast("🔥 Burnout",a.name+" is off the board until sanity is back to 50%","#ff2b5e","progress");
-    termLine("t-bad","☠",a.name+" — sanity hit zero, forced coffee break"); save();
+  // Rogue modes (Phase 2 ships one; Phase 4 adds rows, escalation and Countermeasures — never branches here).
+  const ROGUE_MODES={
+    embezzler:{lbl:"Embezzler", em:"💸", desc:"siphons a slice of your bank every second", tick(a,dt,w){}},
+  };
+  function goRogue(a){
+    P.rogues++; a.rogue={mode:"embezzler",t:0,stolen:0}; a.sanity=0; P.streak=0;
+    const w=WK[P.agents.indexOf(a)]; if(w) w.task=null;
+    celebrate("☠ "+a.name.toUpperCase()+" WENT ROGUE","#ff2b5e"); if(a===agentZero()) flashHp();
+    toast("☠ Rogue",a.name+" is off the board until sanity is back to 50%","#ff2b5e","progress");
+    termLine("t-bad","☠",a.name+" went ROGUE — sanity hit zero"); save();
   }
+  function recoverRogue(a,how){ a.rogue=null; termLine("t-info","☕",a.name+" "+how); }
 
   /* ============ workers ============ */
   const WK=[];   // one worker per P.agents entry, same index. Slot 0 = "you" (manual) → terminal pane; 1+ → agents app
@@ -2294,13 +2307,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const w of WK){ const a=workerAgent(w); if(!a) continue; if(!a.m) agentMult(a);
       for(const id of ASTAT_IDS) w.stat[id].textContent=Math.round(a.m.st[id]);
       w.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%"; w.san.parentElement.classList.toggle("low",a.sanity/a.m.sanityMax<0.28);
-      w.qn.textContent=queueTier(P.queues[a.q]||P.queues[0]).name+(a.down?" · ☕ down":"");
+      const sq=seatedQueue(a); w.qn.textContent=(sq?queueTier(sq).name:"Bench")+(a.rogue?" · ☠ ROGUE":"");
       w.sel.classList.toggle("on",w.i===P.selectedAgent); w.sel.textContent=w.i===P.selectedAgent?"Selected":"Select"; }
   }
   const workerAgent=w=>P.agents[w.i];
-  const workerQueue=w=>P.queues[workerAgent(w).q]||P.queues[0];
+  const workerQueue=w=>seatedQueue(workerAgent(w));
   function assignTask(w){
-    const a=workerAgent(w), q=workerQueue(w), D=queueD(q);
+    const a=workerAgent(w), q=workerQueue(w);
+    if(!q){ w.task=null; w.tk.textContent="on the bench"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; return; }
+    const D=queueD(q);
     const [name]=pick(TASKS);
     if(!a.m) agentMult(a);
     const dur=a.m.dur(D);
@@ -2323,7 +2338,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       addXp(xp); P.credits+=cr; P.earned+=cr; checkReveal();
       P.plot+=D*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
       P.tasksDone++; a.done++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
-      a.sanity=clamp(a.sanity-drainWork,0,a.m.sanityMax);
+      a.sanity=clamp(a.sanity-drainWork,a.immune>0?1:0,a.m.sanityMax);
       w.el.classList.add(crit>1?"crit":"win"); w.flashT=0.6; spawnArc(crit>1?"#ffb000":"#39ff14");
       termLine("t-ok","✓",a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+money(cr));
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+money(cr)+" · "+queueTier(q).name,crit>1?"#ffb000":"#00e5ff","grind");
@@ -2331,11 +2346,11 @@ notify("#general", "10x-ing that shit 🔥");`,
       grantMaterials(q,locBefore);
     } else {
       const dmg=drainWork+D*BAL.drainC*BAL.drainFail;   // success drains 0.1·D·c, failure (0.1+3)·D·c → expected per ticket = D·c·(0.1+3·(1−chance)), exactly the sim's
-      a.sanity=clamp(a.sanity-dmg,0,a.m.sanityMax); P.streak=0; P.tasksFailed++; a.failed++; addXp(Math.round((D+6)*0.2));
+      a.sanity=clamp(a.sanity-dmg,a.immune>0?1:0,a.m.sanityMax); P.streak=0; P.tasksFailed++; a.failed++; addXp(Math.round((D+6)*0.2));
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); if(w.manual) flashHp();
       termLine("t-bad","✗",a.name+" FAILED ‹"+name+"›  -"+Math.round(dmg)+" sanity  (streak reset)");
       toast("💥 "+name+" failed","-"+Math.round(dmg)+" sanity · "+a.name+"'s Quality too low for "+queueTier(q).name,"#ff2b5e","grind");
-      if(a.sanity<=0) burnout(a);
+      if(a.sanity<=0) goRogue(a);
     }
     w.task=null; w.cooldown=rand(0.4,1.0);
   }
@@ -2346,8 +2361,13 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function tickWorker(w,dt){
     const a=workerAgent(w); if(!a.m) agentMult(a);
-    a.sanity=clamp(a.sanity+dt*a.m.regen,0,a.m.sanityMax);
-    if(a.down){ if(a.sanity>=a.m.sanityMax*0.5){ a.down=false; termLine("t-info","☕",a.name+" is back from the coffee break"); } else return; }
+    if(a.immune>0) a.immune=Math.max(0,a.immune-dt);
+    // Regen: rogue agents recover at BAL.rogueRegen × normal (applied here, not in agentMult, so the transitions
+    // need no recompute()). While immune (just Kill -9'd) sanity can't touch zero.
+    a.sanity=clamp(a.sanity+dt*a.m.regen*(a.rogue?BAL.rogueRegen:1),a.immune>0?1:0,a.m.sanityMax);
+    if(a.rogue){ a.rogue.t+=dt; ROGUE_MODES[a.rogue.mode].tick(a,dt,w);
+      if(a.sanity>=a.m.sanityMax*0.5) recoverRogue(a,"is back — recovered on its own"); else return; }
+    if(a.q<0){ if(w.task||w.tk.textContent!=="on the bench") assignTask(w); return; }   // Bench: no tickets, tile says so
     if(!w.manual){ w.acc+=dt*(12+surge*6); let n=w.acc|0; w.acc-=n; if(n>0) revealChars(w,n); }
     if(w.flashT>0){ w.flashT-=dt; if(w.flashT<=0) w.el.classList.remove("win","fail","crit"); }
     if(!w.task){ w.cooldown-=dt; if(w.cooldown<=0) assignTask(w); return; }
@@ -2357,7 +2377,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function mashCode(){   // typing is the ONLY thing that advances agent zero's ticket
     const w=WK[0]; if(!w) return; revealChars(w,(2+Math.random()*3)|0);
-    if(w.task && !workerAgent(w).down){ w.elapsed+=w.task.dur*BAL.typeProg; if(w.elapsed>=w.task.dur) resolveTask(w); }
+    const a=workerAgent(w); if(w.task && !a.rogue && a.q>=0){ w.elapsed+=w.task.dur*BAL.typeProg; if(w.elapsed>=w.task.dur) resolveTask(w); }
   }
 
   /* ============ counters + HUD update ============ */
@@ -2676,7 +2696,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!P.up.offline || !P.lastReal) return;
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
     if(el<30) return;
-    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; if(!a.m) agentMult(a); const q=P.queues[a.q]||P.queues[0], D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown); }
+    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; if(a.rogue||a.q<0) continue; if(!a.m) agentMult(a); const q=P.queues[a.q], D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown); }
     const gain=Math.floor(perSec*el*0.5);   // offline runs at a flat 50% until the Modem-equivalent returns
     if(gain>0){ P.credits+=gain; P.earned+=gain;
       termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)");
@@ -2709,7 +2729,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   syncFocusMode();   // a reload while already fullscreen should still carry the bonus
   if(restored) offlineEarnings();
   lastEarned=P.earned;   // seed the credits/sec baseline AFTER offline earnings so they don't spike the first sample
-  WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
+  WK.forEach(w=>{ assignTask(w); if(w.task) w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
   if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")+" · "+money(P.credits)); }
   else { termLine("t-info","◈","new career started — welcome, Script Kiddie"); }
