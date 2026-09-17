@@ -27,13 +27,16 @@ await sleep(6000);
 let raw = await ev(`localStorage.getItem("vibehacker")`); if (!raw) { await sleep(4000); raw = await ev(`localStorage.getItem("vibehacker")`); }
 if (!raw) { console.error("no save yet; cookie=", await ev(`document.cookie`)); chrome.kill(); process.exit(1); }
 const fixture = JSON.parse(raw);
-const F = JSON.parse(process.env.FIX || "{}");   // {agents, ilvl}
+const F = JSON.parse(process.env.FIX || "{}");   // {agents, ilvl, queues?, seat?}
 const nAgents = F.agents ?? 3, ilvl = F.ilvl ?? 10;
+// Optional: F.queues = [{tier, seats}], F.seat = [q per agent] (−1 = Bench). Default: everyone on one Backlog.
+const queues = F.queues ?? [{ tier: 0, seats: nAgents }], seat = F.seat ?? Array(nAgents).fill(0);
 const SLOTS = ["model", "memory", "compute", "tools"]; let seq = 100;
 const kit = () => Object.fromEntries(SLOTS.map(k => [k, { id: ++seq, slot: k, name: "fixture " + k, ilvl, patches: [], maxPatches: 2 }]));
-Object.assign(fixture, { intro: false, credits: 0, earned: 0, tasksDone: 0, tasksFailed: 0, xp: 0, xpNeed: 1e9, plot: 0, plotNeed: 1e9, up: Object.assign(fixture.up, { os: 0 }) });   // freeze level/stage so the 60 s window is stationary
-fixture.agents = Array.from({ length: nAgents }, (_, i) => ({ id: i + 1, name: i ? "bot" + i : "you", color: "#0ff", gear: kit(), inv: [], sanity: 100, q: 0, done: 0, failed: 0 }));
-fixture.queues = [{ tier: 0, seats: nAgents, mods: 0, configs: [] }];
+Object.assign(fixture, { intro: false, credits: 0, earned: 0, tasksDone: 0, tasksFailed: 0, xp: 0, xpNeed: 1e9, plot: 0, plotNeed: 1e9 });   // freeze level/stage so the 60 s window is stationary
+fixture.agents = Array.from({ length: nAgents }, (_, i) => ({ id: i + 1, name: i ? "bot" + i : "you", color: "#0ff", gear: kit(), inv: [], sanity: 100, q: seat[i], done: 0, failed: 0, rogue: null }));
+fixture.queues = queues.map(q => ({ tier: q.tier, seats: q.seats, mods: 0, configs: [] }));
+fixture.up.os = Math.max(...queues.map(q => q.tier));   // the OS that can own the highest queue (ILVL_CAP/HIRE_CAP consistent with the sim)
 await ev(`localStorage.setItem('vibehacker', ${JSON.stringify(JSON.stringify(fixture))}); document.cookie='vibehacker=;max-age=0'; localStorage.setItem=function(){}; 'ok'`);
 await send("Page.reload"); await sleep(3000);
 await ev(`delete localStorage.setItem; 'ok'`);

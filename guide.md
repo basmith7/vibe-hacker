@@ -54,7 +54,7 @@ Every stat starts at a floor of **10** and rises purely with the **item level** 
 slot (plus patches). So a fully-geared agent is simply an agent wearing high-ilvl, well-patched
 items — which is exactly what queues drop and what the IDE improves.
 
-### Sanity and burnout
+### Sanity and going rogue
 
 Each agent has its own **sanity** bar. Its maximum is `50 + 2 × Stamina`, and it regenerates
 continuously at `0.02 × Stamina` per second (faster with the *Well-Rested* patch or Deep Work).
@@ -62,10 +62,18 @@ continuously at `0.02 × Stamina` per second (faster with the *Well-Rested* patc
 - Every ticket costs a little sanity, **succeed or fail** — and a **failure costs far more**
   (roughly 30× the success cost). Running an agent on a queue it can't handle is therefore
   self-limiting: it will drain itself faster than it regenerates.
-- If an agent's sanity hits **zero** it **burns out** and takes a forced coffee break — it stops
-  working until its sanity has climbed back to **50%**, then resumes on its own.
-
-(A later phase turns burnout into agents going **rogue**; for now it's just downtime.)
+- If an agent's sanity hits **zero** it **goes rogue**. The one rogue mode so far is the
+  **💸 Embezzler**: it drops its ticket, stops working, and siphons **0.265% of your *current* bank
+  every second** (so it can never take you below zero — a bigger bank just bleeds faster). The
+  running total shows up in the Terminal every few seconds.
+- It **recovers on its own** once its sanity climbs back to **50%** — but sanity regenerates at
+  **half speed** while rogue, so a full unattended episode costs roughly a quarter of your bank
+  (more for a low-Stamina agent, which takes longer to recover).
+- Or **Kill -9** it: the button appears on its chip in the **Queues** app and its tile in **Agent
+  Swarm**. It costs `8 × (the summed item level of its gear)`, restarts the agent at **half sanity**,
+  and gives it a **20-second grace** during which it can't go rogue again. Rule of thumb: if your
+  bank is more than about **4× the Kill -9 price**, pay; if you're broke, wait it out.
+- This applies to **you** too — agent zero goes rogue like anyone else.
 
 ### Hiring and seats
 
@@ -75,12 +83,13 @@ Two separate purchases, both in the Store's **Team** section:
   one is a real step up. A new hire arrives with a **Junior starter kit** (ilvl 10 in all four
   slots) so it can work immediately. **Your OS caps the roster**: 1 agent on MS-DOS, 2 on
   Windows 3.1, 4 on Windows 95, 6 on Windows 10, 8 on NEON//OS, 10 on STARSHIP OS.
-- **🪑 Backlog Seat** — adds a seat on the Backlog queue. Cost is `150 × 2.2^(seats so far)`.
-  **An agent needs a seat to work**, so you buy these in step with hires; the hire button tells you
-  when you have no free seat.
+- **🪑 *Queue* Seat** — one card per board you own (one card each for the Backlog, Kanban, …). Cost is
+  `150 × 2.2^(seats so far) × 4^tier`, so seats on harder boards cost more. **An agent needs a seat
+  to work**, so you buy these in step with hires; if no seat is free the new hire waits on the
+  **Bench**. A board can't have more seats than your OS's hire cap.
 
-The **👥 Agents** app is the roster: one tile per agent showing its three stats, sanity bar, which
-queue it's seated on, and a **Select** button. The **selected** agent is the one the Equipment,
+The **🤖 Agent Swarm** app is the roster: one tile per agent showing its three stats, sanity bar, which
+queue it's seated on (or *Bench*), a **Select** button, and a **Kill -9** button while it's rogue. The **selected** agent is the one the Equipment,
 Inventory and IDE apps act on.
 
 ## Queues
@@ -97,8 +106,20 @@ everything about it:
 | 🗺 The Roadmap | 100 | NEON//OS |
 | 🏚 Legacy Monolith | 140 | STARSHIP OS |
 
-**Only the Backlog exists right now** — the other five are the roadmap; buying and seating them is
-the next phase of work.
+You start with the Backlog and nothing else; it's simply "the queue" your terminal works until you
+buy **📋 Open the Queues app** ($2,000, in Getting Started). That reveals the **Queues** app and the
+Store's whole **Team** section.
+
+- **Boards.** The Queues app shows one board per queue you own, plus the **🪑 Bench**. Every agent is
+  a chip on exactly one of them.
+- **Installing queues.** Each **Install <queue>** card in the Store (**$2K** Kanban, **$20K** Jira,
+  **$200K** PagerDuty, **$2M** The Roadmap, **$15M** Legacy Monolith) only appears once you own the
+  previous board, and needs the matching OS from the table above. A new board starts with one seat.
+- **Seating.** Click a chip and a picker lists every board with that agent's **success %**, **★**
+  and expected **$/s** there — or just drag the chip onto a board. Boards with no free seat are
+  greyed out. Reseating abandons the ticket in progress.
+- **The Bench.** A benched agent works nothing and regenerates sanity at the **full** rate — it's
+  where new hires wait when no seat is free, and a fine place to park an agent that keeps failing.
 
 For an agent on a queue of difficulty `D`:
 
@@ -140,7 +161,8 @@ quality-of-life toggles, mutable per type once owned), then the app unlocks: **�
 **🛠 Launch the IDE**, **🌐 Go Global**.
 
 ### Team
-**👥 Hire an Agent** and **🪑 Backlog Seat** — see **Hiring and seats** above.
+**👥 Hire an Agent**, **🪑 <Queue> Seat** (one per owned board) and **Install <Queue>** — see
+**Hiring and seats** and **Queues** above. The whole section appears once you own the Queues app.
 
 ### Rigs
 **🖥️ Upgrade OS** — the one remaining tier ladder, and the spine of the game. See **OS gates**
@@ -277,7 +299,7 @@ the tiled layout until you buy your way back up to Windows 3.1.
 ## Prestige (IPO / Equity)
 
 Once you've **earned $20,000** in a run, the Store's top card lets you **cash out**. This is a hard
-reset — credits, OS tier, hires, seats and **every agent's gear** go back to the very start — in
+reset — credits, OS tier, hires, seats, queues and **every agent's gear** go back to the very start — in
 exchange for permanent **Equity**, worth **+2% credits, forever**, stacking with every future
 cash-out.
 
@@ -300,7 +322,7 @@ as you play (popping a toast if you own **Push Notifications**, and always loggi
 Most of the list stays **hidden** until you're close: progress-based achievements (task counts,
 level thresholds, streaks, etc.) only appear once you're **75% of the way there**, so the panel
 doesn't open as a wall of distant goals. A few are single-trigger events with no meaningful
-"75%" (Touch Grass/burnout, Critical Hit, IPO Day) — those stay fully hidden until the instant
+"75%" (Touch Grass/watching an agent go rogue, Critical Hit, IPO Day) — those stay fully hidden until the instant
 you actually earn them. "Hello, World" is always visible as a first nudge.
 
 ## Saving
@@ -355,11 +377,11 @@ The **⚙ button** (top-right, next to **?**) opens a Settings panel — prefere
 
 ## A few tips
 
-- **Hires and seats go together.** A hire with no free seat can't work, and a seat with nobody in it
-  earns nothing — the Store tells you which one you're short of.
+- **Hires and seats go together.** A hire with no free seat sits on the Bench, and a seat with nobody
+  in it earns nothing — the Store tells you which one you're short of.
 - **Quality is the stat that gates everything else.** Below ~`0.8 × D` an agent fails so often it
-  drains its own sanity into a burnout loop; Speed and Tools only pay off on tickets you actually clear.
-- **Gear your weakest agent first.** Income is a *sum* over agents, so a burned-out or under-geared
+  drains its own sanity and goes rogue on repeat; Speed and Tools only pay off on tickets you actually clear.
+- **Gear your weakest agent first.** Income is a *sum* over agents, so a rogue or under-geared
   agent is a flat hole in your rate — not something your best agent makes up for.
 - **The OS ceiling is the real wall.** When your drops all come back at the same item level, you've hit
   it: buy the next OS tier rather than grinding more.

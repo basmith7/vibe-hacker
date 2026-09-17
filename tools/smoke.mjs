@@ -247,7 +247,7 @@ export const SCENARIOS = {
     const r = await click('#queuesBody .qchip[data-agent="1"] .k9'); assert(r === "ok", "Kill -9 button");
     await sleep(3500); const s3 = await readSave();
     assert(s3.agents[1].rogue === null, "Kill -9 clears rogue");
-    assert(Math.abs(s3.credits - (s2.credits - 320)) < 5, "Kill -9 cost $320 (" + s2.credits + " → " + s3.credits + ")");
+    assert(Math.abs(s3.credits - (s2.credits - 320)) < 12, "Kill -9 cost $320 within autosave drift (" + s2.credits + " → " + s3.credits + ")");
     assert(s3.agents[1].sanity >= 40, "restarted at ~half sanity (max 90 → 45), got " + s3.agents[1].sanity);
     assert(!("immune" in s3.agents[1]), "immune is not persisted");
     await sleep(10000); const s4 = await readSave();   // still inside the 20 s immunity: failures can't re-rogue it

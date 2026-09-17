@@ -195,8 +195,8 @@ function checks() {
   for (let t = 0; t + 1 < T.TIERS.length; t++) { const os = T.TIER_OS[t]; const top = Math.min(T.ILVL_CAP[os], T.BAND_TOP * T.TIERS[t + 1].D);
     for (const craft of [0, 1]) { const a = newAgent(top, 0); const sv = T.FLOOR + top * T.COEFF.model * (1 + craft * T.craftBonus); const D = T.TIERS[t + 1].D;
       const ch = succChance(sv, D); console.log(`    ${T.TIERS[t].name.padEnd(14)} top ilvl ${Math.round(top)} craft=${craft} → Q${Math.round(sv)} vs ${T.TIERS[t + 1].name} D${D}: ${Math.round(ch * 100)}% ${ch >= 0.9 ? "ok" : (ch >= 0.6 ? "meh" : "WALL")}`); } }
-  // Interior optimum: for gear levels across the range, which tier maximises income incl. rogue?
-  console.log("  best tier per gear level (income incl. rogue uptime); ✓ if best has ≥85% success:");
+  // Interior optimum: for gear levels across the range, which tier maximises income (net of Kill -9 per cycle)?
+  console.log("  best tier per gear level (income net of Kill -9 per cycle); ✓ if best has ≥85% success:");
   for (const il of [10, 20, 30, 45, 60, 80, 110, 150]) { const a = newAgent(il, 0); let best = null;
     const rows = T.TIERS.map((tier, ti) => { const r = agentRate(a, { tier: ti, seats: 1, mods: 0 }, 0, false); if (!best || r.credits > best.r.credits) best = { ti, r }; return `${tier.name.slice(0, 6)} ${Math.round(r.chance * 100)}%/${money(r.credits)}`; });
     console.log(`    ilvl ${String(il).padStart(3)}: best=${T.TIERS[best.ti].name} (${Math.round(best.r.chance * 100)}%, up ${Math.round(best.r.uptime * 100)}%) ${best.r.chance >= 0.85 ? "✓" : "✗ overreach pays"}   [${rows.join(" | ")}]`); }
@@ -215,9 +215,11 @@ function checks() {
     console.log(`    ilvl ${String(il).padStart(3)}: best=${T.TIERS[best.ti].name} ${Math.round(best.r.chance * 100)}% cycle ${best.r.cycle === Infinity ? "∞" : Math.round(best.r.cycle) + "s"} ${best.r.chance >= 0.85 ? "✓" : "✗ overreach pays"}`); }
 }
 
-if (args.probe) {   // same fixture as tools/validate-rate.mjs: N agents (agent zero idle) with uniform ilvl gear on Backlog
+if (args.probe) {   // same fixture as tools/validate-rate.mjs: N agents (agent zero idle) with uniform ilvl gear; FIX.queues/FIX.seat place them (−1 = Bench)
   const F = JSON.parse(process.env.FIX || "{}"); const n = F.agents ?? 3, il = F.ilvl ?? 10;
-  const S = initial(); S.queues[0].seats = n; for (let i = 1; i < n; i++) S.agents.push(newAgent(il, 0)); S.agents[0] = newAgent(il, 0); S.hires = n;
-  for (const k of [0, 2]) { let cr = 0, succ = 0, tot = 0; S.agents.forEach((a, i) => { const r = agentRate(a, S.queues[0], k, i === 0); cr += r.credits; succ += r.succ; tot += r.tps * r.uptime; });
+  const queues = F.queues ?? [{ tier: 0, seats: n }], seat = F.seat ?? Array(n).fill(0);
+  const S = initial(); S.os = Math.max(...queues.map(q => q.tier)); S.queues = queues.map(q => ({ tier: q.tier, seats: q.seats, mods: 0 }));
+  S.agents = Array.from({ length: n }, (_, i) => newAgent(il, seat[i])); S.hires = n;
+  for (const k of [0, 2]) { let cr = 0, succ = 0, tot = 0; S.agents.forEach((a, i) => { if (a.q < 0) return; const r = agentRate(a, S.queues[a.q], k, i === 0); cr += r.credits; succ += r.succ; tot += r.tps * r.uptime; });
     console.log(JSON.stringify({ kps: k, creditsPerSec: +cr.toFixed(2), tasksPerSec: +tot.toFixed(2), successRate: +(succ / Math.max(1e-9, tot)).toFixed(2) })); }
 } else if (args.checks) checks(); else run();

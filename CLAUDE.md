@@ -51,11 +51,14 @@ So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → `todo.md` **or** a n
 is the spec and the source of truth for where to pick up.** It restructures the game around two systems:
 a **Desktop** (your machine — the OS ladder, apps, queues and their seats) and **Agents** (a roster where
 every agent, including you, has the same sheet: three stats, four gear slots, its own inventory and
-sanity bar, and **no levels** — item level is the only progression axis). **Phase 1 is shipped on that
-branch**: `P.agents[]`/`P.queues[]`, the per-agent worker loop on the Backlog queue, hires and Backlog
-seats in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's ilvl band, and the removal of
-the old stat/skill-point system, Machine and AI Model ladders, global 8-slot rig, Toolbox roll, Mission
-Board and Legendaries. Phase 2 (queues as purchases, seating UI, rogue agents) is next.
+sanity bar, and **no levels** — item level is the only progression axis). **Phases 1 and 2 are shipped on
+that branch**: Phase 1 brought `P.agents[]`/`P.queues[]`, the per-agent worker loop on the Backlog queue,
+hires and Backlog seats in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's ilvl band,
+and the removal of the old stat/skill-point system, Machine and AI Model ladders, global 8-slot rig,
+Toolbox roll, Mission Board and Legendaries; Phase 2 added queues as Store purchases generated from
+`QUEUE_TIERS`, the Queues app (boards, chips, click-picker + drag seating through `seatAgent()`, the Bench
+at `a.q = -1`), and rogue agents (`ROGUE_MODES`, Embezzler, Kill -9 with immunity). Phase 3 (Configs +
+bounties) is next.
 
 **`main` still runs the previous game** and auto-deploys, so this branch merges only when the rewrite is
 playable end to end. Two earlier, fully-shipped plans describe what's on `main` and what Phase 1 replaced:
@@ -81,10 +84,18 @@ is orthogonal to the rewrite and still applies.
   (`UPG[].reqOs`), the window paradigm (`wmFloat()`) and retro item names. `osLock(u)` is the single check
   the Store uses; when gating something new behind an OS, hang it off that rather than a bespoke conditional.
 - **Agents and queues are the two state arrays.** `P.agents[]` — `{id, name, color, gear:{model,memory,
-  compute,tools}, inv, sanity, q, done, failed}`, agent zero is you (manual; hires are automatic) — and
-  `P.queues[]` — `{tier, seats, mods, configs}`, Backlog only so far. `P.selectedAgent` is what the
-  Equipment/Inventory/IDE apps act on; `P.craftSlot` is `{owner, item}`. The runtime-only fields `a.m`
-  (derived stats) and `a.down` (burnt out) are stripped in `save()` — never add them to `PERSIST`.
+  compute,tools}, inv, sanity, q (−1 = Bench), done, failed, rogue:{mode,t,stolen}|null}`, agent zero is
+  you (manual; hires are automatic) — and `P.queues[]` — `{tier, seats, mods, configs}`, one entry per
+  owned queue, installed in `QUEUE_TIERS` order. `P.selectedAgent` is what the Equipment/Inventory/IDE
+  apps act on; `P.craftSlot` is `{owner, item}`. The runtime-only fields `a.m` (derived stats) and
+  `a.immune` (Kill -9 grace) are stripped in `save()` — never add them to `PERSIST`.
+- **`seatAgent(a, qi)` is the only way an agent changes queue** after hire — it validates capacity via
+  `canSeat`, abandons the in-flight ticket, recomputes and rebuilds the Queues app. The click-picker and
+  drag-and-drop are both sugar over it. `seatedQueue(a)` returns `null` on the Bench; never fall back to
+  `P.queues[0]` (that would silently make the Bench the Backlog).
+- **Rogue is a table, not branches.** `ROGUE_MODES[mode].tick(a, dt, w)` runs at the top of `tickWorker`
+  (so it pauses with the boss key and never runs offline); new modes are rows. `goRogue`/`recoverRogue`/
+  `kill9` are the only transitions; `kill9Cost(a)` is `BAL.kill9PerIlvl × Σ gear ilvl`.
 - **`agentMult(a)` is the per-agent recompute.** It writes `a.m = {st, chance(D), dur(D), payout(D,q),
   sanityMax, regen}` from `agentStats(a)` (gear ilvl + patches + the `BAL.floor`), Equity and Deep Work.
   `recompute()` just loops every agent calling it — cheap, safe to over-call, call it after anything that
@@ -99,7 +110,10 @@ is orthogonal to the rewrite and still applies.
   the pattern that kept 7 phases of itemization additions easy — keep using it.
 - The Store/gear UI (`buildShop()`/`renderShop()`, `buildToolbox()`/`renderToolbox()`) rebuilds its DOM
   once and then just updates text/classes on a timer — look at the existing `slotEls`/`matEls`/etc.
-  caching pattern before adding a new section.
+  caching pattern before adding a new section. The Team cards (`q_<tier>` Install and `seat_<tier>`
+  Seat) are generated from `QUEUE_TIERS` at load rather than listed in `UPG` by hand, and `isRevealed()`
+  owns the whole Team section's visibility (hidden until the Queues app is bought; install cards need
+  the previous board; seat cards need their board).
 - **1920×1080 is the reference resolution.** Every font size/padding/border in the CSS is a fixed px
   value tuned for it. `fitScale()` sets a CSS `zoom` on `:root` for anything larger (capped at 3×),
   so the logical canvas stays ~1920 wide no matter the display; below the reference it holds at 1× and
@@ -130,8 +144,9 @@ new throwaway script unless none of them fits:
 
 - **`tools/smoke.mjs` is the verification entry point.** `node tools/smoke.mjs <scenario>` drives a real
   headless Chrome and prints `PASS`/`FAIL`. Current scenarios: `boots stateShape loopEarns storeHire
-  noOldSystems perAgentGear`. Run the whole set before calling a change done:
-  `for s in boots stateShape loopEarns storeHire noOldSystems perAgentGear; do node tools/smoke.mjs $s || break; done`
+  seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent bench rogue offline`. Run the whole set
+  before calling a change done (about 15 minutes):
+  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent bench rogue offline; do node tools/smoke.mjs $s || break; done`
   Add a scenario rather than weakening one.
 - **`tools/aq-sim.mjs` is the balance source of truth** — the expected-value model of the whole economy
   (`--checks` for the design-rule checks, `--table`, `--kps`, `--craft`, `--hours` for playthrough runs).
@@ -140,7 +155,10 @@ new throwaway script unless none of them fits:
   node tools/validate-rate.mjs 0 60` measures 60 s of live play for an N-agent Backlog fixture;
   `FIX='{"agents":3,"ilvl":10}' node tools/aq-sim.mjs --probe --craft 0` prints the model's number for the
   same state. They should agree within ~20% at kps 0; a bigger gap means a formula in one drifted from the
-  other. (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
+  other. Both accept `queues` (`[{tier, seats}]`) and `seat` (queue index per agent, `-1` = Bench) in `FIX`
+  for multi-queue states, e.g. `FIX='{"agents":3,"ilvl":30,"queues":[{"tier":0,"seats":2},{"tier":1,"seats":1}],"seat":[0,0,1]}'`.
+  A 60 s window is noisy (ticket completions are lumpy); use 120 s before calling a gap drift.
+  (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
 
 All of them use the same CDP recipe, which is also what to follow for an ad-hoc script:
 

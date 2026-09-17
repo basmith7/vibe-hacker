@@ -20,8 +20,9 @@ agent has the same small sheet: three stats (🎯 Quality, ⚡ Speed, 🧠 Stami
 **no agent levels** — an agent is exactly as good as the **item level** of the gear it's wearing,
 so the whole progression is drops and crafting. Quality versus the queue's difficulty sets success
 chance, Speed sets how fast a ticket clears, failures drain sanity, and an agent at zero sanity
-burns out and takes a coffee break until it recovers. Credits buy **hires**, **seats** on a queue,
-the apps themselves, and **OS tiers** — and the OS is the spine: it caps how many agents you can
+goes rogue — off the board and skimming your bank — until it recovers or you **Kill -9** it. Credits
+buy **hires**, **seats** on a queue, **queues** (boards you install), the apps themselves, and **OS
+tiers** — and the OS is the spine: it caps how many agents you can
 run and how high an item level you can even find.
 
 - **Starts tiny, grows wild.** You begin as a **full-screen terminal** that only moves when you type
@@ -30,8 +31,9 @@ run and how high an item level you can even find.
   hire agents, install telemetry, open the Inventory/Equipment/IDE, go global — and each one **tiles
   into the screen**, splitting the layout tmux-style as you grow.
 - **Queues** — 📥 Backlog → 🗂 Kanban → 📋 Jira → 📟 PagerDuty → 🗺 The Roadmap → 🏚 Legacy Monolith,
-  each harder and far richer than the last, each gated behind an OS tier. (Only the Backlog is
-  buyable so far.)
+  each harder and far richer than the last, each gated behind an OS tier — bought in order from the
+  Store, managed in the **Queues app** (click or drag agents between boards, or park them on the
+  Bench).
 - **Loot and crafting** — cleared tickets drop gear at the queue's item-level band. Spare gear lands
   in the finding agent's **🧰 Inventory**; stage anything in **🛠 The IDE** to spend materials on
   **patches** (Stock → Modded → Custom-Built).

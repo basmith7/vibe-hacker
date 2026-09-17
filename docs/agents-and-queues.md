@@ -23,29 +23,34 @@ save-version bump with no migration; the current game stays live on `main` until
 
 ## Status
 
-**Phase 1 shipped on branch `agents-and-queues` (2026-09-17).** The agent sheet, the Backlog queue and
-the per-agent loop are live: `P.agents[]`/`P.queues[]`, per-agent stats via `agentMult(a)`, hires and
-Backlog seats sold in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's item-level
+**Phases 1–2 shipped on branch `agents-and-queues` (2026-09-17).** Phase 1 put the agent sheet, the
+Backlog queue and the per-agent loop live: `P.agents[]`/`P.queues[]`, per-agent stats via `agentMult(a)`,
+hires and seats sold in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's item-level
 band, and the removal of the old stat/SP, Machine, AI Model, global rig, Toolbox, Mission and
-Legendary systems (`SAVE_VER` bumped, no migration). The economy skeleton is modelled in
-`tools/aq-sim.mjs` (see "Balance model") and the live game is checked against it with
-`tools/validate-rate.mjs` + `aq-sim.mjs --probe` (agreement within 8–15% at kps 0). **Next: Phase 2 —
-queues as purchases, seating UI, rogue proper.**
+Legendary systems (`SAVE_VER` bumped, no migration). Phase 2 (`SAVE_VER 9`) added: queues as Store
+purchases (Install/Seat cards generated from `QUEUE_TIERS`, gated behind the $2K Queues app and the
+previous board + OS); the Queues app (one board per owned queue plus the Bench at `a.q = -1`, chips,
+click-picker with per-board success/★/$-per-s and drag-to-seat, all through `seatAgent()`); the
+Embezzler rogue (`ROGUE_MODES`, steals a bank fraction per second, half-speed regen, self-recovers at
+50%) with Kill -9 (`8 × Σ gear ilvl`, restart at half sanity, 20 s immunity); offline earnings that skip
+rogue and benched agents; `BAL` rogue knobs derived in the sim's breakeven/overreach checks; and
+`validate-rate.mjs`/`--probe` accepting two-queue fixtures (`FIX.queues`/`FIX.seat`, agreement within
+~2–20% at kps 0 depending on sample length). Smoke suite is 13 scenarios. **Next: Phase 3 — Configs +
+bounties.**
 
-**Whole-branch review (2026-09-17) — residuals carried into Phase 2.** Not mergeable yet *by design*
-(one queue, no Queues app, no rogue/bounties; the only idle income is gated behind the $4K Win 3.1
-OS earned by typing). Deviation to know about: the Backlog *is* named on day one (agent tiles + the
-"Backlog Seat" Store line) — unavoidable while seats must be sellable; the Queues app in Phase 2 owns
-the reveal. Pacing-table caveat: the sim assumes typing until the first hire, so the "idle" rows are
+**Whole-branch review (2026-09-17) — residuals carried forward.** Not mergeable yet *by design*
+(no bounties/Configs yet). ~~Backlog named on day one via the "Backlog Seat" Store line~~ — closed in
+Phase 2: the Team section is hidden until the Queues app is bought, so `isRevealed()` owns the reveal.
+Pacing-table caveat: the sim assumes typing until the first hire, so the "idle" rows are
 really "type until Win 3.1, then idle"; the pre-Win3.1 segment in the live game is ~13 min of typing.
 Open minors (none block Phase 2 work): Store header shows a permanent `+$0/s` from the vestigial
 `MULT.passive`; 5 Hz `innerHTML` rebuilds of the stash/IDE buttons can drop a click that straddles a
 tick; dead `rollEls`/stale `buildToolbox` + `isRevealed` comments and unreachable `legendary` styling;
 the Merge orb can never light in Phase 1 (gated on the Senior queue); `tools/smoke.mjs` doesn't await
 `Page.reload` and leaks Chrome on an unknown scenario name; `aq-sim.mjs` should model the 5%×3 crit
-(most of the 8–15% gap) and default `--probe` to `--craft 0`. Untested paths worth a scenario in
-Phase 2: burnout → coffee break → recovery, prestige, unequip/decommission, IDE craft actions on the
-new `craftSlot` shape, inventory cap, offline earnings.
+(most of the 8–15% gap) and default `--probe` to `--craft 0`. Untested paths worth a scenario:
+~~burnout → coffee break → recovery~~ (now the `rogue` scenario), prestige, unequip/decommission, IDE
+craft actions on the new `craftSlot` shape, inventory cap, ~~offline earnings~~ (now `offline`).
 
 Treat this doc as a living, resumable record (as with `crafting-update.md` and `window-manager.md`)
 — the phase checkboxes are the source of truth for where to pick back up.
@@ -330,10 +335,10 @@ faucet is thinner than the model's endgame assumes.
 - [x] Sim `rate()` rewritten; first pacing pass. Validator re-specified for the new state shape.
 
 ### Phase 2 — Queues as purchases
-- [ ] Queue table (tier band, seats, cost, OS gate); Queues app; Store sells queues and seats.
-- [ ] Drag-to-seat UI with per-queue expected-success readout; OS caps ilvl and hires; drops/bounties roll ilvl from queue tier.
-- [ ] Payout curve, sanity drain on failure; rogue state (single mode) + Kill -9 + auto-recover.
-- [ ] Hire line (with starter kit) separate from seats; OS caps hires.
+- [x] Queue table (tier band, seats, cost, OS gate); Queues app; Store sells queues and seats.
+- [x] Drag-to-seat UI with per-queue expected-success readout; OS caps ilvl and hires; drops/bounties roll ilvl from queue tier.
+- [x] Payout curve, sanity drain on failure; rogue state (single mode) + Kill -9 + auto-recover.
+- [x] Hire line (with starter kit) separate from seats; OS caps hires.
 
 ### Phase 3 — Queue Configs + bounties
 - [ ] Config item type, 2–3 slots per queue, mod `PATCH_DEFS`; IDE bench crafts them.
