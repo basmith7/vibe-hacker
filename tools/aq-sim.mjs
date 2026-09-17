@@ -27,7 +27,11 @@ const T = Object.assign({
   PAY: 1.0, PAYK: 1.5,
   DROP: 0.10,               // drop chance per successful ticket
   c: 0.3, REGEN: 0.02, FAIL_MULT: 3,   // drain/ticket = D·c·(0.1 + FAIL_MULT·(1−chance)); regen = REGEN·Stamina /s
-  rogueTax: 0.5,            // fraction of that agent's would-be income lost per rogue cycle (incidents)
+  // Rogue (Phase 2, Embezzler): while rogue an agent steals ROGUE_STEAL × bank per second and regens
+  // sanity at ROGUE_REGEN × normal until 50% of sanityMax. Kill -9 costs KILL9_PER_ILVL × Σ gear ilvl
+  // and restarts the agent at half sanity with ROGUE_IMMUNE s of immunity. See doc §3/§4.
+  ROGUE_STEAL: 0.00265, ROGUE_REGEN: 0.5, KILL9_PER_ILVL: 8, ROGUE_IMMUNE: 20,
+  SANITY_BASE: 50, SANITY_PER_STAMINA: 2,   // sanityMax = SANITY_BASE + SANITY_PER_STAMINA × Stamina (mirrors BAL)
   MOD_D: 0.12, MOD_PAY: 1.15, MOD_ILVL: 0.12, MOD_MAX: 3,   // per mod: D ×(1+MOD_D·n), payout ×MOD_PAY^n, drop band ×(1+MOD_ILVL·n)
   BAND_TOP: 0.92,           // tier t drops up to BAND_TOP × next tier's D (uncrafted gear alone should NOT reach 95% at t+1)
   surge: 0.15,              // agents speed ×(1 + surge·(surgeLevel)) — small
@@ -80,14 +84,19 @@ function agentRate(a, q, kps, isZero) {
   const payout = T.PAY * Math.pow(D, T.PAYK) * queuePay(q) * S.tools;
   const drainPerTicket = D * T.c * (0.1 + T.FAIL_MULT * (1 - chance));
   const drain = tps * drainPerTicket, regen = T.REGEN * S.stamina;
-  const uptime = drain <= regen ? 1 : (regen / drain) * (1 - T.rogueTax) ;   // cycling rogue costs incidents too
-  const succ = tps * chance * uptime;
-  return { chance, dur, tps, uptime, credits: succ * payout, succ, D, drain, regen };
+  // Overreach (drain > regen): the agent burns from half sanity to zero, is instantly Kill -9'd back
+  // to half, and repeats — full uptime, but every cycle costs kill9Cost. Income = gross − kill9/cycle.
+  const sanityMax = T.SANITY_BASE + T.SANITY_PER_STAMINA * S.stamina;
+  const kill9 = T.KILL9_PER_ILVL * SLOTS.reduce((s, k) => s + a.gear[k], 0);
+  const cycle = drain <= regen ? Infinity : (0.5 * sanityMax) / (drain - regen);
+  const uptime = 1, killCost = cycle === Infinity ? 0 : kill9 / cycle;
+  const succ = tps * chance;
+  return { chance, dur, tps, uptime, credits: Math.max(0, succ * payout - killCost), succ, D, drain, regen, cycle, kill9 };
 }
 function rate(S, kps = KPS) {
   if (S.agents.length === 1) kps = Math.max(kps, 2);   // nothing moves until you type; assume typing until the first hire
   let cr = 0, succByQ = S.queues.map(() => 0);
-  S.agents.forEach((a, i) => { const q = S.queues[a.q]; const r = agentRate(a, q, kps, i === 0); cr += r.credits; succByQ[a.q] += r.succ; });
+  S.agents.forEach((a, i) => { if (a.q < 0) return; const q = S.queues[a.q]; const r = agentRate(a, q, kps, i === 0); cr += r.credits; succByQ[a.q] += r.succ; });
   return { credits: cr, succByQ };
 }
 
@@ -96,7 +105,7 @@ function bandTop(S, q) { const t = q.tier; return Math.min(T.ILVL_CAP[S.os], T.B
 function stepGear(S, dt, kps) {
   // each seated agent: expected drops per sec = succ·DROP; a drop is a random slot with ilvl ~U[D, top].
   // Expected best-of-n keeps its equipped ilvl converging toward `top`; model as exponential approach.
-  S.agents.forEach((a, i) => { const q = S.queues[a.q]; const r = agentRate(a, q, kps, i === 0);
+  S.agents.forEach((a, i) => { if (a.q < 0) return; const q = S.queues[a.q]; const r = agentRate(a, q, kps, i === 0);
     const drops = r.succ * T.DROP * dt / SLOTS.length, top = bandTop(S, q), lo = T.TIERS[q.tier].D;
     for (const s of SLOTS) { if (a.gear[s] >= top) continue;
       // P(drop beats current) · E[improvement | beats]
@@ -136,7 +145,7 @@ function optimiseSeating(S, kps) {
   const used = S.queues.map(() => 0);
   for (const i of order) { let best = -1, br = -1;
     S.queues.forEach((q, qi) => { if (used[qi] >= q.seats) return; const r = agentRate(S.agents[i], { ...q, mods: safeMods(S.agents[i], q) }, kps, i === 0).credits + (i === 0 && kps === 0 ? (S.queues.length - qi) * 1e-6 : 0); if (r > br) { br = r; best = qi; } });
-    if (best < 0) best = S.agents[i].q; S.agents[i].q = best; used[best]++; }
+    S.agents[i].q = best; if (best >= 0) used[best]++; }   // best < 0 = no free seat anywhere → Bench
   // mods per queue = the most every seated agent can run at ≥90% (Configs are re-socketable)
   S.queues.forEach((q, qi) => { const seated = S.agents.filter(a => a.q === qi); if (!seated.length) return; q.mods = Math.min(...seated.map(a => safeMods(a, q))); });
 }
@@ -148,7 +157,7 @@ function printTable(S) {
   const R = rate(S);
   console.log(`\n  payback @ ${fmtT(S.t)}  OS${S.os}  rate ${money(R.credits)}/s  agents ${S.agents.length}  queues ${S.queues.map(q => T.TIERS[q.tier].name + "[" + q.seats + "s," + q.mods + "m]").join(" ")}`);
   for (const o of options(S).sort((a, b) => a.payback - b.payback)) console.log(`    ${o.id.padEnd(28)} ${money(o.cost).padStart(8)}  Δ${money(o.d)}/s  payback ${o.payback === Infinity ? "   ∞" : fmtT(o.payback).padStart(7)}  afford ${fmtT(Math.max(0, o.cost - S.credits) / Math.max(1e-9, R.credits))}`);
-  console.log("    agents: " + S.agents.map((a, i) => { const s = stats(a); const r = agentRate(a, S.queues[a.q], KPS, i === 0); return `${i === 0 ? "you" : "#" + i}@${T.TIERS[S.queues[a.q].tier].name} Q${Math.round(s.quality)} ${Math.round(r.chance * 100)}% up${Math.round(r.uptime * 100)}%`; }).join(" | "));
+  console.log("    agents: " + S.agents.map((a, i) => { const s = stats(a); const r = agentRate(a, S.queues[Math.max(0, a.q)], KPS, i === 0); return `${i === 0 ? "you" : "#" + i}@${(a.q < 0 ? "Bench" : T.TIERS[S.queues[a.q].tier].name)} Q${Math.round(s.quality)} ${Math.round(r.chance * 100)}% up${Math.round(r.uptime * 100)}%`; }).join(" | "));
 }
 function run() {
   const S = initial(); const log = [];
@@ -191,6 +200,19 @@ function checks() {
   for (const il of [10, 20, 30, 45, 60, 80, 110, 150]) { const a = newAgent(il, 0); let best = null;
     const rows = T.TIERS.map((tier, ti) => { const r = agentRate(a, { tier: ti, seats: 1, mods: 0 }, 0, false); if (!best || r.credits > best.r.credits) best = { ti, r }; return `${tier.name.slice(0, 6)} ${Math.round(r.chance * 100)}%/${money(r.credits)}`; });
     console.log(`    ilvl ${String(il).padStart(3)}: best=${T.TIERS[best.ti].name} (${Math.round(best.r.chance * 100)}%, up ${Math.round(best.r.uptime * 100)}%) ${best.r.chance >= 0.85 ? "✓" : "✗ overreach pays"}   [${rows.join(" | ")}]`); }
+  // Kill -9 breakeven: a full unattended rogue (0 → 50% sanity at ROGUE_REGEN × regen) must lose ≥ 25% of the
+  // bank at every Stamina, so at bank = 4 × kill9Cost paying beats waiting. ROGUE_STEAL is calibrated at endgame
+  // Stamina (highest ilvl cap); lower Stamina recovers slower and therefore loses more — that's intended.
+  console.log("  Kill -9 breakeven (loss of bank over a full unattended rogue; need ≥ 25% everywhere):");
+  for (const il of [10, 20, 30, 45, 60, 80, 110, 150, 175]) { const a = newAgent(il, 0); const S = stats(a);
+    const sanityMax = T.SANITY_BASE + T.SANITY_PER_STAMINA * S.stamina, regen = T.REGEN * S.stamina * T.ROGUE_REGEN;
+    const Trec = 0.5 * sanityMax / regen, loss = 1 - Math.exp(-T.ROGUE_STEAL * Trec), kill9 = T.KILL9_PER_ILVL * il * SLOTS.length;
+    console.log(`    ilvl ${String(il).padStart(3)}: recover ${Math.round(Trec)}s  loss ${Math.round(loss * 100)}%  kill9 ${money(kill9)} (= ${Math.round(kill9 / Math.max(1e-9, agentRate(a, { tier: 0, seats: 1, mods: 0 }, 0, false).credits))}s of Backlog income) ${loss >= 0.25 ? "✓" : "✗ waiting beats Kill -9"}`); }
+  // Overreach with instant Kill -9: the best tier per gear level (income net of kill9/cycle) must still be a ≥85% one.
+  console.log("  overreach with instant Kill -9 (net of kill9 per cycle); ✓ if best tier has ≥85% success:");
+  for (const il of [10, 20, 30, 45, 60, 80, 110, 150]) { const a = newAgent(il, 0); let best = null;
+    T.TIERS.forEach((tier, ti) => { const r = agentRate(a, { tier: ti, seats: 1, mods: 0 }, 0, false); if (!best || r.credits > best.r.credits) best = { ti, r }; });
+    console.log(`    ilvl ${String(il).padStart(3)}: best=${T.TIERS[best.ti].name} ${Math.round(best.r.chance * 100)}% cycle ${best.r.cycle === Infinity ? "∞" : Math.round(best.r.cycle) + "s"} ${best.r.chance >= 0.85 ? "✓" : "✗ overreach pays"}`); }
 }
 
 if (args.probe) {   // same fixture as tools/validate-rate.mjs: N agents (agent zero idle) with uniform ilvl gear on Backlog
