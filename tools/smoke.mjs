@@ -63,6 +63,16 @@ export const SCENARIOS = {
     assert(typeof s.ver === "number", "save has no ver");
     assert(s.intro === true, "fresh game should be in intro");
   },
+  async stateShape() {
+    const s = await boot();
+    assert(s.ver === 8, "SAVE_VER must be 8, got " + s.ver);
+    assert(Array.isArray(s.agents) && s.agents.length === 1, "fresh save has exactly one agent (you)");
+    const a = s.agents[0];
+    for (const k of ["model", "memory", "compute", "tools"]) assert(a.gear[k] && a.gear[k].ilvl === 10, "agent zero starter " + k + " ilvl 10");
+    assert(Array.isArray(a.inv), "agent has inv"); assert(typeof a.sanity === "number", "agent has sanity"); assert(a.q === 0, "agent seated in queue 0");
+    assert(Array.isArray(s.queues) && s.queues.length === 1 && s.queues[0].tier === 0 && s.queues[0].seats === 1, "one Backlog queue with one seat");
+    assert(s.selectedAgent === 0, "selectedAgent defaults to 0");
+  },
 };
 
 const name = process.argv[2];

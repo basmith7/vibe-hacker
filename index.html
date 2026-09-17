@@ -988,7 +988,51 @@
   // real capability, not just a reskin. HIRE_CAP = max "Hire an Agent" tier per OS (DOS is
   // single-tasking: one agent; Win3.1 cooperative multitasking: two; Win95 preemptive: four; ...).
   // Slot unlocks live in SLOTS[].os; Automation items carry a reqOs. osLock(u) is the one gate check.
-  const HIRE_CAP=[1,2,4,6,7,7];
+  /* ============ Agents & Queues (docs/agents-and-queues.md) ============ */
+  // Three stats, all derived from gear — no levels, no skill points. Balance numbers: doc "Balance model".
+  const AGENT_STATS=[
+    {id:"quality", lbl:"Quality", em:"🎯", color:"#c77dff", expl:"Quality — success chance vs the queue's difficulty (and crit). Fed by the Model slot."},
+    {id:"speed",   lbl:"Speed",   em:"⚡", color:"#00e5ff", expl:"Speed — how fast tickets clear. Fed by the Compute slot."},
+    {id:"stamina", lbl:"Stamina", em:"🧠", color:"#39ff14", expl:"Stamina — sanity pool and regen; failures drain it, zero means burnout. Fed by the Memory slot."},
+  ];
+  const ASTAT=Object.fromEntries(AGENT_STATS.map(s=>[s.id,s])), ASTAT_IDS=AGENT_STATS.map(s=>s.id);
+  const AGENT_SLOTS=[
+    {id:"model",   lbl:"Model",   em:"🤖", stat:"quality"},
+    {id:"memory",  lbl:"Memory",  em:"🧠", stat:"stamina"},
+    {id:"compute", lbl:"Compute", em:"⚙️", stat:"speed"},
+    {id:"tools",   lbl:"Tools",   em:"🧰", stat:null},      // wildcard: credit multiplier + misc patches
+  ];
+  const ASLOT=Object.fromEntries(AGENT_SLOTS.map(s=>[s.id,s])), ASLOT_IDS=AGENT_SLOTS.map(s=>s.id);
+  // Queue tiers: D = base difficulty; drops roll ilvl in [D, BAL.bandTop × next D]. Phase 1 only sells Backlog seats.
+  const QUEUE_TIERS=[
+    {id:"backlog",  name:"Backlog",         D:10,  os:0, em:"📥"},
+    {id:"kanban",   name:"Kanban",          D:25,  os:1, em:"🗂"},
+    {id:"jira",     name:"Jira",            D:45,  os:2, em:"📋"},
+    {id:"pager",    name:"PagerDuty",       D:70,  os:3, em:"📟"},
+    {id:"roadmap",  name:"The Roadmap",     D:100, os:4, em:"🗺"},
+    {id:"monolith", name:"Legacy Monolith", D:140, os:5, em:"🏚"},
+  ];
+  const BAL={   // every tunable from tools/aq-sim.mjs, in one place
+    floor:10, coeff:{model:1,memory:1,compute:1,tools:0.004},
+    succK:1.25, succMax:0.95, durBase:4, durPerD:0.3, speedDiv:40, durMin:1.1, durMax:16, cooldown:0.7, surgeSpeed:0.15,
+    payK:1.5, modPay:1.15, modD:0.12, modIlvl:0.12,
+    drainC:0.3, drainWork:0.1, drainFail:3, regenK:0.02, sanityBase:50, sanityPerStamina:2,
+    drop:0.10, bandTop:0.92, starterIlvl:10,
+    hireBase:150, hireGrowth:3.2, seatBase:150, seatGrowth:2.2, seatTierMult:4,
+    typeProg:0.09,   // fraction of agent zero's ticket one keypress completes (unchanged from today's mashCode)
+  };
+  const HIRE_CAP=[1,2,4,6,8,10];          // total agents incl. you, per OS tier
+  const OS_COSTS=[0,4000,40000,400000,3000000,24000000];
+  function queueTier(q){ return QUEUE_TIERS[q.tier]; }
+  function queueD(q){ return queueTier(q).D*(1+(q.mods||0)*BAL.modD); }
+  function queueBandTop(q){ const t=q.tier, next=QUEUE_TIERS[t+1]?QUEUE_TIERS[t+1].D:QUEUE_TIERS[t].D*1.4;
+    return Math.min(ILVL_CAP[clamp(P.up.os,0,ILVL_CAP.length-1)], BAL.bandTop*next*(1+(q.mods||0)*BAL.modIlvl)); }
+  function starterItem(slotId){ return {id:++P.itemSeq, slot:slotId, name:"Hand-me-down "+ASLOT[slotId].lbl, ilvl:BAL.starterIlvl, patches:[], maxPatches:2}; }
+  function newAgent(who, q){
+    const a={id:++P.agentSeq, name:who.name, color:who.color, gear:{}, inv:[], sanity:100, q:q||0, done:0, failed:0};
+    for(const s of AGENT_SLOTS) a.gear[s.id]=starterItem(s.id);
+    return a;
+  }
 
   /* ============ Hardware slots (crafting update Phase 3 — structural only, no patches yet) ============ */
   // os = the Upgrade OS tier (index into OS_TIERS) that opens the slot. Ordered by unlock so the
@@ -1058,7 +1102,7 @@
   }
   // crafting update Phase 7 — item level ceiling tied to your OS tier, so upgrading your rig raises
   // the cap on how good gear you can even find, not just its own flat multiplier.
-  const ILVL_CAP=[40,80,140,220,340,520];
+  const ILVL_CAP=[30,55,85,125,175,9999];
   function initialMaxPatches(ilvl){ return ilvl>=60?4:ilvl>=25?3:2; }   // higher-ilvl drops have more room to patch
   function rollPatchTier(def,ilvl){
     const weights=[70,25,5], avail=[];
@@ -1211,7 +1255,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ state + persistence (cookie, with localStorage fallback) ============ */
-  const SAVE_VER=7;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
+  const SAVE_VER=8;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
   // window-manager Phase 2 — default floating-window geometry per app (relative to the #grid canvas).
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
@@ -1259,6 +1303,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       up:{hire:0,skill:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
+      agentSeq:0, agents:null,   // seeded right after construction (newAgent needs P.itemSeq) — see below
+      queues:[{tier:0,seats:1,mods:0,configs:[]}], selectedAgent:0,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       missions:[], sprintConfig:0, missionSeq:0,
@@ -1271,9 +1317,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       achv:{},seenTips:{shop:false,sp:false}};
   }
   let P=defaults();
+  function seedAgents(){ if(!P.agents||!P.agents.length){ P.agents=[newAgent({name:"you",color:"#eafff0"},0)]; } }
+  seedAgents();
   const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
+    "agentSeq","agents","queues","selectedAgent",
     "materials","matPity","missions","sprintConfig","missionSeq",
     "themeChoice","unlocked","unlockedStats","intro","reveal","notify","settings","windows","achv","seenTips"];
   function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true,achievements:true}; P.unlockedStats=STAT_IDS.slice(); }
@@ -1293,6 +1342,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!d||typeof d!=="object") return "stale";
     if(d.ver!==SAVE_VER){ STALE_VER=d.ver; return "stale"; }
     for(const k of PERSIST) if(k in d) P[k]=d[k];
+    seedAgents();
     for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
     const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
     if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
