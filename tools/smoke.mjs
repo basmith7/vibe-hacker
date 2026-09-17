@@ -224,6 +224,35 @@ export const SCENARIOS = {
     r = await click('#qpicker .qopt[data-q="1"]'); await sleep(500);
     assert((await readSave()).agents[0].q === 0, "clicking a full board does nothing");
   },
+  // An agent that can't hold its queue goes rogue: it stops working, embezzles credits every second, and Kill -9
+  // (priced off its gear) restarts it at half sanity with immunity. Covers the Phase 1 residual burnout → recovery path.
+  async rogue() {
+    const kit = k => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: 10, patches: [], maxPatches: 2 });
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      // ilvl 10 kit → Quality 20 vs Kanban D25 → 25% success; sanity 5 → the first failure (-23) sends it rogue
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [], sanity: 5, q: 1, done: 0, failed: 0, rogue: null });
+      s.queues = [{ tier: 0, seats: 1, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+    let s1, waited = 0;
+    while (waited < 60000) { await sleep(3000); waited += 3000; s1 = await readSave(); if (s1.agents[1].rogue) break; }
+    assert(s1.agents[1].rogue && s1.agents[1].rogue.mode === "embezzler", "bot went rogue within 60s");
+    assert(s1.rogues === 1, "P.rogues counted it");
+    const c1 = s1.credits, done1 = s1.agents[1].done + s1.agents[1].failed;
+    await sleep(6000); const s2 = await readSave();
+    assert(s2.credits < c1, "Embezzler drains credits while rogue (" + c1 + " → " + s2.credits + ")");
+    assert(s2.stolen > 0 && s2.agents[1].rogue.stolen > 0, "stolen counters accumulate");
+    assert(s2.agents[1].done + s2.agents[1].failed === done1, "rogue agent works no tickets");
+    assert(await ev(`document.querySelector('#queuesBody .qchip[data-agent="1"]').classList.contains('rogue')`), "chip shows rogue");
+    const k9 = await ev(`document.querySelector('#queuesBody .qchip[data-agent="1"] .k9').textContent`);
+    assert(/Kill -9 \$320/.test(k9), "Kill -9 priced at 8 × 40 ilvl = $320, got " + k9);
+    const r = await click('#queuesBody .qchip[data-agent="1"] .k9'); assert(r === "ok", "Kill -9 button");
+    await sleep(3500); const s3 = await readSave();
+    assert(s3.agents[1].rogue === null, "Kill -9 clears rogue");
+    assert(Math.abs(s3.credits - (s2.credits - 320)) < 5, "Kill -9 cost $320 (" + s2.credits + " → " + s3.credits + ")");
+    assert(s3.agents[1].sanity >= 40, "restarted at ~half sanity (max 90 → 45), got " + s3.agents[1].sanity);
+    assert(!("immune" in s3.agents[1]), "immune is not persisted");
+    await sleep(10000); const s4 = await readSave();   // still inside the 20 s immunity: failures can't re-rogue it
+    assert(s4.agents[1].rogue === null && s4.agents[1].sanity >= 1, "immune agent cannot go rogue again yet");
+  },
 };
 
 const name = process.argv[2];

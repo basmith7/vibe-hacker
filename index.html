@@ -255,6 +255,7 @@
   .agent{display:flex;flex-direction:column;min-height:0;border:1px solid var(--edge);border-radius:6px;background:#070c16;overflow:hidden;transition:border-color .2s,box-shadow .2s}
   .agent.win{border-color:var(--green);box-shadow:0 0 16px rgba(57,255,20,.35) inset}
   .agent.fail{border-color:var(--red);box-shadow:0 0 16px rgba(255,43,94,.35) inset}
+  .agent.rogue{border-color:var(--red);box-shadow:0 0 16px rgba(255,43,94,.35) inset} .agent .k9{font-size:9px;padding:1px 6px}
   .agent .ah{display:flex;align-items:center;gap:7px;padding:3px 7px;font-size:10.5px;border-bottom:1px solid rgba(22,35,61,.7)}
   .agent .ah .nm{font-weight:700;white-space:nowrap}
   .agent .ah .tk{color:var(--txt);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -2403,19 +2404,36 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-info","▶","═══ "+name+" ═══"); addXp(30);
     HUD.stage.textContent=name; save();
   }
-  // Rogue modes (Phase 2 ships one; Phase 4 adds rows, escalation and Countermeasures — never branches here).
+  // Rogue modes (doc §3). Phase 2 ships one; Phase 4 adds rows, escalation and Countermeasures — never branches here.
+  // tick(a,dt,w) runs at the top of tickWorker for every rogue agent (benched too), so it pauses with the boss key
+  // and never runs offline (offlineEarnings skips rogues).
   const ROGUE_MODES={
-    embezzler:{lbl:"Embezzler", em:"💸", desc:"siphons a slice of your bank every second", tick(a,dt,w){}},
+    embezzler:{lbl:"Embezzler", em:"💸", desc:"siphons a slice of your bank every second",
+      tick(a,dt,w){ const take=Math.min(P.credits,P.credits*BAL.rogueSteal*dt); if(take<=0) return;
+        P.credits-=take; a.rogue.stolen+=take; P.stolen+=take;
+        if(w){ w.dripT=(w.dripT||0)+dt; if(w.dripT>=10){ w.dripT=0; termLine("t-bad","💸",agentLabel(a)+" embezzled "+money(a.rogue.stolen)+" so far — Kill -9 for "+money(kill9Cost(a))); } } }},
   };
-  function kill9(a){}   // real one in Task 7
   function goRogue(a){
     P.rogues++; a.rogue={mode:"embezzler",t:0,stolen:0}; a.sanity=0; P.streak=0;
-    const w=WK[P.agents.indexOf(a)]; if(w) w.task=null;
-    celebrate("☠ "+a.name.toUpperCase()+" WENT ROGUE","#ff2b5e"); if(a===agentZero()) flashHp();
-    toast("☠ Rogue",a.name+" is off the board until sanity is back to 50%","#ff2b5e","progress");
-    termLine("t-bad","☠",a.name+" went ROGUE — sanity hit zero"); save();
+    const w=WK[P.agents.indexOf(a)]; if(w){ w.task=null; w.dripT=0; w.el.classList.remove("win","fail","crit"); w.tk.textContent="gone rogue"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; }
+    const M=ROGUE_MODES[a.rogue.mode], nm=agentLabel(a);
+    celebrate("☠ "+nm.toUpperCase()+" WENT ROGUE","#ff2b5e"); if(a===agentZero()) flashHp();
+    toast("☠ Rogue — "+M.lbl, nm+" "+M.desc+" · Kill -9 for "+money(kill9Cost(a))+" or wait it out", "#ff2b5e","progress");
+    termLine("t-bad","☠",nm+" went ROGUE ("+M.em+" "+M.lbl+") — sanity hit zero");
+    renderAgentSheets(); renderQueues(); save();
   }
-  function recoverRogue(a,how){ a.rogue=null; termLine("t-info","☕",a.name+" "+how); }
+  function recoverRogue(a,how){
+    const st=a.rogue.stolen; a.rogue=null;
+    termLine("t-info","☕",agentLabel(a)+" "+how+(st>0?" — embezzled "+money(st)+" in total":""));
+    renderAgentSheets(); renderQueues(); save();
+  }
+  function kill9(a){
+    if(!a.rogue) return; const c=kill9Cost(a);
+    if(P.credits<c){ toast("💸 Can't afford Kill -9","need "+money(c)+" — or wait for sanity to recover","#ffb000","system"); return; }
+    P.credits-=c; if(!a.m) agentMult(a); a.sanity=a.m.sanityMax*0.5; a.immune=BAL.rogueImmune;
+    recoverRogue(a,"was killed -9 and restarted at half sanity ("+BAL.rogueImmune+"s immunity) for "+money(c));
+    toast("⚡ Kill -9",agentLabel(a)+" restarted · "+money(c),"#00e5ff","system"); renderShop();
+  }
 
   /* ============ workers ============ */
   const WK=[];   // one worker per P.agents entry, same index. Slot 0 = "you" (manual) → terminal pane; 1+ → agents app
@@ -2430,15 +2448,16 @@ notify("#general", "10x-ing that shit 🔥");`,
       el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
         <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
         <div class="sheet">${AGENT_STATS.map(s=>`<span class="ss" title="${s.expl}" style="color:${s.color}">${s.em}<b data-stat="${s.id}">0</b></span>`).join("")}
-          <span class="sanity" title="sanity"><i></i></span><span class="qn"></span><button class="buy sel" data-act="select" data-agent="${i}">Select</button></div>
+          <span class="sanity" title="sanity"><i></i></span><span class="qn"></span><button class="buy sel" data-act="select" data-agent="${i}">Select</button><button class="buy k9" data-act="kill9" data-agent="${i}"></button></div>
         <div class="code"></div><div class="prog"><i></i></div>`;
       (manual&&manualWrap?manualWrap:autoList).appendChild(el);
       const w={i,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
         dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
         sheet:el.querySelector(".sheet"),stat:Object.fromEntries(ASTAT_IDS.map(id=>[id,el.querySelector(`[data-stat="${id}"]`)])),
-        san:el.querySelector(".sanity i"),qn:el.querySelector(".qn"),sel:el.querySelector(".sel"),
+        san:el.querySelector(".sanity i"),qn:el.querySelector(".qn"),sel:el.querySelector(".sel"),k9:el.querySelector(".k9"),
         task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
       w.sel.addEventListener("click",e=>{e.stopPropagation();selectAgent(i);});
+      w.k9.addEventListener("click",e=>{e.stopPropagation();kill9(a);});
       w.nm.textContent=manual?"you ⌨️":a.name; WK.push(w);
     });
     renderAgentSheets();
@@ -2451,6 +2470,8 @@ notify("#general", "10x-ing that shit 🔥");`,
       for(const id of ASTAT_IDS) w.stat[id].textContent=Math.round(a.m.st[id]);
       w.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%"; w.san.parentElement.classList.toggle("low",a.sanity/a.m.sanityMax<0.28);
       const sq=seatedQueue(a); w.qn.textContent=(sq?queueTier(sq).name:"Bench")+(a.rogue?" · ☠ ROGUE":"");
+      w.el.classList.toggle("rogue",!!a.rogue);
+      w.k9.style.display=a.rogue?"":"none"; if(a.rogue){ const k=kill9Cost(a); w.k9.textContent="Kill -9 "+money(k); w.k9.disabled=P.credits<k; }
       w.sel.classList.toggle("on",w.i===P.selectedAgent); w.sel.textContent=w.i===P.selectedAgent?"Selected":"Select"; }
   }
   const workerAgent=w=>P.agents[w.i];
