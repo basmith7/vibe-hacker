@@ -265,6 +265,27 @@
   .agent .sheet .sanity{flex:1;height:5px;background:#0b1220;border-radius:3px;overflow:hidden;min-width:30px}
   .agent .sheet .sanity i{display:block;height:100%;background:var(--green);transition:width .3s}
   .agent .sheet .sanity.low i{background:var(--red)}
+  /* ---- Queues app (A&Q Phase 2): one board per owned queue + the Bench; agents are chips ---- */
+  #queuesPanel{display:flex;flex-direction:column}
+  #queuesBody{flex:1;min-height:0;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px}
+  .qboard{border:1px solid var(--edge);border-radius:6px;padding:5px 7px;background:rgba(11,18,32,.6)}
+  .qboard.bench{border-style:dashed;opacity:.85}
+  .qboard.over{border-color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.35) inset}
+  .qhead{display:flex;align-items:center;gap:6px;font-size:10.5px;margin-bottom:4px}
+  .qhead .qname{color:var(--txt)} .qhead .qmeta{color:var(--dim);margin-left:auto;font-size:9.5px;white-space:nowrap}
+  .qseats{display:flex;flex-wrap:wrap;gap:5px}
+  .qseat.empty{border:1px dashed var(--edge);border-radius:14px;padding:3px 9px;font-size:9.5px;color:var(--dim)}
+  .qchip{position:relative;display:flex;align-items:center;gap:5px;border:1px solid var(--edge);border-radius:14px;padding:3px 8px;font-size:10px;cursor:grab;user-select:none;background:#0b1220;touch-action:none}
+  .qchip .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac)}
+  .qchip .nm{font-weight:700;color:var(--ac)} .qchip .pct{color:var(--amber)}
+  .qchip .san{width:34px;height:4px;background:#0b1220;border:1px solid var(--edge);border-radius:2px;overflow:hidden} .qchip .san i{display:block;height:100%;background:var(--green)}
+  .qchip.rogue{border-color:var(--red);box-shadow:0 0 10px rgba(255,43,94,.4)} .qchip.rogue .pct{color:var(--red)}
+  .qchip .k9{display:none;font-size:9px;padding:1px 6px;margin-left:2px} .qchip.rogue .k9{display:inline-block}
+  .qchip.dragging{pointer-events:none;opacity:.8;z-index:60;cursor:grabbing}
+  .qpicker{position:absolute;top:100%;left:0;margin-top:4px;min-width:210px;z-index:70;display:flex;flex-direction:column;gap:2px;padding:5px;background:#0b1220;border:1px solid var(--edge);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:default}
+  .qopt{display:flex;justify-content:space-between;gap:10px;padding:4px 7px;border-radius:4px;font-size:10px;cursor:pointer;white-space:nowrap}
+  .qopt:hover{background:rgba(0,229,255,.12)} .qopt.cur{color:var(--green)} .qopt.full{opacity:.45;cursor:not-allowed}
+  .qopt span{color:var(--dim)}
   .agent .sheet .qn{color:#5b6b86}
   .agent .sheet .sel{padding:1px 7px;font-size:10px}
   .agent .sheet .sel.on{background:var(--green);color:#000}
@@ -758,6 +779,11 @@
       <div id="agentList"></div>
     </section>
 
+    <section class="panel" id="queuesPanel" data-app="queues">
+      <div class="head"><span class="dot"></span> QUEUES <span class="spacer"></span><span class="tag" id="queuesTag">1 board</span></div>
+      <div id="queuesBody"></div>
+    </section>
+
     <section class="panel" id="chartsPanel" data-app="telemetry">
       <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag" id="teleTag">$0 · +$0/s</span></div>
       <div id="chartsBody">
@@ -1183,8 +1209,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     telemetry:   {c:0, r:3, h:2, z:5},
     equipment:   {c:0, r:5, h:2, z:7},
     agents:      {c:1, r:0, h:3, z:2},
-    deploy_mesh: {c:1, r:3, h:2, z:4},
-    achievements:{c:1, r:5, h:2, z:11},
+    deploy_mesh: {c:1, r:3, h:1, z:4},
+    queues:      {c:1, r:4, h:2, z:12},
+    achievements:{c:1, r:6, h:1, z:11},
     status:      {c:2, r:0, h:3, z:3},
     inventory:   {c:2, r:3, h:4, z:6},
     store:       {c:3, r:0, h:3, z:10},
@@ -1837,6 +1864,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
     {id:"equipment",   panelId:"equipPanel",    order:6, emoji:"🔧", title:"Equipment",   unlocked:()=>!!P.unlocked.equipment},
     {id:"ide",         panelId:"idePanel",      order:7, emoji:"🛠", title:"The IDE",     unlocked:()=>!!P.unlocked.ide},
+    {id:"queues",      panelId:"queuesPanel",   order:8, emoji:"📋", title:"Queues",      unlocked:()=>!!P.unlocked.queues},
     {id:"deploy_mesh", panelId:"globePanel",    order:9, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
     {id:"telemetry",   panelId:"chartsPanel",   order:10,emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
     {id:"achievements",panelId:"achievementsPanel",order:11,emoji:"🏆",title:"Achievements",unlocked:()=>!!P.unlocked.achievements},
