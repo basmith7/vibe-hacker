@@ -1307,6 +1307,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   function osLock(u){   // OS tier index the NEXT purchase of u needs, or null if not locked
     let need=null;
     if(u.kind==="hire") need=HIRE_CAP.findIndex(c=>c>=P.agents.length+1);   // -1 only past the last cap, which upCost already nulls
+    // A seat nobody can ever sit in is a day-one credit trap: gate it on the OS that could hire into it.
+    else if(u.kind==="seat"){ const n=HIRE_CAP.findIndex(c=>c>=P.queues[0].seats+1); need=n<0?null:n; }
     else if(u.reqOs!=null) need=u.reqOs;
     return (need!=null && need>P.up.os)?need:null;
   }
@@ -1391,7 +1393,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     body.appendChild(pc);
     pc.querySelector("#eqBtn").addEventListener("click",e=>{ e.stopPropagation();
       if(!canPrestige()) return;
-      if(confirm("Cash out now?\n\nResets credits, OS, seats, hires and every agent\u2019s gear — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
+      if(confirm("Cash out now?\n\nResets credits, OS, seats, hires and every agent\u2019s gear — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
     });
     // upgrades
     for(const u of UPG){
@@ -1666,7 +1668,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
     HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
-    toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% XP & credits","#39ff14");
+    toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% credits","#39ff14");
     termLine("t-git","💰","IPO #"+P.ipos+" — banked "+g+" Equity (total "+P.equity+" · +"+(P.equity*2)+"%)");
     renderShop(); save();
   }

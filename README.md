@@ -35,8 +35,8 @@ run and how high an item level you can even find.
 - **Loot and crafting** — cleared tickets drop gear at the queue's item-level band. Spare gear lands
   in the finding agent's **🧰 Inventory**; stage anything in **🛠 The IDE** to spend materials on
   **patches** (Stock → Modded → Custom-Built).
-- **Prestige** — once you've earned $20K you can **IPO / cash out** for **Equity**, a permanent XP &
-  credit multiplier, and start a fresh, stronger run. Plus **20 achievements**.
+- **Prestige** — once you've earned $20K you can **IPO / cash out** for **Equity**, a permanent
+  **+2% credits** multiplier, and start a fresh, stronger run. Plus **20 achievements**.
 - **Evolving UI, bought not given.** Buy **🖥️ Upgrade OS** to move your rig through computing history:
   **MS-DOS → Windows 3.1 → Windows 95 → Windows 10 → NEON//OS → STARSHIP OS**. Each purchase switches
   your look immediately — click the OS name (top-left) anytime to switch back to any look you've

@@ -104,6 +104,17 @@ export const SCENARIOS = {
     assert(s1.agents[1].gear.model.ilvl === 10 && s1.agents[1].q === 0, "hire has starter kit and sits on Backlog");
     assert(s1.credits < 10000 - 150, "credits were spent");
   },
+  // On MS-DOS (hire cap 1) the Backlog Seat card must be OS-locked: a seat you cannot fill is a credit trap.
+  async seatGate() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 5000; s.maxCredits = 5000; s.reveal = { credits: true, shop: true, store: true }; /* up.os stays 0 = MS-DOS */ }});
+    assert(s0.queues[0].seats === 1, "fixture starts with one seat");
+    await click('[data-upg="seat"] .buy');
+    await sleep(3500);
+    const s1 = await readSave();
+    assert(s1.queues[0].seats === 1, "seat must not be buyable on MS-DOS (hire cap 1), got seats=" + s1.queues[0].seats);
+    const txt = await ev(`document.querySelector('[data-upg="seat"] .buy').textContent`);
+    assert(txt.includes("\u{1F512}"), "seat buy button should show a lock, got: " + txt);
+  },
   async noOldSystems() {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 5000; s.maxCredits = 5000; s.reveal = { credits: true, shop: true, store: true };
       s.unlocked = { telemetry: true, globe: true, status: true, inventory: true, equipment: true, ide: true, achievements: true };

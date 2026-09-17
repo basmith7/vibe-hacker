@@ -278,7 +278,7 @@ the tiled layout until you buy your way back up to Windows 3.1.
 
 Once you've **earned $20,000** in a run, the Store's top card lets you **cash out**. This is a hard
 reset — credits, OS tier, hires, seats and **every agent's gear** go back to the very start — in
-exchange for permanent **Equity**, worth **+2% XP and credits, forever**, stacking with every future
+exchange for permanent **Equity**, worth **+2% credits, forever**, stacking with every future
 cash-out.
 
 Equity earned is `floor(√(total earned ÷ 15,000) + your highest queue tier)`. Bigger, longer runs
