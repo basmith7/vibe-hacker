@@ -260,6 +260,14 @@
   .agent .ah .tk{color:var(--txt);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .agent .ah .sTag{font-size:9px;padding:1px 6px;border-radius:10px;border:1px solid currentColor;opacity:.95;white-space:nowrap}
   .agent .ah .diff{font-size:9px;color:var(--amber);letter-spacing:-1px;white-space:nowrap}
+  .agent .sheet{display:flex;align-items:center;gap:8px;padding:2px 7px;font-size:10.5px;border-bottom:1px solid rgba(22,35,61,.7)}
+  .agent .sheet .ss b{margin-left:2px}
+  .agent .sheet .sanity{flex:1;height:5px;background:#0b1220;border-radius:3px;overflow:hidden;min-width:30px}
+  .agent .sheet .sanity i{display:block;height:100%;background:var(--green);transition:width .3s}
+  .agent .sheet .sanity.low i{background:var(--red)}
+  .agent .sheet .qn{color:#5b6b86}
+  .agent .sheet .sel{padding:1px 7px;font-size:10px}
+  .agent .sheet .sel.on{background:var(--green);color:#000}
   .agent .code{flex:1;overflow:hidden;padding:4px 8px;font-size:11px;white-space:pre-wrap;word-break:break-word;position:relative}
   .agent .code::after{content:"▊";color:var(--green);animation:blink .8s steps(1) infinite}
   .agent .prog{height:3px;background:#0a1120}
@@ -506,7 +514,7 @@
   body.intro.reveal-credits #statusbar .stat.credits{display:flex;animation:reveal .5s ease-out}
   body.intro #hud{display:none}
   body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
-  body.intro .agent .ah .sTag,body.intro .agent .ah .diff{display:none}
+  body.intro .agent .ah .sTag,body.intro .agent .ah .diff,body.intro .agent .sheet{display:none}
   /* day-1 immersive terminal — only until the Store reveals at 10 credits; after that the terminal is
      a normal tile beside the Store. Strips the terminal's chrome + build log and enlarges the mash surface. */
   body.intro:not(.reveal-shop) #terminalPanel{border:none;border-radius:0}
@@ -1427,10 +1435,21 @@ notify("#general", "10x-ing that shit 🔥");`,
   // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
   // unequipped candidates (filterable card list rather than a spatial grid — see the plan's
   // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
-  function buildToolbox(){   // builds The IDE app (bench + materials). Equipment/Inventory become per-agent apps in Task 6.
-    const ideBody=$("#ideBody");
-    if(!ideBody) return;
-    ideBody.innerHTML=""; slotEls={}; rollEls={};
+  function buildToolbox(){   // builds the Equipment, Inventory and IDE apps — all three render the selected agent
+    const eqBody=$("#equipBody"), invBody=$("#inventoryBody"), ideBody=$("#ideBody");
+    if(!eqBody||!invBody||!ideBody) return;
+    eqBody.innerHTML=invBody.innerHTML=ideBody.innerHTML=""; slotEls={}; rollEls={};
+    // Equipment app — the selected agent's four hardware slots
+    const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; eqBody.appendChild(eh);
+    for(const sl of AGENT_SLOTS){
+      const card=document.createElement("div"); card.className="card slotCard"; card.draggable=true; card.title="Drag me onto the IDE bench socket to craft";
+      card.innerHTML=`<span class="em">${sl.em}</span><div class="mid"><div class="nm">${sl.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
+      eqBody.appendChild(card);
+      card.addEventListener("dragstart",e=>{ if(!selectedAgent().gear[sl.id]){e.preventDefault();return;} benchPayload="eq:"+sl.id; e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragend",()=>{benchPayload=null;});
+      card.querySelector(".buy").addEventListener("click",e=>{ e.stopPropagation(); unequipSlot(selectedAgent(),sl.id); });
+      slotEls[sl.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn:card.querySelector(".buy")};
+    }
     // The IDE app — the crafting bench (item in the middle, materials ringed around it) + materials
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 Crafting Bench"; ideBody.appendChild(ih);
     const bench=document.createElement("div"); bench.className="bench"; bench.id="benchWrap";
@@ -1465,6 +1484,9 @@ notify("#general", "10x-ing that shit 🔥");`,
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
+    // Inventory app — the selected agent's stash
+    const sh=document.createElement("div"); sh.className="shopCat"; sh.id="invCat"; invBody.appendChild(sh);
+    const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; invBody.appendChild(stash);
     toolboxBuilt=true; renderToolbox();
   }
   function patchSummary(item){
@@ -1494,24 +1516,33 @@ notify("#general", "10x-ing that shit 🔥");`,
     ring.style.setProperty("--coreH",Math.round(Math.max(104,(ry-oh/2)*2-14))+"px");
   }
   // one entry point for both drag sources: a stash item id, or "eq:<slot>" for an equipped item
-  function dropOnBench(payload){ return; }   // Task 6 rewires the bench to per-agent inventories
+  function dropOnBench(payload){
+    if(!payload) return;
+    if(payload.startsWith("eq:")){ const a=selectedAgent(), sid=payload.slice(3), it=a.gear[sid]; if(!it) return;
+      if(P.craftSlot){ const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); }
+      a.gear[sid]=null; P.craftSlot={owner:a.id,item:it}; recompute(); save(); renderShop(); }
+    else sendToCraftSlot(selectedAgent(),Number(payload));
+  }
   function renderIdeCard(){
     const core=$("#benchCore"), acts=$("#benchActs"), mods=$("#benchMods"); if(!core||!acts||!mods) return;
-    const it=P.craftSlot;
+    const it=P.craftSlot&&P.craftSlot.item;
     core.dataset.rarity=it?rarityOf(it):"";
     core.classList.toggle("empty",!it);
     if(it){
       core.innerHTML=`<span class="cEm">${ASLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
         `<span class="cSub">Lv ${it.ilvl} · ${ASLOT[it.slot].lbl}</span>`+
-        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`;
-      acts.innerHTML="";
+        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`+
+        `<span class="cSub">${agentById(P.craftSlot.owner).name}'s</span>`;
+      acts.innerHTML=`<button class="buy" id="ideEquip">Equip on ${agentById(P.craftSlot.owner).name}</button><button class="buy" id="ideBack">Back to inventory</button>`;
+      acts.querySelector("#ideEquip").addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
+      acts.querySelector("#ideBack").addEventListener("click",e=>{e.stopPropagation();returnCraftSlot();});
       const rows=it.patches.map(p=>{ const d=PATCH_DEFS[p.id];
         return `<div class="modRow card"><span class="mN">${d.lbl}</span><span class="mV">${d.fmt(p.value)}</span><span class="mT">T${p.tier+1}</span></div>`; });
       for(let i=it.patches.length;i<it.maxPatches;i++) rows.push(`<div class="modRow card open">open patch slot</div>`);
       mods.innerHTML=rows.join("");
     } else {
       core.innerHTML=`<span class="cEm">🛠</span><span class="cNm">Empty socket</span>`+
-        `<span class="cSub">drag hardware here from Inventory or Equipment — or use its “→ IDE” button</span>`;
+        `<span class="cSub">drag gear here from the selected agent's Inventory or Equipment — or use its “→ IDE” button</span>`;
       acts.innerHTML=""; mods.innerHTML="";
     }
     const cost=it?craftCost(it):0;
@@ -1537,8 +1568,53 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function renderToolbox(){
     if(!toolboxBuilt) return;
-    renderMaterials(); renderIdeCard();
+    const a=selectedAgent(); if(!a.m) agentMult(a);
+    const equipCat=$("#equipCat"); if(equipCat) equipCat.textContent="🔧 "+a.name+"'s rig";
+    for(const sl of AGENT_SLOTS){ const el=slotEls[sl.id]; if(!el) continue; const item=a.gear[sl.id];
+      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name+" · "+patchSummary(item); el.btn.disabled=false; }
+      else { el.lv.textContent=""; el.fx.textContent="empty — "+(sl.stat?ASTAT[sl.stat].lbl+" falls to the floor":"no credit bonus"); el.btn.disabled=true; } }
+    const invCat=$("#invCat"); if(invCat) invCat.textContent="🧰 "+a.name+"'s inventory ("+a.inv.length+"/"+INV_CAP+")";
+    renderMaterials(); renderIdeCard(); renderStashList();
   }
+  function renderStashList(){
+    const wrap=$("#stashList"); if(!wrap) return; const a=selectedAgent();
+    const items=a.inv.slice().sort((x,y)=>y.ilvl-x.ilvl);
+    if(!items.length){ wrap.innerHTML=`<div class="stashEmpty">${a.name} has nothing stashed — clearing tickets drops gear at the queue's item level.</div>`; return; }
+    wrap.innerHTML=items.map(it=>`<div class="card stashCard" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${ASLOT[it.slot].em}</span>`+
+      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${ASLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
+      `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
+    wrap.querySelectorAll(".stashCard").forEach(card=>{ const id=Number(card.dataset.id);
+      card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragend",()=>{benchPayload=null;});
+      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromInv(a,id);});
+      card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(a,id);});
+      card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(a,id);}); });
+  }
+  /* ---- per-agent item operations (Equipment / Inventory / IDE socket) ---- */
+  function equipItem(a,item){
+    const old=a.gear[item.slot]; if(old){ a.inv.push(old); enforceInvCap(a); }
+    a.gear[item.slot]=item; recompute();
+    toast("🔧 "+a.name+" equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" to inventory":""),"#4d8cff");
+    termLine("t-git","🔧",a.name+" equipped "+item.name+" → "+ASLOT[item.slot].lbl);
+  }
+  function equipFromInv(a,itemId){ const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return; equipItem(a,a.inv.splice(i,1)[0]); save(); renderShop(); }
+  function unequipSlot(a,slotId){ const it=a.gear[slotId]; if(!it) return; a.inv.push(it); enforceInvCap(a); a.gear[slotId]=null; recompute(); save(); renderShop(); }
+  function decommissionItem(a,itemId){
+    const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return;
+    const item=a.inv.splice(i,1)[0], refund=salvageValue(item), matGain=Math.max(1,Math.round(item.ilvl/15));
+    P.credits+=refund; P.materials.commit=(P.materials.commit||0)+matGain;
+    toast("♻️ Decommissioned",item.name+" → +"+money(refund)+" · +"+matGain+" Commit","#5b6b86"); termLine("t-dim","♻",a.name+" decommissioned "+item.name);
+    save(); renderShop();
+  }
+  const agentById=id=>P.agents.find(a=>a.id===id)||agentZero();
+  function sendToCraftSlot(a,itemId){
+    const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return;
+    if(P.craftSlot){ const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); }
+    P.craftSlot={owner:a.id,item:a.inv.splice(i,1)[0]};
+    termLine("t-git","🛠",a.name+" sent "+P.craftSlot.item.name+" to the IDE"); save(); renderShop();
+  }
+  function returnCraftSlot(){ if(!P.craftSlot) return; const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); P.craftSlot=null; save(); renderShop(); }
+  function equipFromCraftSlot(){ if(!P.craftSlot) return; const o=agentById(P.craftSlot.owner), it=P.craftSlot.item; P.craftSlot=null; equipItem(o,it); save(); renderShop(); }
   function renderStore(){   // Store app content — runs on the timer whenever the store is on screen
     if(!shopBuilt) return;
     const sb=$("#storeBal"); if(sb) sb.textContent=money(P.credits)+" · +"+money(MULT.passive)+"/s";
@@ -2094,7 +2170,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     return true;
   }
   function craftAddPatch(){
-    const it=P.craftSlot; if(!it||it.patches.length>=it.maxPatches) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||it.patches.length>=it.maxPatches) return;
     const ids=availablePatchIds(it); if(!ids.length) return;
     if(!spendCraftMaterial("commit",craftCost(it))) return;
     const id=pick(ids);
@@ -2105,7 +2181,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftHotfix(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     if(!spendCraftMaterial("hotfix",craftCost(it))) return;
     const p=pick(it.patches), def=PATCH_DEFS[p.id];
     p.value=def.tiers[p.tier]*rand(0.9,1.1);
@@ -2115,7 +2191,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftRefactor(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     const idx=(Math.random()*it.patches.length)|0;
     const have=new Set(it.patches.filter((_,i)=>i!==idx).map(p=>p.id));
     const ids=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===it.slot)&&!have.has(id); });
@@ -2128,7 +2204,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftFullRewrite(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     const n=it.patches.length, pool=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return d.slot===null||d.slot===it.slot; });
     if(!spendCraftMaterial("rewrite",craftCost(it))) return;
     const chosen=[];
@@ -2140,7 +2216,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftRevert(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     if(!spendCraftMaterial("revert",craftCost(it))) return;
     it.patches=[];
     recompute();
@@ -2149,7 +2225,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftAddSlot(){
-    const it=P.craftSlot; if(!it||it.maxPatches>=4) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||it.maxPatches>=4) return;
     if(!spendCraftMaterial("merge",craftCost(it)*2)) return;   // adding a slot is more impactful than any single reroll — priced accordingly
     it.maxPatches++;
     toast("🔗 Feature Branch Merged",it.name+" now holds "+it.maxPatches+" patches","#39ff14");
@@ -2195,13 +2271,29 @@ notify("#general", "10x-ing that shit 🔥");`,
       const el=document.createElement("div"); el.className="agent"+(manual?" manual":"");
       el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
         <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
+        <div class="sheet">${AGENT_STATS.map(s=>`<span class="ss" title="${s.expl}" style="color:${s.color}">${s.em}<b data-stat="${s.id}">0</b></span>`).join("")}
+          <span class="sanity" title="sanity"><i></i></span><span class="qn"></span><button class="buy sel" data-act="select" data-agent="${i}">Select</button></div>
         <div class="code"></div><div class="prog"><i></i></div>`;
       (manual&&manualWrap?manualWrap:autoList).appendChild(el);
       const w={i,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
         dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
+        sheet:el.querySelector(".sheet"),stat:Object.fromEntries(ASTAT_IDS.map(id=>[id,el.querySelector(`[data-stat="${id}"]`)])),
+        san:el.querySelector(".sanity i"),qn:el.querySelector(".qn"),sel:el.querySelector(".sel"),
         task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
+      w.sel.addEventListener("click",e=>{e.stopPropagation();selectAgent(i);});
       w.nm.textContent=manual?"you ⌨️":a.name; WK.push(w);
     });
+    renderAgentSheets();
+  }
+  // The Equipment / Inventory / IDE apps all act on one agent at a time — the one picked here.
+  function selectedAgent(){ return P.agents[clamp(P.selectedAgent|0,0,P.agents.length-1)]; }
+  function selectAgent(i){ P.selectedAgent=clamp(i,0,P.agents.length-1); renderAgentSheets(); renderShop(); save(); }
+  function renderAgentSheets(){
+    for(const w of WK){ const a=workerAgent(w); if(!a) continue; if(!a.m) agentMult(a);
+      for(const id of ASTAT_IDS) w.stat[id].textContent=Math.round(a.m.st[id]);
+      w.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%"; w.san.parentElement.classList.toggle("low",a.sanity/a.m.sanityMax<0.28);
+      w.qn.textContent=queueTier(P.queues[a.q]||P.queues[0]).name+(a.down?" · ☕ down":"");
+      w.sel.classList.toggle("on",w.i===P.selectedAgent); w.sel.textContent=w.i===P.selectedAgent?"Selected":"Select"; }
   }
   const workerAgent=w=>P.agents[w.i];
   const workerQueue=w=>P.queues[workerAgent(w).q]||P.queues[0];
@@ -2304,7 +2396,7 @@ notify("#general", "10x-ing that shit 🔥");`,
 
     // Store is an always-on app → refresh its cards on the timer; the Toolbox drawer refreshes only when open
     // Store + Toolbox apps are on-screen tiles/windows → refresh their cards on the timer
-    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); }
+    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); renderAgentSheets(); }
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }

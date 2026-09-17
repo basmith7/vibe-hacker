@@ -116,6 +116,27 @@ export const SCENARIOS = {
     for (const app of ["terminal", "status", "store", "ide", "telemetry", "achievements", "deploy_mesh"]) assert(open.includes(app), "app not visible: " + app);
     assert(typeof s1.achv === "object", "achievements object present");
   },
+  // Select the hired agent, equip a better Model from its inventory via the Equipment/Inventory apps, see Quality rise.
+  async perAgentGear() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 100; s.reveal = { credits: true, shop: true, store: true };
+      s.unlocked.inventory = true; s.unlocked.equipment = true; s.unlocked.ide = true; s.up.u_inv = 1; s.up.u_equip = 1; s.up.u_ide = 1;
+      const kit = k => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: 10, patches: [], maxPatches: 2 });
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [{ id: 99, slot: "model", name: "Big Model", ilvl: 40, patches: [], maxPatches: 3 }], sanity: 100, q: 0, done: 0, failed: 0 });
+      s.queues[0].seats = 2; }});
+    let r = await click('.agent .sheet [data-act="select"][data-agent="1"]'); assert(r === "ok", "select button on hired agent's tile");
+    await sleep(300);
+    r = await click('#inventoryBody .stashCard[data-id="99"] [data-act="equip"]'); assert(r === "ok", "equip button for inventory item 99");
+    await sleep(3500);
+    const s1 = await readSave();
+    assert(s1.selectedAgent === 1, "selectedAgent persisted");
+    assert(s1.agents[1].gear.model.id === 99, "Big Model equipped on agent 1");
+    assert(s1.agents[1].inv.some(it => it.id === 60), "old kit model (id 60) returned to inventory");
+    const q = await ev(`document.querySelector('.agent .sheet [data-agent="1"]').closest('.sheet').querySelector('[data-stat="quality"]').textContent`);
+    assert(Number(q) >= 50, "Quality shown >= 50 after equipping ilvl 40 Model, got " + q);
+    r = await click('#inventoryBody .stashCard[data-id="60"] [data-act="ide"]'); assert(r === "ok", "send to IDE");
+    await sleep(3500); const s2 = await readSave();
+    assert(s2.craftSlot && s2.craftSlot.item.id === 60 && s2.craftSlot.owner === 2, "craft slot holds item 60 owned by agent id 2");
+  },
 };
 
 const name = process.argv[2];
