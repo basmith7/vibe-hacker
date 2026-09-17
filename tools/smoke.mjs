@@ -253,6 +253,24 @@ export const SCENARIOS = {
     await sleep(10000); const s4 = await readSave();   // still inside the 20 s immunity: failures can't re-rogue it
     assert(s4.agents[1].rogue === null && s4.agents[1].sanity >= 1, "immune agent cannot go rogue again yet");
   },
+  // While the tab is closed only seated, sane agents earn; a rogue neither steals nor recovers; the Bench earns nothing.
+  async offline() {
+    const kit = (k, il) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 2 });
+    const mk = (id, name, q, extra) => Object.assign({ id, name, color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 10)])), inv: [], sanity: 100, q, done: 0, failed: 0, rogue: null }, extra);
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      s.up.offline = 1; s.lastReal = Date.now() - 3600 * 1000;   // an hour away with Cloud Sync
+      s.agents.push(mk(2, "worker", 0), mk(3, "thief", 0, { sanity: 0, rogue: { mode: "embezzler", t: 0, stolen: 0 } }), mk(4, "bench", -1));
+      s.queues = [{ tier: 0, seats: 3, mods: 0, configs: [] }]; }});
+    const gain = s0.earned;   // offline gain is credited at boot, before the fixture's reload-save
+    assert(gain > 0, "seated sane agent earned offline");
+    // credits = 1000 + offline gain + ≤7 s of live play; the rogue steals live at ~0.26%/s, so allow 3%
+    assert(Math.abs((s0.credits - 1000) - s0.earned) < 0.03 * s0.credits + 1, "no offline steal: credits " + s0.credits + " vs earned " + s0.earned);
+    assert(s0.agents[2].rogue && s0.agents[2].sanity < 5, "rogue state frozen while away (no offline recovery)");
+    assert(s0.stolen < 0.03 * s0.credits + 1, "rogue stole nothing offline");
+    assert(s0.agents[3].done === 0, "benched agent did nothing");
+    const rate1 = gain / 3600;   // per second, at the game's 50% offline efficiency
+    assert(rate1 < 20, "gain must be ONE ilvl-10 Backlog agent's rate (~$2–3/s at 50%), got " + rate1.toFixed(2) + "/s");
+  },
 };
 
 const name = process.argv[2];

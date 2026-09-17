@@ -2860,10 +2860,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!P.up.offline || !P.lastReal) return;
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
     if(el<30) return;
-    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; if(a.rogue||a.q<0) continue; if(!a.m) agentMult(a); const q=P.queues[a.q], D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown); }
+    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; const q=seatedQueue(a); if(a.rogue||!q) continue; if(!a.m) agentMult(a); const D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown); }
     const gain=Math.floor(perSec*el*0.5);   // offline runs at a flat 50% until the Modem-equivalent returns
     if(gain>0){ P.credits+=gain; P.earned+=gain;
-      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)");
+      const idle=P.agents.slice(1).filter(a=>a.rogue||a.q<0).length;
+      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away"+(idle?" · "+idle+" rogue/benched sat out":"")+")");
       showWelcomeBack(el,gain);   // full "while you were away" summary modal (replaces the old toast)
     }
   }
