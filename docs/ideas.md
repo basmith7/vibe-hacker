@@ -29,14 +29,10 @@ The agent picks the destination based on size; when in doubt, ask.
 
 * Walk me though the code. I'd like to understand the architecture better.
 * set my computer to not sleep when claude is working
-* "slack" as a purchasable item, should have insane messages about really dumb sales people storeies, and project managers saying "nothing from my end" and it should hurt productivity while its open.  
 
 ## 📥 Ready
 
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
-* much later in the process, i want mini games. rogue, bbs adventure game, solitare, etc. 
 
-_(nothing pending — batch routed 2026-07-07: espresso/assist→gear and achievements-as-app → todo.md;
-title-bar/taskbar merge + credits/clock bottom-right → window-manager.md queued. Two were already
-shipped: "start menu only shows purchased apps" = playtest-batch-5's apps-only Start Menu; "better
-default window layout" = playtest-batch-6's non-overlapping grid.)_
+_(nothing pending — batch routed 2026-09-16: mini-games, Claude Auto endgame, training-data model,
+and Slack app → todo.md Gameplay depth, all W7.)_

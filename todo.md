@@ -75,6 +75,23 @@ on the Cooling and Neural Interface slots + item-level ceiling.)*
 - [ ] **[W7·L]** Agent **personalities / specializations** (each agent better at certain stats).
 - [ ] **[W7·M]** **Buffs/debuffs** with durations (crunch mode, weekend, coffee crash).
 - [ ] **[W7·M]** Difficulty / challenge modes (ironman: no burnout recovery).
+- [ ] **[W7·M]** **🧠 Training Data → train your own model** (routed from `ideas.md` 📥 2026-09-16). A new
+      collectable material (`MATS` entry, dropped by tasks/missions like the others) that you feed into a
+      **Train** action; the resulting model's quality scales with **the hardware you're training on**
+      (equipped `GEAR`/OS tier) **and how much data you feed it**. Open: is the model a new equip slot,
+      a `P.up`-style level, or a multiplier in `recompute()`? Instant, or a timed job in the idle loop?
+- [ ] **[W7·S]** **💬 Slack as a purchasable app** (routed from `ideas.md` 2026-09-16). A window that
+      streams unhinged messages — dumb sales-people stories, PMs saying "nothing from my end" — and
+      **hurts productivity while it's open** (a negative multiplier in `recompute()` gated on the window
+      being open/unminimized). Fits the WM app pattern; content is just a strings table.
+- [ ] **[W7·L]** **🎮 Mini-games** (routed from `ideas.md` 📥 2026-09-16) — much later in progression:
+      rogue, a BBS door/adventure game, solitaire, etc. Each is an app (purchase- and probably OS-gated);
+      decide whether they're pure flavor or pay out credits/materials.
+- [ ] **[W7·L]** **🏁 Endgame — "beat the game" + Claude Auto** (routed from `ideas.md` 2026-09-16).
+      There's no win condition today; the natural trigger is the last `OS_TIERS` entry (STARSHIP OS).
+      Once beaten, you unlock **Claude Auto**: submit a ticket and it *pulls, bills, and deploys* on its
+      own. Open: is a ticket a prestige/reset ("deploy" wipes the run for a permanent bonus, layering on
+      IPO/Equity), a post-game auto-play mode, or both? What does "bills" do — a credit drain per deploy?
 
 ## Economy / math
 *(Networking is now the Modem hardware slot, and Bulk-buy is now part of the Toolbox — both in
