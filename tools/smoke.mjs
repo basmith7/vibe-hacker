@@ -104,6 +104,18 @@ export const SCENARIOS = {
     assert(s1.agents[1].gear.model.ilvl === 10 && s1.agents[1].q === 0, "hire has starter kit and sits on Backlog");
     assert(s1.credits < 10000 - 150, "credits were spent");
   },
+  async noOldSystems() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 5000; s.maxCredits = 5000; s.reveal = { credits: true, shop: true, store: true };
+      s.unlocked = { telemetry: true, globe: true, status: true, inventory: true, equipment: true, ide: true, achievements: true };
+      s.up.os = 1; s.up.u_achv = 1; }});
+    for (const k of ["hp", "hpMax", "stats", "sp", "equip", "toolbox", "missions", "unlockedStats"]) assert(!(k in s0), "old field still persisted: " + k);
+    await type(2, 20); await sleep(25000);
+    const s1 = await readSave();
+    assert(s1.earned > 0, "earned nothing");
+    const open = await ev(`[...document.querySelectorAll('.panel')].filter(p=>getComputedStyle(p).display!=='none').map(p=>p.dataset.app)`);
+    for (const app of ["terminal", "status", "store", "ide", "telemetry", "achievements", "deploy_mesh"]) assert(open.includes(app), "app not visible: " + app);
+    assert(typeof s1.achv === "object", "achievements object present");
+  },
 };
 
 const name = process.argv[2];

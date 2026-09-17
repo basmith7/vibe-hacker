@@ -226,7 +226,7 @@
   #storeBody{position:absolute;inset:26px 0 42px 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #storeFooter{position:absolute;left:0;right:0;bottom:0;height:42px;border-top:1px solid var(--edge);padding:7px 10px;background:rgba(0,0,0,.2)}
   /* the four Toolbox tool-apps share a scrollable card body */
-  #equipBody,#inventoryBody,#ideBody,#missionsBody,#achBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+  #equipBody,#inventoryBody,#ideBody,#achBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
   #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
   #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
@@ -409,8 +409,7 @@
     border:1px solid var(--edge);border-radius:6px;padding:4px 6px;flex:1;min-width:0}
   .rollBtns{display:flex;gap:6px;flex-shrink:0}
   .rollBtns .buy{padding:8px 9px}
-  .stashCard .actions,.missionCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
-  .missionCard .buy{font-size:9.5px;padding:6px 8px;white-space:normal;text-align:center}
+  .stashCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
   .buy.danger{border-color:var(--red);color:var(--red);background:rgba(255,43,94,.08)}
   .buy.danger:hover:not(:disabled){background:rgba(255,43,94,.18);box-shadow:0 0 12px rgba(255,43,94,.3)}
   .stashEmpty{font-size:10.5px;color:var(--dim);padding:14px 4px;text-align:center;line-height:1.4}
@@ -544,7 +543,7 @@
     #chartsPanel{height:300px}
     #terminalPanel{height:420px}
     #storePanel{height:460px}
-    #inventoryPanel,#idePanel,#missionsPanel,#equipPanel,#achievementsPanel{height:400px}
+    #inventoryPanel,#idePanel,#equipPanel,#achievementsPanel{height:400px}
     #statusBody{overflow:auto}
     /* day-1 on mobile: terminal is the only unlocked tile → let it fill the screen for the immersive mash */
     body.intro #cockpit{min-height:100vh}
@@ -719,10 +718,8 @@
       <div class="head"><span class="dot"></span> STATUS <span class="spacer"></span><span class="tag">character sheet</span></div>
       <div id="statusBody">
         <div class="statRow">
-          <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
           <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
           <div class="stat a"><span class="k">streak 🔥</span><span class="v" id="s_streak">0</span></div>
-          <div class="stat m"><span class="k">loot 🎁</span><span class="v" id="s_loot">0</span></div>
           <div class="stat"><span class="k">uptime</span><span class="v" id="s_up">00:00:00</span></div>
           <div class="stat grow">
             <span class="k">❤ sanity — <span id="s_hp">100</span>%</span>
@@ -738,7 +735,6 @@
             <div class="hl"><span class="lbl">📅 Stage</span><span class="stgname" id="hud_stage">Day 1: The Onboarding</span><span class="pct" id="hud_plotpct">0%</span></div>
             <div class="hbar plot"><i id="hud_plot"></i></div>
           </div>
-          <div class="hud-block stats" id="statChips"></div>
         </footer>
       </div>
     </section>
@@ -791,10 +787,6 @@
       <div class="head"><span class="dot"></span> THE IDE <span class="spacer"></span><span class="tag">crafting bench</span></div>
       <div id="ideBody"></div>
     </section>
-    <section class="panel" id="missionsPanel" data-app="missions">
-      <div class="head"><span class="dot"></span> MISSIONS <span class="spacer"></span><span class="tag">bounty board</span></div>
-      <div id="missionsBody"></div>
-    </section>
     <section class="panel" id="achievementsPanel" data-app="achievements">
       <div class="head"><span class="dot"></span> ACHIEVEMENTS <span class="spacer"></span><span class="tag" id="achTag">trophy case</span></div>
       <div id="achBody"></div>
@@ -824,7 +816,6 @@
     <div class="hsub">click / tap anywhere to grind — the rest is optional</div>
     <table>
       <tr><td class="k"><kbd>any key</kbd> / <kbd>click</kbd> / <kbd>tap</kbd></td><td class="hd">Grind — type code, advance & clear tasks</td></tr>
-      <tr><td class="k"><kbd>Shift</kbd> + click a stat's <kbd>+</kbd></td><td class="hd">Spend <b>all</b> your skill points on that one stat</td></tr>
       <tr><td class="k"><kbd>T</kbd></td><td class="hd">Cycle through your unlocked OS looks</td></tr>
       <tr><td class="k"><kbd>?</kbd></td><td class="hd">Show / hide this help</td></tr>
       <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen — earns the 🎧 <b>Deep Work</b> bonus (+25% XP, +25% credits, +50% sanity regen)</td></tr>
@@ -860,7 +851,7 @@
 
 
 <div id="hint">
-  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key
+  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · <b>hire agents</b> to work the queue · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key
 </div>
 
 <script>
@@ -887,21 +878,7 @@
   const UI={};   // cached DOM refs for the per-frame hot loop (populated in cacheUI)
   let bodyFont="ui-monospace,monospace";   // canvas font family, refreshed on theme change
 
-  /* ============ stats ============ */
-  // Stats: merged 9->5 for the crafting-expansion rework (see "crafting update.md" Phase 1).
-  // Coding absorbs the old Git-Fu; Systems absorbs the old Architect+DevOps. Rizz and Caffeine
-  // are retired as active/grindable stats — their effects return later as gear patches (Phase 5).
-  const STATS=[
-    {id:"coding",  lbl:"Coding",     em:"⌨️", color:"#eafff0"},
-    {id:"focus",   lbl:"Focus",      em:"🧠", color:"#00e5ff"},
-    {id:"debug",   lbl:"Debugging",  em:"🐛", color:"#39ff14"},
-    {id:"systems", lbl:"Systems",    em:"🏛", color:"#4d8cff"},
-    {id:"algo",    lbl:"Algorithms", em:"🧮", color:"#c77dff"},
-  ];
-  const STAT=Object.fromEntries(STATS.map(s=>[s.id,s]));
-  const STAT_IDS=STATS.map(s=>s.id);
-
-  /* ============ tasks (name, statId) ============ */
+  /* ============ tasks (name, legacy flavor tag — only the name is used) ============ */
   const TASKS=[
     ["Write your first function","coding"],["Fix a typo in prod","coding"],["Center a div","coding"],
     ["Print 'hello world'","coding"],["Add a semicolon","coding"],["Rename a variable","coding"],
@@ -947,12 +924,6 @@
     "Distinguished Engineer","10x Engineer","Rockstar Dev","Ninja Coder","Code Wizard","Systems Guru","Tech Lead",
     "Chief Architect","Thought Leader","VP of Vibes","CTO","Singularity Whisperer","Benevolent AGI"];
 
-  const LOOT=["Mechanical Keyboard of Clackening +7","Standing Desk of Focus","Rubber Duck of Debugging",
-    "Noise-Cancelling Headphones +5","Ergonomic Chair of the Ancients","Second Monitor of Productivity",
-    "Artisanal Cold Brew of Awakening","Vim Cheatsheet (Legendary)","+500 Stack Overflow Reputation",
-    "Dark-Mode Theme (Mythic)","Cursed USB-C Dongle","Blue-Light Glasses of Clarity","Hoodie of Invisibility",
-    "Golden Pull Request","Sticker of the Rust Crab","Legendary Yak Shaver","Amulet of No Meetings"];
-
   /* ============ upgrade economy ============ */
   const OS_TIERS=[   // cockpit look tiers; buying advances + auto-switches, but any owned look can be picked later
     {id:"dos",     name:"MS-DOS 6.22",  short:"DOS",      cost:0},
@@ -965,7 +936,7 @@
   // OS gates (os-gates update) — the OS ladder is the game's milestone spine, so each tier unlocks
   // real capability, not just a reskin. HIRE_CAP = max "Hire an Agent" tier per OS (DOS is
   // single-tasking: one agent; Win3.1 cooperative multitasking: two; Win95 preemptive: four; ...).
-  // Slot unlocks live in SLOTS[].os; Automation items carry a reqOs. osLock(u) is the one gate check.
+  // Agent gear slots live in AGENT_SLOTS; Automation items carry a reqOs. osLock(u) is the one gate check.
   /* ============ Agents & Queues (docs/agents-and-queues.md) ============ */
   // Three stats, all derived from gear — no levels, no skill points. Balance numbers: doc "Balance model".
   const AGENT_STATS=[
@@ -1011,24 +982,6 @@
     return a;
   }
 
-  /* ============ Hardware slots (crafting update Phase 3 — structural only, no patches yet) ============ */
-  // os = the Upgrade OS tier (index into OS_TIERS) that opens the slot. Ordered by unlock so the
-  // Equipment app reads top-down as a roadmap. Thematic: a GUI needs a Monitor, Win95 is the
-  // dial-up era (Modem), Win10 brings the GPU, NEON needs Cooling, STARSHIP jacks in the Neural Interface.
-  const SLOTS=[
-    {id:"ram",       lbl:"RAM",        em:"🧠", os:0},
-    {id:"cpu",       lbl:"CPU",        em:"⚙️", os:0},
-    {id:"harddrive", lbl:"Hard Drive", em:"💾", os:0},
-    {id:"monitor",   lbl:"Monitor",    em:"🖥️", os:1},
-    {id:"modem",     lbl:"Modem",      em:"📡", os:2},
-    {id:"gpu",       lbl:"GPU",        em:"🎮", os:3},
-    {id:"cooling",   lbl:"Cooling",    em:"❄️", os:4},
-    {id:"neural",    lbl:"Neural Interface", em:"🔮", os:5},
-  ];
-  const SLOT=Object.fromEntries(SLOTS.map(s=>[s.id,s]));
-  function slotUnlocked(slotId){ return P.up.os>=SLOT[slotId].os; }
-  function slotUnlockHint(slotId){ return "unlocks on "+OS_TIERS[SLOT[slotId].os].name; }
-  const TOOLBOX_CAP=18;   // crafting update Phase 4 — stash size before the worst item auto-scraps
   // crafting update Phase 5 — patches (affixes). Slot-specific patches only roll on their matching
   // slot; generic ones (stat/no) roll on anything. `tiers` are gated by item level via `gate` (a
   // low-ilvl item can't roll the top tier), and weighted toward the common tier when multiple are
@@ -1077,7 +1030,6 @@
     const era=ERA_NAMES[clamp(P.up.os,0,ERA_NAMES.length-1)];
     return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+ASLOT[slotId].lbl, ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
   }
-  const GEAR={setBonus:1};   // shim — renderToolbox still reads GEAR.setBonus until Task 5 rewrites it
   // Per-agent derived stats. Never persisted: recompute() rewrites a.m for every agent.
   function agentStats(a){
     const out={quality:BAL.floor, speed:BAL.floor, stamina:BAL.floor, tools:1, regen:0};
@@ -1208,10 +1160,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     equipment:   {c:0, r:5, h:2, z:7},
     agents:      {c:1, r:0, h:3, z:2},
     deploy_mesh: {c:1, r:3, h:2, z:4},
-    missions:    {c:1, r:5, h:2, z:9},
+    achievements:{c:1, r:5, h:2, z:11},
     status:      {c:2, r:0, h:3, z:3},
-    inventory:   {c:2, r:3, h:2, z:6},
-    achievements:{c:2, r:5, h:2, z:11},
+    inventory:   {c:2, r:3, h:4, z:6},
     store:       {c:3, r:0, h:3, z:10},
     ide:         {c:3, r:3, h:4, z:8},   // widest content of the lot — the crafting bench ring needs the room
   };
@@ -1229,14 +1180,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   const defaultWindow=id=>defaultWindows()[id]||{x:8,y:8,w:306,h:210,z:1,open:true};
   const cloneWindows=()=>defaultWindows();
   function defaults(){
-    const stats={}; STAT_IDS.forEach(id=>stats[id]=rand(6,12));
-    return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
-      stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
+    return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,stage:0,plot:0,plotNeed:120,prestige:0,
+      tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
-      credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
+      credits:0,maxCredits:0,earned:0,lastReal:0,equity:0,ipos:0,
       up:{hire:0,seat:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_achv:0,u_inv:0,u_equip:0,u_ide:0,os:0,offline:0,autoBuy:0},
-      equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
-      toolbox:[], itemSeq:0, craftSlot:null,
+      itemSeq:0, craftSlot:null,
       agentSeq:0, agents:null,   // seeded right after construction (newAgent needs P.itemSeq) — see below
       queues:[{tier:0,seats:1,mods:0,configs:[]}], selectedAgent:0,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
@@ -1247,14 +1196,14 @@ notify("#general", "10x-ing that shit 🔥");`,
       notify:{grind:true,progress:true,system:true,hype:true},
       settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
       windows:null,   // seeded at boot, after fitScale() — defaults() runs before the UI zoom exists, so measuring the canvas here would be wrong
-      achv:{},seenTips:{shop:false,sp:false}};
+      achv:{},seenTips:{shop:false}};
   }
   let P=defaults();
   function seedAgents(){ if(!P.agents||!P.agents.length){ P.agents=[newAgent({name:"you",color:"#eafff0"},0)]; } }
   seedAgents();
-  const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
-    "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
+  const PERSIST=["ver","level","xp","xpNeed","stage","plot","plotNeed","prestige",
+    "tasksDone","tasksFailed","streak","bestStreak","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
+    "credits","maxCredits","earned","lastReal","equity","ipos","up","itemSeq","craftSlot",
     "agentSeq","agents","queues","selectedAgent",
     "materials","matPity",
     "themeChoice","unlocked","intro","reveal","notify","settings","windows","achv","seenTips"];
@@ -1276,7 +1225,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(d.ver!==SAVE_VER){ STALE_VER=d.ver; return "stale"; }
     for(const k of PERSIST) if(k in d) P[k]=d[k];
     seedAgents();
-    for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
     const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
     if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
     return true;
@@ -1312,12 +1260,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ derived multipliers ============ */
-  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0,offlineEff:0.5,resist:0};
-  function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
+  const MULT={workers:1,passive:0};   // all that survives the Agents & Queues rework: agent count + (future) passive income
   function recompute(){
     for(const a of P.agents) agentMult(a);
-    MULT.workers=P.agents.length;   // MULT shrinks to what the old UI still reads; removed fully in Task 5
-    MULT.passive=0;
+    MULT.workers=P.agents.length;
   }
 
   /* ---- Deep Work: a live bonus while the game is fullscreen. Two detection paths, because they
@@ -1428,7 +1374,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"system",  lbl:"System & Buys"},
     {id:"hype",    lbl:"Hype Banners"},
   ];
-  let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
+  let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up";
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -1437,7 +1383,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     body.appendChild(pc);
     pc.querySelector("#eqBtn").addEventListener("click",e=>{ e.stopPropagation();
       if(!canPrestige()) return;
-      if(confirm("Cash out now?\n\nResets your level, stats, credits, and all upgrades — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
+      if(confirm("Cash out now?\n\nResets credits, OS, seats, hires and every agent\u2019s gear — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
     });
     // upgrades
     for(const u of UPG){
@@ -1481,27 +1427,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
   // unequipped candidates (filterable card list rather than a spatial grid — see the plan's
   // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
-  function buildToolbox(){   // builds the four Toolbox tool-apps: Equipment, The IDE, Missions, Inventory
-    const eqBody=$("#equipBody"), invBody=$("#inventoryBody"), ideBody=$("#ideBody"), misBody=$("#missionsBody");
-    if(!eqBody||!invBody||!ideBody||!misBody) return;
-    eqBody.innerHTML=invBody.innerHTML=ideBody.innerHTML=misBody.innerHTML=""; slotEls={}; rollEls={};
-    // Equipment app — equipped-hardware slots
-    const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; eqBody.appendChild(eh);
-    for(const s of SLOTS){
-      const card=document.createElement("div"); card.className="card slotCard"; card.draggable=true; card.title="Drag me onto the IDE bench socket to craft";
-      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
-      eqBody.appendChild(card);
-      card.addEventListener("dragstart",e=>{ if(!P.equip[s.id]){e.preventDefault();return;} benchPayload="eq:"+s.id; e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
-      card.addEventListener("dragend",()=>{benchPayload=null;});
-      const btn=card.querySelector(".buy");
-      btn.addEventListener("click",e=>{ e.stopPropagation();
-        const it=P.equip[s.id]; if(!it) return;
-        if(it.id==null) it.id=++P.itemSeq;
-        P.toolbox.push(it); enforceToolboxCap(); P.equip[s.id]=null; recompute();
-        renderShop(); save();
-      });
-      slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
-    }
+  function buildToolbox(){   // builds The IDE app (bench + materials). Equipment/Inventory become per-agent apps in Task 6.
+    const ideBody=$("#ideBody");
+    if(!ideBody) return;
+    ideBody.innerHTML=""; slotEls={}; rollEls={};
     // The IDE app — the crafting bench (item in the middle, materials ringed around it) + materials
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 Crafting Bench"; ideBody.appendChild(ih);
     const bench=document.createElement("div"); bench.className="bench"; bench.id="benchWrap";
@@ -1536,63 +1465,11 @@ notify("#general", "10x-ing that shit 🔥");`,
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
-    // Missions app — bounty board
-    const mbh=document.createElement("div"); mbh.className="shopCat"; mbh.id="missionCat"; misBody.appendChild(mbh);
-    const missionsWrap=document.createElement("div"); missionsWrap.id="missionList"; missionsWrap.className="stashWrap"; misBody.appendChild(missionsWrap);
-    const rerollCard=document.createElement("div"); rerollCard.className="card"; rerollCard.innerHTML=
-      `<span class="em">🔄</span><div class="mid"><div class="nm">Reroll Board</div><div class="fx">Scrap every not-yet-complete mission for a fresh set of 3. Cost scales with their level — cheap early, pricier the more you've invested.</div></div>`+
-      `<button class="buy" id="rerollBtn"></button>`;
-    misBody.appendChild(rerollCard);
-    rerollCard.querySelector("#rerollBtn").addEventListener("click",e=>{e.stopPropagation();rerollBoard();});
-    // Inventory app — roll for hardware + stash
-    const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; invBody.appendChild(rh);
-    for(const s of SLOTS){
-      const card=document.createElement("div"); card.className="card";
-      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl}</div>`+
-        `<div class="fx">Gamble credits for a random ${s.lbl} — lands in the stash below, or equips right away if that slot is empty</div></div>`+
-        `<div class="rollBtns"><button class="buy" data-n="1"></button><button class="buy" data-n="10"></button></div>`;
-      invBody.appendChild(card);
-      const b1=card.querySelector('[data-n="1"]'), b10=card.querySelector('[data-n="10"]');
-      b1.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,1);});
-      b10.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,10);});
-      rollEls[s.id]={btn1:b1,btn10:b10};
-    }
-    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🧰 Stash"; invBody.appendChild(sh);
-    const filters=document.createElement("div"); filters.className="toolFilters";
-    filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
-      SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
-      `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option>`+
-      `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option><option value="legendary">Legendary</option></select>`;
-    invBody.appendChild(filters);
-    filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
-    filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
-    const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; invBody.appendChild(stash);
     toolboxBuilt=true; renderToolbox();
   }
   function patchSummary(item){
     if(!item.patches||!item.patches.length) return "no patches";
     return item.patches.map(p=>PATCH_DEFS[p.id].fmt(p.value)).join(", ");
-  }
-  function renderStashList(){
-    const wrap=$("#stashList"); if(!wrap) return;
-    const items=P.toolbox.filter(it=>(toolFilter.slot==="all"||it.slot===toolFilter.slot) && (toolFilter.rarity==="all"||rarityOf(it)===toolFilter.rarity));
-    items.sort((a,b)=>b.ilvl-a.ilvl);
-    if(!items.length){
-      wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
-      return;
-    }
-    wrap.innerHTML=items.map(it=>`<div class="card stashCard${it.legendary?" legendary":""}" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${SLOT[it.slot].em}</span>`+
-      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
-      `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
-      `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
-    wrap.querySelectorAll(".stashCard").forEach(card=>{
-      const id=Number(card.dataset.id);
-      card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
-      card.addEventListener("dragend",()=>{benchPayload=null;});
-      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromToolbox(id);});
-      card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(id);});
-      card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(id);});
-    });
   }
   let orbEls={}, benchRO=null, benchPayload=null;
   // Sizes the bench ring to the app's actual width: an ellipse a little wider than tall, with the
@@ -1617,28 +1494,17 @@ notify("#general", "10x-ing that shit 🔥");`,
     ring.style.setProperty("--coreH",Math.round(Math.max(104,(ry-oh/2)*2-14))+"px");
   }
   // one entry point for both drag sources: a stash item id, or "eq:<slot>" for an equipped item
-  function dropOnBench(payload){
-    if(!payload) return;
-    if(payload.startsWith("eq:")){
-      const sid=payload.slice(3), it=P.equip[sid]; if(!it) return;
-      if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
-      P.equip[sid]=null; P.craftSlot=it; recompute();
-      termLine("t-git","🛠","pulled "+it.name+" out of the rig and onto the bench");
-      save(); renderShop();
-    } else sendToCraftSlot(Number(payload));
-  }
+  function dropOnBench(payload){ return; }   // Task 6 rewires the bench to per-agent inventories
   function renderIdeCard(){
     const core=$("#benchCore"), acts=$("#benchActs"), mods=$("#benchMods"); if(!core||!acts||!mods) return;
     const it=P.craftSlot;
     core.dataset.rarity=it?rarityOf(it):"";
     core.classList.toggle("empty",!it);
     if(it){
-      core.innerHTML=`<span class="cEm">${SLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
-        `<span class="cSub">Lv ${it.ilvl} · ${SLOT[it.slot].lbl}</span>`+
+      core.innerHTML=`<span class="cEm">${ASLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
+        `<span class="cSub">Lv ${it.ilvl} · ${ASLOT[it.slot].lbl}</span>`+
         `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`;
-      acts.innerHTML=`<button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button>`;
-      acts.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
-      acts.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
+      acts.innerHTML="";
       const rows=it.patches.map(p=>{ const d=PATCH_DEFS[p.id];
         return `<div class="modRow card"><span class="mN">${d.lbl}</span><span class="mV">${d.fmt(p.value)}</span><span class="mT">T${p.tier+1}</span></div>`; });
       for(let i=it.patches.length;i<it.maxPatches;i++) rows.push(`<div class="modRow card open">open patch slot</div>`);
@@ -1669,53 +1535,9 @@ notify("#general", "10x-ing that shit 🔥");`,
       el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
     }
   }
-  function renderMissionBoard(){
-    const cat=$("#missionCat"), wrap=$("#missionList"), btn=$("#rerollBtn");
-    if(!cat||!wrap) return;
-    cat.textContent="📋 Mission Board — "+(P.sprintConfig||0)+" ⚙️ Sprint Config";
-    wrap.innerHTML=(P.missions||[]).map(m=>{
-      const def=MISSION_DEF[m.defId];
-      const pct=Math.round(Math.min(1,1-Math.max(0,m.tasksLeft)/m.totalTasks)*100);
-      const status=m.done?"Complete — waiting on the rest of the board":(Math.max(0,m.tasksLeft)+"/"+m.totalTasks+" tasks left");
-      return `<div class="card missionCard" data-id="${m.id}"><span class="em">${def.em}</span>`+
-        `<div class="mid"><div class="nm">${def.lbl} <span class="lv">Lv ${m.level}</span></div>`+
-        `<div class="fx">${status} · bonus ${def.bonusMat} on ${def.allStats?"any":STAT[def.favorStat].lbl} task${m.rewardMult>1?" · ×"+m.rewardMult.toFixed(2)+" payout":""}</div>`+
-        `<div class="pity"><i style="width:${pct}%"></i></div></div>`+
-        `<div class="actions">`+
-        `<button class="buy" data-act="extend" ${m.done||(P.sprintConfig||0)<2?"disabled":""}>+3 tasks (2⚙️)</button>`+
-        `<button class="buy" data-act="crunch" ${m.done||(P.sprintConfig||0)<3?"disabled":""}>×1.35 (3⚙️)</button>`+
-        `</div></div>`;
-    }).join("");
-    wrap.querySelectorAll(".missionCard").forEach(card=>{
-      const id=Number(card.dataset.id);
-      card.querySelector('[data-act="extend"]').addEventListener("click",e=>{e.stopPropagation();missionExtend(id);});
-      card.querySelector('[data-act="crunch"]').addEventListener("click",e=>{e.stopPropagation();missionCrunch(id);});
-    });
-    if(btn){ const cost=rerollCost(); btn.textContent="Reroll — "+money(cost); btn.disabled=P.credits<cost; }
-  }
   function renderToolbox(){
     if(!toolboxBuilt) return;
-    const equipCat=$("#equipCat");
-    if(equipCat) equipCat.textContent="🔧 Equipped Hardware"+(GEAR.setBonus>1?" — Set Bonus ×"+GEAR.setBonus.toFixed(2):"");
-    for(const s of SLOTS){
-      const el=slotEls[s.id]; if(!el) continue;
-      const item=P.equip[s.id], unlocked=slotUnlocked(s.id);
-      el.card.classList.toggle("legendary",!!(item&&item.legendary));
-      if(!unlocked){ el.lv.textContent=""; el.fx.textContent="🔒 Locked — "+slotUnlockHint(s.id); el.btn.disabled=true; }
-      else if(item){ el.lv.textContent="Lv "+item.ilvl+(item.legendary?" ★":""); el.fx.textContent=item.name; el.btn.disabled=false; }
-      else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
-    }
-    renderMaterials();
-    renderMissionBoard();
-    renderIdeCard();
-    const c=rollCost();
-    for(const s of SLOTS){
-      const r=rollEls[s.id]; if(!r) continue;
-      const unlocked=slotUnlocked(s.id);
-      if(!unlocked){ r.btn1.textContent="🔒"; r.btn10.textContent=slotUnlockHint(s.id); r.btn1.disabled=true; r.btn10.disabled=true; }
-      else{ r.btn1.textContent=money(c); r.btn1.disabled=P.credits<c; r.btn10.textContent="×10 "+money(c*10); r.btn10.disabled=P.credits<c*10; }
-    }
-    renderStashList();
+    renderMaterials(); renderIdeCard();
   }
   function renderStore(){   // Store app content — runs on the timer whenever the store is on screen
     if(!shopBuilt) return;
@@ -1723,8 +1545,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     const eqLv=$("#eqLv"),eqFx=$("#eqFx"),eqBtn=$("#eqBtn");
     if(eqLv){ const g=equityGain();
       eqLv.textContent=P.equity?("· "+P.equity+" Equity (+"+(P.equity*2)+"%)"):"";
-      eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at Lv 10 (worth +"+g+" now)");
-      eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 Lv 10"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
+      eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at $20K earned (worth +"+g+" now)");
+      eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 $20K earned"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
     }
     const catVisible={};
     for(const s of shopCards){
@@ -1754,24 +1576,19 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   // full refresh (store + the four Toolbox apps) — used after any buy/craft/roll that can touch both
   function renderShop(){ renderStore(); renderToolbox(); }
-  function allocate(id,all){ if(P.sp<=0) return; const n=all?P.sp:1; P.sp-=n; statUp(id,n); updateSPui(); save(); }   // shift-click = pour all skill points into one stat
-  function updateSPui(){
-    if(UI.s_sp) UI.s_sp.textContent=P.sp;
-    if(UI.spStat) UI.spStat.classList.toggle("sppulse",P.sp>0);
-    if(HUD.chip) for(const id of STAT_IDS){ const b=HUD.chip[id]&&HUD.chip[id].plus; if(b) b.classList.toggle("on",P.sp>0); }
-  }
 
   /* ============ prestige (IPO → permanent Equity) ============ */
-  function equityGain(){ return Math.floor(Math.sqrt(Math.max(0,P.earned)/15000) + P.stage + P.level*0.15); }
-  function canPrestige(){ return P.level>=10 && equityGain()>=1; }
+  function highestQueueTier(){ return P.queues.reduce((m,q)=>Math.max(m,q.tier),0); }
+  function equityGain(){ return Math.floor(Math.sqrt(Math.max(0,P.earned)/15000) + highestQueueTier()); }
+  function canPrestige(){ return P.earned>=20000 && equityGain()>=1; }
   function doPrestige(){
-    const g=equityGain(); if(g<1||P.level<10) return;
+    const g=equityGain(); if(!canPrestige()) return;
     const keep={equity:P.equity+g, ipos:P.ipos+1, achv:P.achv, seenTips:P.seenTips,
-      bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed, loot:P.loot,
+      bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed,
       burnouts:P.burnouts, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
-    P=Object.assign(defaults(),keep);
+    P=Object.assign(defaults(),keep); seedAgents();
     recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
-    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme(); updateSPui();
+    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
     toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% XP & credits","#39ff14");
     termLine("t-git","💰","IPO #"+P.ipos+" — banked "+g+" Equity (total "+P.equity+" · +"+(P.equity*2)+"%)");
@@ -1784,17 +1601,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"t100",   em:"💯",name:"Centurion",           desc:"Clear 100 tasks",              chk:()=>P.tasksDone>=100,   pct:()=>P.tasksDone/100},
     {id:"t1000",  em:"🏭",name:"Feature Factory",     desc:"Clear 1,000 tasks",            chk:()=>P.tasksDone>=1000,  pct:()=>P.tasksDone/1000},
     {id:"lv10",   em:"⭐",name:"Getting the Hang",     desc:"Reach level 10",               chk:()=>P.level>=10,        pct:()=>P.level/10},
-    {id:"lv25",   em:"🌟",name:"Seasoned",            desc:"Reach level 25",               chk:()=>P.level>=25,        pct:()=>P.level/25},
     {id:"lv50",   em:"👑",name:"Living Legend",       desc:"Reach level 50",               chk:()=>P.level>=50,        pct:()=>P.level/50},
-    {id:"lv100",  em:"🏆",name:"Triple Digits",       desc:"Reach level 100",              chk:()=>P.level>=100,       pct:()=>P.level/100},
+    {id:"team4",  em:"👥",name:"Squad Goals",         desc:"Field 4 agents at once",       chk:()=>P.agents.length>=4, pct:()=>P.agents.length/4},
+    {id:"team8",  em:"🏢",name:"Full Floor",          desc:"Field 8 agents at once",       chk:()=>P.agents.length>=8, pct:()=>P.agents.length/8},
+    {id:"ilvl50", em:"🔧",name:"Serious Hardware",    desc:"Equip a Lv 50 item on anyone", chk:()=>P.agents.some(a=>ASLOT_IDS.some(s=>a.gear[s]&&a.gear[s].ilvl>=50)), pct:()=>Math.max(0,...P.agents.map(a=>Math.max(0,...ASLOT_IDS.map(s=>a.gear[s]?a.gear[s].ilvl:0))))/50},
+    {id:"patched",em:"📝",name:"Custom Build",        desc:"Own an item with 3 patches",   chk:()=>P.agents.some(a=>[...ASLOT_IDS.map(s=>a.gear[s]),...a.inv].some(it=>it&&it.patches.length>=3)), binary:true},
     {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25,   pct:()=>P.bestStreak/25},
     {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100,  pct:()=>P.bestStreak/100},
     {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1,  binary:true},
     {id:"crit",   em:"💥",name:"Critical Hit",        desc:"Land a critical success",      chk:()=>P.crits>=1,     binary:true},
-    {id:"loot25", em:"🎁",name:"Packrat",             desc:"Collect 25 loot",              chk:()=>P.loot>=25,         pct:()=>P.loot/25},
-    {id:"rig",    em:"💻",name:"Quantum Leap",        desc:"Own the Quantum Rig",          chk:()=>P.up.computer>=5,   pct:()=>P.up.computer/5},
-    {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5,      pct:()=>P.up.model/5},
-    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7,       pct:()=>P.up.hire/7},
     {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6,      pct:()=>P.earned/1e6},
     {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.up.os>=2,         pct:()=>P.up.os/2},
     {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.up.os>=4,         pct:()=>P.up.os/4},
@@ -1893,15 +1708,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   const HUD={};
   function buildHUD(){
     for(const id of ["lv","title","xp","xppct","stage","plot","plotpct"]) HUD[id]=$("#hud_"+id);
-    const wrap=$("#statChips"); wrap.innerHTML="";
-    HUD.chip={};
-    STATS.forEach(s=>{
-      const el=document.createElement("div"); el.className="statchip";
-      el.innerHTML=`<span class="em">${s.em}</span><span class="sk">${s.lbl}</span><span class="sv" style="color:${s.color}">0</span><button class="sp" title="spend a skill point">+</button>`;
-      wrap.appendChild(el);
-      const plus=el.querySelector(".sp"); plus.title="spend a skill point (shift-click = all)"; plus.addEventListener("click",e=>{e.stopPropagation();allocate(s.id,e.shiftKey);});
-      HUD.chip[s.id]={el,v:el.querySelector(".sv"),plus};
-    });
     HUD.stage.textContent=STAGES[P.stage]||("New Game+ "+P.prestige);
     HUD.title.textContent=titleFor();
     $("#g_stages").textContent=STAGES.length;
@@ -1917,7 +1723,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
     {id:"equipment",   panelId:"equipPanel",    order:6, emoji:"🔧", title:"Equipment",   unlocked:()=>!!P.unlocked.equipment},
     {id:"ide",         panelId:"idePanel",      order:7, emoji:"🛠", title:"The IDE",     unlocked:()=>!!P.unlocked.ide},
-    {id:"missions",    panelId:"missionsPanel", order:8, emoji:"📋", title:"Missions",    unlocked:()=>!!P.unlocked.missions},
     {id:"deploy_mesh", panelId:"globePanel",    order:9, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
     {id:"telemetry",   panelId:"chartsPanel",   order:10,emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
     {id:"achievements",panelId:"achievementsPanel",order:11,emoji:"🏆",title:"Achievements",unlocked:()=>!!P.unlocked.achievements},
@@ -2173,7 +1978,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!P.intro) return;
     P.intro=false; applyReveal(); applyUnlocks();
     let h=$("#hint"); if(!h){ h=document.createElement("div"); h.id="hint"; document.body.appendChild(h); }
-    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key';
+    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · <b>hire agents</b> to work the queue · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key';
     h.style.opacity=""; hintFaded=false; setTimeout(fadeHint,10000);
     save();
   }
@@ -2208,7 +2013,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(UI.themeMenu){ if(themeMenuOpen) renderThemeMenu(); UI.themeMenu.classList.toggle("open",themeMenuOpen); }
   }
   function closeThemeMenu(){ toggleThemeMenu(false); }
-  function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
   function addXp(n){ P.xp+=n; P.totalXp+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
   function salvageValue(item){ return Math.round(item.ilvl*2)+1; }
   const INV_CAP=18;
@@ -2223,69 +2027,12 @@ notify("#general", "10x-ing that shit 🔥");`,
       termLine("t-dim","♻",a.name+"'s inventory full, auto-scrapped "+gone.name+" for "+money(refund));
     }
   }
-  function enforceToolboxCap(){   // Toolbox has finite space — scrap the single worst item to make room
-    while(P.toolbox.length>TOOLBOX_CAP){
-      let worst=0; for(let i=1;i<P.toolbox.length;i++) if(P.toolbox[i].ilvl<P.toolbox[worst].ilvl) worst=i;
-      const gone=P.toolbox.splice(worst,1)[0], refund=salvageValue(gone);
-      P.credits+=refund;
-      toast("🧰 Toolbox full","Auto-scrapped "+gone.name+" (Lv "+gone.ilvl+") → +"+money(refund),"#5b6b86","grind");
-      termLine("t-dim","♻","toolbox full, auto-scrapped "+gone.name+" for "+money(refund));
-    }
-  }
   function dropHardware(a,q){
     const slotId=pick(ASLOT_IDS), item=rollItem(slotId, rollIlvl(q));
     const where=addItemToAgent(a,item);
     toast("🧰 "+a.name+" found gear",item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" — equipped":" → inventory"),"#4d8cff","grind");
     termLine("t-git","🧰",a.name+" found "+item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" and equipped it":""));
   }
-  // shared by equipFromToolbox()/equipFromCraftSlot() — swaps whatever's currently in that slot
-  // back into the Toolbox (rather than deleting it) before equipping the new item
-  function equipItem(item){
-    const old=P.equip[item.slot];
-    if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
-    P.equip[item.slot]=item; recompute();
-    toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
-    termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
-  }
-  function equipFromToolbox(itemId){
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    equipItem(P.toolbox.splice(idx,1)[0]);
-    save(); renderShop();
-  }
-  function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit + material refund
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    const item=P.toolbox.splice(idx,1)[0], refund=salvageValue(item);
-    const matGain=Math.max(1,Math.round(item.ilvl/15));   // Phase 5 — Decommission also feeds the Commit material economy
-    P.credits+=refund; P.materials.commit=(P.materials.commit||0)+matGain;
-    toast("♻️ Decommissioned",item.name+" (Lv "+item.ilvl+") → +"+money(refund)+" · +"+matGain+" Commit"+(matGain>1?"s":""),"#5b6b86");
-    termLine("t-dim","♻","decommissioned "+item.name+" for "+money(refund)+" + "+matGain+" Commit"+(matGain>1?"s":""));
-    save(); renderShop();
-  }
-  // crafting update Phase 4 — The IDE holds one item you're "working on," separate from the general
-  // stash. No craft verbs exist yet (that's Phase 5); for now it's just a staging spot Phase 5's
-  // add/reroll actions will attach to, so save-state and UI plumbing exist ahead of time.
-  function sendToCraftSlot(itemId){
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    const item=P.toolbox.splice(idx,1)[0];
-    if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
-    P.craftSlot=item;
-    termLine("t-git","🛠","sent "+item.name+" to the IDE");
-    save(); renderShop();
-  }
-  function returnCraftSlotToToolbox(){
-    if(!P.craftSlot) return;
-    P.toolbox.push(P.craftSlot); P.craftSlot=null; enforceToolboxCap();
-    save(); renderShop();
-  }
-  function equipFromCraftSlot(){
-    if(!P.craftSlot) return;
-    const item=P.craftSlot; P.craftSlot=null;
-    equipItem(item);
-    save(); renderShop();
-  }
-  function rollCost(){ return Math.round(15+P.level*3); }   // Toolbox "Roll for Hardware" gamble cost
-  function rollForSlot(slotId,count){ return; }   // old gamble retired — Task 5 deletes it outright
-
   /* ============ crafting materials (crafting update Phase 5) ============ */
   const MATS=[
     {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots"},
@@ -2410,93 +2157,23 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
 
-  /* ============ missions (crafting update Phase 6) ============ */
-  // 3 always-active contracts. Each qualifying task decrements every non-done mission's counter
-  // (so nothing ever stalls from the player ignoring it); a task matching a mission's favored stat
-  // has a bonus-material chance and gets weighted higher in task selection (assignTask()) so
-  // leaning into a mission is worth it without being mandatory.
-  const MISSION_DEFS=[
-    {id:"debug_sprint",lbl:"Debugging Sprint", em:"🐛",favorStat:"debug",  bonusMat:"hotfix",  tasks:8,bonusChance:0.5},
-    {id:"deploy_week", lbl:"Deploy Week",       em:"🚀",favorStat:"systems",bonusMat:"refactor",tasks:8,bonusChance:0.5},
-    {id:"algo_grind",  lbl:"Algorithm Grind",   em:"🧮",favorStat:"algo",   bonusMat:"commit",  tasks:8,bonusChance:0.5},
-    {id:"focus_block", lbl:"Focus Block",       em:"🎯",favorStat:"focus",  bonusMat:"commit",  tasks:8,bonusChance:0.5},
-    {id:"hackathon",   lbl:"Hackathon",         em:"⚡",favorStat:null,     bonusMat:"commit",  tasks:5,bonusChance:0.8,allStats:true},
-  ];
-  const MISSION_DEF=Object.fromEntries(MISSION_DEFS.map(m=>[m.id,m]));
-  function rollMission(){
-    const def=pick(MISSION_DEFS), level=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
-    return {id:++P.missionSeq, defId:def.id, level, tasksLeft:def.tasks, totalTasks:def.tasks, rewardMult:1, done:false};
-  }
-  function refreshBoard(){
-    P.missions=[rollMission(),rollMission(),rollMission()];
-    toast("📋 New mission board","3 fresh contracts available","#00e5ff");
-    termLine("t-git","📋","mission board refreshed");
-  }
-  function rerollCost(){ return P.missions.filter(m=>!m.done).reduce((s,m)=>s+m.level,0)*8; }
-  function rerollBoard(){
-    const cost=rerollCost(); if(P.credits<cost) return;
-    P.credits-=cost; refreshBoard();
-    save(); renderShop();
-  }
-  function completeMission(m){
-    m.done=true;
-    const def=MISSION_DEF[m.defId];
-    const matGain=Math.max(1,Math.round(m.level*0.15*m.rewardMult));
-    P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+matGain;
-    const sprintGain=Math.max(1,Math.round(1+m.level/20));
-    P.sprintConfig=(P.sprintConfig||0)+sprintGain;
-    toast("📋 Mission complete: "+def.lbl,"+"+matGain+" "+def.bonusMat+" · +"+sprintGain+" Sprint Config","#39ff14");
-    termLine("t-git","📋","completed mission: "+def.lbl+" (+"+matGain+" "+def.bonusMat+")");
-    if(Math.random()<0.35){ const z=agentZero(); dropHardware(z,P.queues[z.q]||P.queues[0]); }   // missions can reward items directly, not just materials
-    if(P.missions.every(mm=>mm.done)) refreshBoard();
-  }
-  function progressMissions(stat){
-    for(const m of P.missions){
-      if(m.done) continue;
-      m.tasksLeft--;
-      const def=MISSION_DEF[m.defId];
-      if((def.favorStat===stat||def.allStats) && Math.random()<def.bonusChance*m.rewardMult){
-        P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+1;
-      }
-      if(m.tasksLeft<=0) completeMission(m);
-    }
-  }
-  // Sprint Config — spend on an active mission to make it (and its eventual payout) bigger, the
-  // mission-crafting analogue of gear patches: same add/reroll-flavored verbs, different target.
-  function missionExtend(missionId){
-    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<2) return;
-    P.sprintConfig-=2; m.tasksLeft+=3; m.totalTasks+=3; m.rewardMult*=1.15;
-    toast("⚙️ Sprint Config spent","Extended "+MISSION_DEF[m.defId].lbl+" — bigger payout, more tasks","#c77dff");
-    termLine("t-git","⚙️","extended mission: "+MISSION_DEF[m.defId].lbl);
-    save(); renderShop();
-  }
-  function missionCrunch(missionId){
-    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<3) return;
-    P.sprintConfig-=3; m.rewardMult*=1.35;
-    toast("⚙️ Sprint Config spent","Crunched "+MISSION_DEF[m.defId].lbl+" — bigger payout, same length","#c77dff");
-    termLine("t-git","⚙️","crunched mission: "+MISSION_DEF[m.defId].lbl);
-    save(); renderShop();
-  }
   function levelUp(){
     const before=titleFor();
-    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);   // tuned so Lv100 is a real, hard-fought (but reachable) milestone — see "crafting update.md" Phase 2
-    updateHpMax(); P.hp=P.hpMax;
-    const gain=2+Math.floor(P.level/8); P.sp+=gain;
+    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);
     const nt=titleFor();
-    if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");   // big banner only on rank-up, not every level
-    toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000","progress");
-    termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
-    HUD.title.textContent=nt; updateSPui(); save();
+    if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");
+    toast("⭐ Level "+P.level+" — "+nt,"a new title for the résumé","#ffb000","progress");
+    termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt);
+    HUD.title.textContent=nt; save();
   }
   function stageAdvance(){
     P.plot-=P.plotNeed; P.stage++; P.plotNeed=Math.round(P.plotNeed*1.16+45);
     let name;
     if(P.stage>=STAGES.length){ P.prestige++; P.stage=0; name="✦ New Game+ "+P.prestige+" · "+STAGES[0]; }
     else name=STAGES[P.stage];
-    P.hp=P.hpMax;
     celebrate("📅 "+name,"#00e5ff"); flyMeme("NEW STAGE");
     toast("📅 New stage unlocked",name+" · difficulty ↑","#00e5ff","progress");
-    termLine("t-info","▶","═══ "+name+" ═══"); addXp(Math.round(30*(1+P.stage*.1)));
+    termLine("t-info","▶","═══ "+name+" ═══"); addXp(30);
     HUD.stage.textContent=name; save();
   }
   function burnout(a){
@@ -2597,12 +2274,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     P.playSecs+=dt;
     let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
     // automation upgrades
-    if(P.up.autoAlloc && P.sp>0){ while(P.sp>0){ let lo=STAT_IDS[0]; for(const id of STAT_IDS) if(P.stats[id]<P.stats[lo])lo=id; statUp(lo,1); P.sp--; } }
     if(P.up.autoBuy){ autoBuyT+=dt; if(autoBuyT>=1.2){ autoBuyT=0; autoBuyCheapest(); } }
     // onboarding nudges (once each)
-    if(!P.seenTips.sp && P.sp>0){ P.seenTips.sp=true;
-      termLine("t-info","✦","you earned a skill point — spend it with the + buttons on a stat (higher stats clear tasks faster & more reliably)");
-      toast("✦ You earned a skill point!","Spend it on a stat with the + buttons — higher stats clear tasks faster & more reliably.","#00e5ff","system"); }
     if(!P.seenTips.shop && anyAffordable()){ P.seenTips.shop=true;
       termLine("t-info","🛒","you can afford an upgrade — open the Store to spend credits and speed everything up");
       toast("🛒 You can afford an upgrade!","Open the Store to spend credits and speed everything up.","#ffb000","system"); }
@@ -2612,7 +2285,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     UI.s_credits.textContent=money(P.credits);
     UI.s_task.textContent=fmt(P.tasksDone);
     UI.s_streak.textContent=P.streak;
-    UI.s_loot.textContent=fmt(P.loot);
     const t=P.playSecs; const hh=String((t/3600|0)).padStart(2,"0"),mm=String((t/60%60|0)).padStart(2,"0"),ss=String((t%60|0)).padStart(2,"0");
     UI.s_up.textContent=`${hh}:${mm}:${ss}`;
     const z=agentZero(); if(!z.m) agentMult(z);
@@ -2626,8 +2298,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     HUD.xppct.textContent=Math.floor(clamp(P.xp/P.xpNeed*100,0,100))+"%";
     HUD.plot.style.width=clamp(P.plot/P.plotNeed*100,0,100).toFixed(1)+"%";
     HUD.plotpct.textContent=Math.floor(clamp(P.plot/P.plotNeed*100,0,100))+"%";
-    for(const id of STAT_IDS) HUD.chip[id].v.textContent=Math.floor(P.stats[id]);
-    updateSPui();
 
     UI.g_stage.textContent=P.stage+1; UI.g_streak.textContent=P.streak; UI.g_arcs.textContent=globe?globe.arcs.length:0;
     UI.agentCount.textContent=WK.filter(w=>!w.manual&&w.task).length+"/"+Math.max(0,WK.length-1)+" agents on task";
@@ -2639,7 +2309,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
   function cacheUI(){   // cache per-frame DOM refs once (avoids ~13 querySelector calls per frame)
-    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","spStat","themeLabel","themeMenu"]) UI[id]=$("#"+id);
+    for(const id of ["s_credits","s_task","s_streak","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","themeLabel","themeMenu"]) UI[id]=$("#"+id);
   }
 
   /* ============ canvas helpers ============ */
@@ -2721,31 +2391,18 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   // stat sheet — HTML horizontal bars with real names + per-stat mouseover explainers (built once,
   // widths/values updated each tick). Replaces the old unlabeled canvas bars.
-  const STAT_EXPL={
-    coding:"Coding — your raw output. Powers coding tasks (writing code, shipping, git wrangling). Higher = faster clears and better odds on those tasks.",
-    focus:"Focus — deep work. Powers focus tasks (entering flow, inbox zero, ignoring pings).",
-    debug:"Debugging — bug-squashing. Powers debug tasks (race conditions, memory leaks, 3am prod fires).",
-    systems:"Systems — architecture & ops. Powers systems tasks (design, migrations, zero-downtime deploys).",
-    algo:"Algorithms — the hard CS. Powers algorithm tasks (complexity, data structures, optimization).",
-  };
   let ssRowEls={};
   function buildStatSheet(){
     const wrap=$("#ssBars"); if(!wrap) return; wrap.innerHTML=""; ssRowEls={};
-    for(const s of STATS){
-      const row=document.createElement("div"); row.className="ssRow"; row.title=STAT_EXPL[s.id]||s.lbl;
-      row.innerHTML=`<span class="ssn" style="color:${s.color}">${s.lbl}</span>`+
-        `<span class="ssbar"><i style="background:${s.color};box-shadow:0 0 6px ${s.color}"></i></span><span class="ssv">0</span>`;
+    for(const s of AGENT_STATS){
+      const row=document.createElement("div"); row.className="ssRow"; row.title=s.expl;
+      row.innerHTML=`<span class="ssn" style="color:${s.color}">${s.lbl}</span><span class="ssbar"><i style="background:${s.color};box-shadow:0 0 6px ${s.color}"></i></span><span class="ssv">0</span>`;
       wrap.appendChild(row); ssRowEls[s.id]={row,bar:row.querySelector("i"),v:row.querySelector(".ssv")};
     }
   }
   function renderStatSheet(){
-    const shown=STATS.filter(s=>true);
-    const max=Math.max(1,...shown.map(s=>P.stats[s.id]));
-    for(const s of STATS){ const el=ssRowEls[s.id]; if(!el) continue;
-      const on=true;
-      el.row.style.display=on?"":"none";
-      if(on){ el.bar.style.width=clamp(P.stats[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.floor(P.stats[s.id]); }
-    }
+    const z=agentZero(); if(!z.m) agentMult(z); const st=z.m.st, max=Math.max(1,...ASTAT_IDS.map(id=>st[id]));
+    for(const s of AGENT_STATS){ const el=ssRowEls[s.id]; if(!el) continue; el.bar.style.width=clamp(st[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.round(st[s.id]); }
   }
   function drawSpark(){
     const {ctx,w,h}=chartCtx("cSpark");
@@ -2918,15 +2575,15 @@ notify("#general", "10x-ing that shit 🔥");`,
   function showWelcomeBack(el,gain){
     const set=(id,v)=>{ const e=$("#"+id); if(e) e.textContent=v; };
     set("wbTime",fmtDur(el)); set("wbEarned","+"+money(gain)); set("wbRate","+"+money(gain/Math.max(1,el))+"/s");
-    set("wbEff",Math.round(MULT.offlineEff*100)+"%"); set("wbBal",money(P.credits));
+    set("wbEff","50%"); set("wbBal",money(P.credits));
     const o=$("#welcomeBack"); if(o) o.classList.add("open");
   }
   function offlineEarnings(){
     if(!P.up.offline || !P.lastReal) return;
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
     if(el<30) return;
-    const perSec=MULT.passive + MULT.workers*MULT.credit*0.8;   // rough idle rate
-    const gain=Math.floor(perSec*el*MULT.offlineEff);            // efficiency while away (Modem improves this)
+    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; if(!a.m) agentMult(a); const q=P.queues[a.q]||P.queues[0], D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D)+BAL.cooldown); }
+    const gain=Math.floor(perSec*el*0.5);   // offline runs at a flat 50% until the Modem-equivalent returns
     if(gain>0){ P.credits+=gain; P.earned+=gain;
       termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)");
       showWelcomeBack(el,gain);   // full "while you were away" summary modal (replaces the old toast)
@@ -2944,7 +2601,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   // layout measured there would be double-width on a 4K screen. A restored save brings its own
   // arrangement; clampWindow() pulls anything out-of-bounds back in.
   if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
-  if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
   buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); buildAchievements(); initGlobe(); initMatrix();
@@ -2961,7 +2617,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   lastEarned=P.earned;   // seed the credits/sec baseline AFTER offline earnings so they don't spike the first sample
   WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
-  updateSPui();
   if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")+" · "+money(P.credits)); }
   else { termLine("t-info","◈","new career started — welcome, Script Kiddie"); }
   if(matchMedia("(pointer:coarse)").matches){
