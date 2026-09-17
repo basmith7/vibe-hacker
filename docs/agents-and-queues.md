@@ -32,6 +32,21 @@ Legendary systems (`SAVE_VER` bumped, no migration). The economy skeleton is mod
 `tools/validate-rate.mjs` + `aq-sim.mjs --probe` (agreement within 8–15% at kps 0). **Next: Phase 2 —
 queues as purchases, seating UI, rogue proper.**
 
+**Whole-branch review (2026-09-17) — residuals carried into Phase 2.** Not mergeable yet *by design*
+(one queue, no Queues app, no rogue/bounties; the only idle income is gated behind the $4K Win 3.1
+OS earned by typing). Deviation to know about: the Backlog *is* named on day one (agent tiles + the
+"Backlog Seat" Store line) — unavoidable while seats must be sellable; the Queues app in Phase 2 owns
+the reveal. Pacing-table caveat: the sim assumes typing until the first hire, so the "idle" rows are
+really "type until Win 3.1, then idle"; the pre-Win3.1 segment in the live game is ~13 min of typing.
+Open minors (none block Phase 2 work): Store header shows a permanent `+$0/s` from the vestigial
+`MULT.passive`; 5 Hz `innerHTML` rebuilds of the stash/IDE buttons can drop a click that straddles a
+tick; dead `rollEls`/stale `buildToolbox` + `isRevealed` comments and unreachable `legendary` styling;
+the Merge orb can never light in Phase 1 (gated on the Senior queue); `tools/smoke.mjs` doesn't await
+`Page.reload` and leaks Chrome on an unknown scenario name; `aq-sim.mjs` should model the 5%×3 crit
+(most of the 8–15% gap) and default `--probe` to `--craft 0`. Untested paths worth a scenario in
+Phase 2: burnout → coffee break → recovery, prestige, unequip/decommission, IDE craft actions on the
+new `craftSlot` shape, inventory cap, offline earnings.
+
 Treat this doc as a living, resumable record (as with `crafting-update.md` and `window-manager.md`)
 — the phase checkboxes are the source of truth for where to pick back up.
 
