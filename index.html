@@ -954,35 +954,13 @@
     "Golden Pull Request","Sticker of the Rust Crab","Legendary Yak Shaver","Amulet of No Meetings"];
 
   /* ============ upgrade economy ============ */
-  const MACH=[   // computer tiers (index = owned tier); mult scales XP+credits+passive, speed scales task speed
-    {name:"Hand-me-down Laptop",mult:1,speed:1,cost:0},
-    {name:"Gaming Rig",mult:1.8,speed:1.15,cost:800},
-    {name:"Mac Studio",mult:3.4,speed:1.3,cost:9000},
-    {name:"Threadripper Workstation",mult:6.5,speed:1.5,cost:95000},
-    {name:"Liquid-Cooled Beast",mult:13,speed:1.7,cost:950000},
-    {name:"Quantum Rig",mult:32,speed:2.2,cost:1.3e7},
-    {name:"Dyson-Sphere Cluster",mult:90,speed:3,cost:2.2e8},
-  ];
-  const MODEL=[  // AI model tiers → flat success bonus + speed
-    {name:"Naive Autocomplete",success:0,speed:1,cost:0},
-    {name:"GPT-2 (2019)",success:.03,speed:1.05,cost:500},
-    {name:"GPT-4",success:.06,speed:1.12,cost:6500},
-    {name:"Claude Sonnet",success:.09,speed:1.2,cost:70000},
-    {name:"Claude Opus 4.8",success:.12,speed:1.32,cost:750000},
-    {name:"AGI (do not release)",success:.16,speed:1.55,cost:9e6},
-  ];
-  const HIRE=[   // hired auto-agents (total workers = 1 "you" + index)
-    {name:"just you",cost:0},{name:"1st agent",cost:60},{name:"2nd agent",cost:650},
-    {name:"3rd agent",cost:5500},{name:"4th agent",cost:42000},{name:"5th agent",cost:350000},
-    {name:"6th agent",cost:3e6},{name:"7th agent",cost:2.6e7},
-  ];
   const OS_TIERS=[   // cockpit look tiers; buying advances + auto-switches, but any owned look can be picked later
     {id:"dos",     name:"MS-DOS 6.22",  short:"DOS",      cost:0},
-    {id:"win31",   name:"Windows 3.1",  short:"Win 3.1",  cost:650},
-    {id:"win95",   name:"Windows 95",   short:"Win 95",   cost:7500},
-    {id:"win10",   name:"Windows 10",   short:"Win 10",   cost:80000},
-    {id:"neon",    name:"NEON//OS v6",  short:"NEON",     cost:850000},
-    {id:"spaceage",name:"STARSHIP OS",  short:"STARSHIP", cost:9500000},
+    {id:"win31",   name:"Windows 3.1",  short:"Win 3.1",  cost:4000},
+    {id:"win95",   name:"Windows 95",   short:"Win 95",   cost:40000},
+    {id:"win10",   name:"Windows 10",   short:"Win 10",   cost:400000},
+    {id:"neon",    name:"NEON//OS v6",  short:"NEON",     cost:3000000},
+    {id:"spaceage",name:"STARSHIP OS",  short:"STARSHIP", cost:24000000},
   ];
   // OS gates (os-gates update) — the OS ladder is the game's milestone spine, so each tier unlocks
   // real capability, not just a reskin. HIRE_CAP = max "Hire an Agent" tier per OS (DOS is
@@ -1022,7 +1000,6 @@
     typeProg:0.09,   // fraction of agent zero's ticket one keypress completes (unchanged from today's mashCode)
   };
   const HIRE_CAP=[1,2,4,6,8,10];          // total agents incl. you, per OS tier
-  const OS_COSTS=[0,4000,40000,400000,3000000,24000000];
   function queueTier(q){ return QUEUE_TIERS[q.tier]; }
   function queueD(q){ return queueTier(q).D*(1+(q.mods||0)*BAL.modD); }
   function queueBandTop(q){ const t=q.tier, next=QUEUE_TIERS[t+1]?QUEUE_TIERS[t+1].D:QUEUE_TIERS[t].D*1.4;
@@ -1127,27 +1104,24 @@
     return a.m;
   }
   const agentZero=()=>P.agents[0];
+  function hireCost(){ return Math.round(BAL.hireBase*Math.pow(BAL.hireGrowth,P.agents.length-1)); }
+  function seatCost(q){ return Math.round(BAL.seatBase*Math.pow(BAL.seatGrowth,q.seats-1)*Math.pow(BAL.seatTierMult,q.tier)); }
+  function freeSeatQueue(){ return P.queues.find((q,qi)=>q.seats>P.agents.filter(a=>a.q===qi).length)||null; }
   const UPG=[
-    {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
-    {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
+    {id:"hire",    kind:"hire",  emoji:"👥",name:"Hire an Agent",     cat:"Team",  fx:()=>P.agents.length+" on the team · a new hire ships with a Junior starter kit"+(freeSeatQueue()?"":" · needs a free seat")},
+    {id:"seat",    kind:"seat",  emoji:"🪑",name:"Backlog Seat",      cat:"Team",  fx:()=>"seats on the Backlog: "+P.queues[0].seats+" → "+(P.queues[0].seats+1)},
     {id:"notify",  kind:"tier",  emoji:"🔔",name:"Push Notifications",cat:"Getting Started", tiers:[{cost:0},{cost:40,name:"ON"}],  fx:i=>i?"toast pop-ups are ON — mute types below in the Store":"pop-up toasts for wins & finds (routine logs still go to the Terminal)"},
-    {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",     cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
-    {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",   cost:25,   unlocks:"status",    meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your character sheet — level, stats, sanity"},
-    {id:"u_achv",  kind:"unlock",emoji:"🏆",name:"Trophy Case",      cost:150,  unlocks:"achievements",meme:"ACHIEVEMENTS", cat:"Getting Started", fx:()=>"open the Achievements app — and retro-unlock every one you've already earned"},
-    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
-    {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Toolbox",     cost:500,  unlocks:"inventory", meme:"TOOLBOX",      cat:"Getting Started", fx:()=>"reveal the Inventory — roll & stash hardware"},
-    {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",   cost:700,  unlocks:"equipment", meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipped Hardware — gear up your rig"},
-    {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",   cost:1000, unlocks:"ide",       meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch your gear"},
-    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
-    {id:"u_missions",kind:"unlock",emoji:"📋",name:"Mission Board",  cost:1800, unlocks:"missions",  meme:"MISSIONS",     cat:"Getting Started", fx:()=>"reveal the Mission Board — bounties for rewards"},
-    {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
-    {id:"coffee",  kind:"repeat",emoji:"☕",name:"Espresso Machine",base:90, growth:1.22, cat:"Hardware", fx:l=>"+"+(l*15)+" max sanity, +regen"},
-    {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
-    {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
-    {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",       cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name:" (final look)")},
-    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
-    {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
-    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
+    {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",      cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
+    {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",    cost:25,   unlocks:"status",      meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your sheet — sanity, streak, level"},
+    {id:"u_achv",  kind:"unlock",emoji:"🏆",name:"Trophy Case",       cost:150,  unlocks:"achievements",meme:"ACHIEVEMENTS", cat:"Getting Started", fx:()=>"open the Achievements app — and retro-unlock every one you've already earned"},
+    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry", cost:400,  unlocks:"telemetry",   meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
+    {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Inventory",    cost:500,  unlocks:"inventory",   meme:"INVENTORY",    cat:"Getting Started", fx:()=>"reveal each agent's inventory — the gear they've found"},
+    {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",    cost:700,  unlocks:"equipment",   meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipment — gear up the selected agent"},
+    {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",    cost:1000, unlocks:"ide",         meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch gear"},
+    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",         cost:1400, unlocks:"globe",       meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",        cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name+" (+hires, higher item levels)":" (final)")},
+    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",        cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
+    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",        cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest seat/hire":"reinvest credits automatically"},
   ];
   function money(n){ n=Math.floor(n);
     const f=P.settings&&P.settings.numFormat;                                  // number-format setting (Settings panel)
@@ -1260,16 +1234,15 @@ notify("#general", "10x-ing that shit 🔥");`,
       stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
       playSecs:0,burnouts:0,crits:0,
       credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
+      up:{hire:0,seat:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_achv:0,u_inv:0,u_equip:0,u_ide:0,os:0,offline:0,autoBuy:0},
       equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
       toolbox:[], itemSeq:0, craftSlot:null,
       agentSeq:0, agents:null,   // seeded right after construction (newAgent needs P.itemSeq) — see below
       queues:[{tier:0,seats:1,mods:0,configs:[]}], selectedAgent:0,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
-      missions:[], sprintConfig:0, missionSeq:0,
       themeChoice:"dos",
-      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,missions:false,achievements:false}, unlockedStats:["coding"],
+      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,achievements:false},
       intro:true, reveal:{credits:false,shop:false,store:false},
       notify:{grind:true,progress:true,system:true,hype:true},
       settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
@@ -1283,9 +1256,9 @@ notify("#general", "10x-ing that shit 🔥");`,
     "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
     "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
     "agentSeq","agents","queues","selectedAgent",
-    "materials","matPity","missions","sprintConfig","missionSeq",
-    "themeChoice","unlocked","unlockedStats","intro","reveal","notify","settings","windows","achv","seenTips"];
-  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true,achievements:true}; P.unlockedStats=STAT_IDS.slice(); }
+    "materials","matPity",
+    "themeChoice","unlocked","intro","reveal","notify","settings","windows","achv","seenTips"];
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,achievements:true}; }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -1371,15 +1344,15 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ shop / upgrades ============ */
   function upCost(u){
-    if(u.kind==="repeat"){ if(u.max&&P.up[u.id]>=u.max) return null; return Math.floor(u.base*Math.pow(u.growth,P.up[u.id])); }
+    if(u.kind==="hire"){ return P.agents.length>=HIRE_CAP[HIRE_CAP.length-1]?null:hireCost(); }   // OS caps are osLock()'s job, so the card shows 🔒 Win 3.1 rather than MAX
+    if(u.kind==="seat"){ return seatCost(P.queues[0]); }
     if(u.kind==="unlock"){ return P.up[u.id]>=1?null:u.cost; }
-    if(u.kind==="skill"){ const n=P.unlockedStats.length; if(n>=STATS.length) return null; return Math.floor(u.base*Math.pow(u.growth,n-1)); }
     const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
   // OS gate for the NEXT purchase of u: returns the OS tier index it needs, or null if not locked.
-  function osLock(u){
+  function osLock(u){   // OS tier index the NEXT purchase of u needs, or null if not locked
     let need=null;
-    if(u.id==="hire") need=HIRE_CAP.findIndex(c=>c>=P.up.hire+1);       // -1 (never) only past the last tier, which upCost already nulls
+    if(u.kind==="hire") need=HIRE_CAP.findIndex(c=>c>=P.agents.length+1);   // -1 only past the last cap, which upCost already nulls
     else if(u.reqOs!=null) need=u.reqOs;
     return (need!=null && need>P.up.os)?need:null;
   }
@@ -1389,7 +1362,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
     // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
     // app-unlocks reveal progressively (at 50%-saved) so the store isn't a wall of options on day one.
-    if(u.cat==="Getting Started" && u.kind!=="unlock") return true;
+    if(u.cat==="Team") return true;
     if(P.up[u.id]>0) return true;   // already invested in it — never re-hide something owned, even after spending elsewhere
     const c=upCost(u);
     if(c==null) return true;        // maxed/owned edge case
@@ -1408,11 +1381,15 @@ notify("#general", "10x-ing that shit 🔥");`,
         let got=0; for(const a of ACH) if(P.achv[a.id]) got++;
         if(got) termLine("t-warn","🏆","trophy case opened — "+got+" achievement"+(got>1?"s":"")+" retro-unlocked");
       }
-    } else if(u.kind==="skill"){
-      const next=STATS[P.unlockedStats.length];
-      if(next){ P.unlockedStats.push(next.id); P.up.skill++; applyUnlocks(); recompute();
-        toast("🧠 New skill — "+next.lbl, next.em+" now in the task pool · spend SP on it", next.color);
-        termLine("t-git","🧠","learned a new skill: "+next.lbl); }
+    } else if(u.kind==="hire"){
+      const q=freeSeatQueue(); if(!q){ P.credits+=c; toast("🪑 No free seat","Buy a seat first","#ffb000","system"); return; }
+      const who=pick(AGENTS.filter(x=>!P.agents.some(a=>a.name===x.name)))||pick(AGENTS);
+      const a=newAgent(who,P.queues.indexOf(q)); P.agents.push(a); P.up.hire++;
+      recompute(); buildWorkers(); applyLayout(); assignTask(WK[WK.length-1]);
+      toast("👥 Hired — "+a.name,"seated on "+queueTier(q).name+" with a starter kit","#39ff14"); termLine("t-git","👥","hired "+a.name);
+    } else if(u.kind==="seat"){
+      P.queues[0].seats++; P.up.seat++;
+      toast("🪑 New seat","Backlog now seats "+P.queues[0].seats,"#00e5ff"); termLine("t-git","🪑","added a Backlog seat");
     } else if(u.id==="os"){
       const wasFloat=wmFloat();
       P.up.os++; const t=OS_TIERS[P.up.os];
@@ -1430,7 +1407,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       toast("🔔 "+u.name+" enabled", u.fx(1), "#00e5ff", "system");
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
-      if(u.id==="hire"){ recompute(); buildWorkers(); applyLayout(); } else recompute();   // first hire = agents app tiles in
+      recompute();
       const label=u.kind==="tier"?(u.tiers[lvl].name||u.name):(u.name+" Lv"+lvl);
       termLine("t-git","$","bought "+label+" — "+money(c));
       toast("🛠 "+u.emoji+" "+u.name, u.kind==="tier"?("→ "+(u.tiers[lvl].name||"")):("now level "+lvl), "#ffb000");
@@ -1465,7 +1442,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     // upgrades
     for(const u of UPG){
       if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); catHeaderEls[cat]=h; }
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card"; card.dataset.upg=u.id;
       card.innerHTML=`<span class="em">${u.emoji}</span><div class="mid"><div class="nm">${u.name} <span class="lv"></span></div><div class="fx"></div></div><button class="buy"></button>`;
       body.appendChild(card);
       const btn=card.querySelector(".buy"); btn.addEventListener("click",e=>{e.stopPropagation();buy(u);});
@@ -1756,13 +1733,13 @@ notify("#general", "10x-ing that shit 🔥");`,
       s.card.style.display=revealed?"":"none";
       if(revealed) catVisible[u.cat]=true;
       if(!revealed) continue;   // skip formatting hidden cards — nothing depends on it, just saves a little work
-      if(u.kind==="repeat"){ s.lv.textContent="Lv "+lvl; }
-      else if(u.kind==="skill"){ s.lv.textContent=(P.unlockedStats.length)+"/"+STATS.length; }
+      if(u.kind==="hire"){ s.lv.textContent=P.agents.length+"/"+HIRE_CAP[P.up.os]; }
+      else if(u.kind==="seat"){ s.lv.textContent=P.queues[0].seats+" seats"; }
       else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
       else { s.lv.textContent=lvl?("· "+(u.tiers[lvl].name||("T"+lvl))):""; }
       const lock=osLock(u);
       s.fx.textContent=u.fx(lvl)+(lock!=null&&c!=null?" · "+osLockHint(u):"");
-      if(c==null){ s.btn.textContent=(u.kind==="repeat"||u.kind==="skill")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
+      if(c==null){ s.btn.textContent=(u.kind==="hire")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
       else if(lock!=null){ s.btn.textContent="🔒 "+OS_TIERS[lock].short; s.btn.disabled=true; s.btn.classList.remove("maxed"); s.card.classList.remove("hot"); }
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
@@ -1934,7 +1911,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   // (MULT.workers=1+hire, so hire>=1 means an auto-swarm exists); telemetry/globe reuse their buys.
   const APPS=[
     {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
-    {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
+    {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.agents.length>=2},
     {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!!P.unlocked.status},
     {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.store)},
     {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
@@ -2178,9 +2155,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function applyUnlocks(){
-    // stat chips visible per unlocked skill; app panels (incl. locked globe/telemetry) are shown/hidden
-    // wholesale by applyLayout — the old in-panel lockmask overlay is gone (a locked app just isn't tiled).
-    if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
     applyLayout();
   }
   function applyReveal(){   // intro funnel: full-screen terminal → credits → shop button
@@ -2765,10 +2739,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function renderStatSheet(){
-    const shown=STATS.filter(s=>P.unlockedStats.includes(s.id));
+    const shown=STATS.filter(s=>true);
     const max=Math.max(1,...shown.map(s=>P.stats[s.id]));
     for(const s of STATS){ const el=ssRowEls[s.id]; if(!el) continue;
-      const on=P.unlockedStats.includes(s.id);
+      const on=true;
       el.row.style.display=on?"":"none";
       if(on){ el.bar.style.width=clamp(P.stats[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.floor(P.stats[s.id]); }
     }

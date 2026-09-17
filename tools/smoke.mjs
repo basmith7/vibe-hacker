@@ -91,6 +91,19 @@ export const SCENARIOS = {
     const s2 = await readSave();
     assert(s2.agents[0].done + s2.agents[0].failed >= 1, "typing 30 keys must resolve at least one ticket for agent zero");
   },
+  // Buying "Hire an Agent" from the Store adds a starter-kitted agent seated on Backlog, and the seat card gates it.
+  async storeHire() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 10000; s.reveal = { credits: true, shop: true, store: true }; s.maxCredits = 10000; s.up.os = 1; /* DOS caps hires at 1 */ }});
+    assert(s0.agents.length === 1, "start with one agent");
+    let r = await click('[data-upg="hire"] .buy'); assert(r === "ok", "hire card present");
+    await sleep(3500); let s1 = await readSave();
+    assert(s1.agents.length === 1, "hire must be blocked while Backlog has one seat (no free seat)");
+    r = await click('[data-upg="seat"] .buy'); assert(r === "ok", "seat card present"); await sleep(500);
+    r = await click('[data-upg="hire"] .buy'); await sleep(3500); s1 = await readSave();
+    assert(s1.queues[0].seats === 2, "seat bought"); assert(s1.agents.length === 2, "hire bought after seat");
+    assert(s1.agents[1].gear.model.ilvl === 10 && s1.agents[1].q === 0, "hire has starter kit and sits on Backlog");
+    assert(s1.credits < 10000 - 150, "credits were spent");
+  },
 };
 
 const name = process.argv[2];
