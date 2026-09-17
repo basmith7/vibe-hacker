@@ -126,10 +126,14 @@ export const SCENARIOS = {
     assert(!(await vis('[data-upg="hire"]')), "Hire card hidden before the Queues app");
     assert(!(await vis('[data-upg="seat_backlog"]')), "Seat card hidden before the Queues app");
     assert(!(await vis('#queuesPanel')), "Queues panel hidden before purchase");
+    const qn0 = await ev(`document.querySelector('#manualWrap .agent .qn').textContent`);
+    assert(typeof qn0 === "string" && !qn0.includes("Backlog"), "tile stays nameless before the Queues app, got: " + qn0);
     const r = await click('[data-upg="u_queues"] .buy'); assert(r === "ok", "u_queues card present");
     await sleep(3500);
     const s1 = await readSave();
     assert(s1.unlocked.queues === true && s1.up.u_queues === 1, "Queues app unlocked");
+    const qn1 = await ev(`document.querySelector('#manualWrap .agent .qn').textContent`);
+    assert(qn1.includes("Backlog"), "tile names the Backlog once the Queues app is owned, got: " + qn1);
     assert(await vis('[data-upg="hire"]') && await vis('[data-upg="seat_backlog"]'), "Hire/Seat cards revealed after the Queues app");
     assert(await vis('#queuesPanel'), "Queues panel visible after purchase");
     const boards = await ev(`[...document.querySelectorAll('#queuesBody .qboard')].map(b=>b.dataset.q)`);
@@ -169,7 +173,6 @@ export const SCENARIOS = {
   async perAgentGear() {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 100; s.reveal = { credits: true, shop: true, store: true };
       s.unlocked.inventory = true; s.unlocked.equipment = true; s.unlocked.ide = true; s.up.u_inv = 1; s.up.u_equip = 1; s.up.u_ide = 1;
-      const kit = k => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: 10, patches: [], maxPatches: 2 });
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [{ id: 99, slot: "model", name: "Big Model", ilvl: 40, patches: [], maxPatches: 3 }], sanity: 100, q: 0, done: 0, failed: 0 });
       s.queues[0].seats = 2; }});
     let r = await click('.agent .sheet [data-act="select"][data-agent="1"]'); assert(r === "ok", "select button on hired agent's tile");
@@ -202,7 +205,6 @@ export const SCENARIOS = {
   },
   // Click-to-seat: the picker lists every board with a success readout; choosing Kanban moves the agent and it works Kanban tickets.
   async seatAgent() {
-    const kit = (k, il) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 3 });
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 30)])), inv: [], sanity: 100, q: 0, done: 0, failed: 0, rogue: null });
       s.queues = [{ tier: 0, seats: 2, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
@@ -224,10 +226,31 @@ export const SCENARIOS = {
     r = await click('#qpicker .qopt[data-q="1"]'); await sleep(500);
     assert((await readSave()).agents[0].q === 0, "clicking a full board does nothing");
   },
+  // Drag-to-seat: dragging the bot chip past the dead zone onto the Bench board benches it without opening the picker.
+  async dragSeat() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 30)])), inv: [], sanity: 100, q: 0, done: 0, failed: 0, rogue: null });
+      s.queues = [{ tier: 0, seats: 2, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+    assert(s0.agents[1].q === 0, "bot starts on Backlog");
+    const pts = await ev(`(()=>{const z=parseFloat(getComputedStyle(document.documentElement).zoom)||1;
+      const c=x=>{const r=x.getBoundingClientRect(); return {x:(r.left+r.width/2)*z, y:(r.top+r.height/2)*z};};
+      return {zoom:z, chip:c(document.querySelector('#queuesBody .qchip[data-agent="1"]')), bench:c(document.querySelector('#queuesBody .qboard[data-q="-1"]'))};})()`);
+    assert(pts && pts.chip && pts.bench, "chip and Bench board rects readable: " + JSON.stringify(pts));
+    const { chip, bench } = pts;
+    await send("Input.dispatchMouseEvent", { type: "mousePressed", x: chip.x, y: chip.y, button: "left", clickCount: 1 });
+    await sleep(50);
+    const steps = [[chip.x + 10, chip.y + 10], [chip.x + (bench.x - chip.x) * 0.4, chip.y + (bench.y - chip.y) * 0.4], [chip.x + (bench.x - chip.x) * 0.8, chip.y + (bench.y - chip.y) * 0.8], [bench.x, bench.y]];
+    for (const [x, y] of steps) { await send("Input.dispatchMouseEvent", { type: "mouseMoved", x, y, button: "left" }); await sleep(50); }
+    await send("Input.dispatchMouseEvent", { type: "mouseReleased", x: bench.x, y: bench.y, button: "left", clickCount: 1 });
+    await sleep(3500);
+    const s1 = await readSave();
+    assert(s1.agents[1].q === -1, "bot benched by drag, q = " + s1.agents[1].q);
+    assert(await ev(`!!document.querySelector('#queuesBody .qboard[data-q="-1"] .qchip[data-agent="1"]')`), "chip sits on the Bench board");
+    assert(await ev(`!document.querySelector('#qpicker')`), "a completed drag must not open the picker");
+  },
   // An agent that can't hold its queue goes rogue: it stops working, embezzles credits every second, and Kill -9
   // (priced off its gear) restarts it at half sanity with immunity. Covers the Phase 1 residual burnout → recovery path.
   async rogue() {
-    const kit = k => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: 10, patches: [], maxPatches: 2 });
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       // ilvl 10 kit → Quality 20 vs Kanban D25 → 25% success; sanity 5 → the first failure (-23) sends it rogue
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [], sanity: 5, q: 1, done: 0, failed: 0, rogue: null });
@@ -242,12 +265,13 @@ export const SCENARIOS = {
     assert(s2.stolen > 0 && s2.agents[1].rogue.stolen > 0, "stolen counters accumulate");
     assert(s2.agents[1].done + s2.agents[1].failed === done1, "rogue agent works no tickets");
     assert(await ev(`document.querySelector('#queuesBody .qchip[data-agent="1"]').classList.contains('rogue')`), "chip shows rogue");
-    const k9 = await ev(`document.querySelector('#queuesBody .qchip[data-agent="1"] .k9').textContent`);
-    assert(/Kill -9 \$320/.test(k9), "Kill -9 priced at 8 × 40 ilvl = $320, got " + k9);
+    const k9 = 8 * 40;   // BAL.kill9PerIlvl × Σ ilvl of the fixture kit (4 × ilvl 10) — must follow BAL.kill9PerIlvl if it changes
+    const k9txt = await ev(`document.querySelector('#queuesBody .qchip[data-agent="1"] .k9').textContent`);
+    assert(new RegExp("Kill -9 \\$" + k9 + "\\b").test(k9txt), "Kill -9 priced at $" + k9 + ", got " + k9txt);
     const r = await click('#queuesBody .qchip[data-agent="1"] .k9'); assert(r === "ok", "Kill -9 button");
     await sleep(3500); const s3 = await readSave();
     assert(s3.agents[1].rogue === null, "Kill -9 clears rogue");
-    assert(Math.abs(s3.credits - (s2.credits - 320)) < 12, "Kill -9 cost $320 within autosave drift (" + s2.credits + " → " + s3.credits + ")");
+    assert(Math.abs(s3.credits - (s2.credits - k9)) < 12, "Kill -9 cost $" + k9 + " within autosave drift (" + s2.credits + " → " + s3.credits + ")");
     assert(s3.agents[1].sanity >= 40, "restarted at ~half sanity (max 90 → 45), got " + s3.agents[1].sanity);
     assert(!("immune" in s3.agents[1]), "immune is not persisted");
     await sleep(10000); const s4 = await readSave();   // still inside the 20 s immunity: failures can't re-rogue it
@@ -255,7 +279,6 @@ export const SCENARIOS = {
   },
   // While the tab is closed only seated, sane agents earn; a rogue neither steals nor recovers; the Bench earns nothing.
   async offline() {
-    const kit = (k, il) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 2 });
     const mk = (id, name, q, extra) => Object.assign({ id, name, color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 10)])), inv: [], sanity: 100, q, done: 0, failed: 0, rogue: null }, extra);
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       s.up.offline = 1; s.lastReal = Date.now() - 3600 * 1000;   // an hour away with Cloud Sync

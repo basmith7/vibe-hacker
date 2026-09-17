@@ -65,7 +65,7 @@ continuously at `0.02 × Stamina` per second (faster with the *Well-Rested* patc
 - If an agent's sanity hits **zero** it **goes rogue**. The one rogue mode so far is the
   **💸 Embezzler**: it drops its ticket, stops working, and siphons **0.265% of your *current* bank
   every second** (so it can never take you below zero — a bigger bank just bleeds faster). The
-  running total shows up in the Terminal every few seconds.
+  running total shows up in the Terminal every ~10 seconds.
 - It **recovers on its own** once its sanity climbs back to **50%** — but sanity regenerates at
   **half speed** while rogue, so a full unattended episode costs roughly a quarter of your bank
   (more for a low-Stamina agent, which takes longer to recover).
@@ -84,7 +84,7 @@ Two separate purchases, both in the Store's **Team** section:
   slots) so it can work immediately. **Your OS caps the roster**: 1 agent on MS-DOS, 2 on
   Windows 3.1, 4 on Windows 95, 6 on Windows 10, 8 on NEON//OS, 10 on STARSHIP OS.
 - **🪑 *Queue* Seat** — one card per board you own (one card each for the Backlog, Kanban, …). Cost is
-  `150 × 2.2^(seats so far) × 4^tier`, so seats on harder boards cost more. **An agent needs a seat
+  `150 × 2.2^(seats bought so far on that board) × 4^tier`, so seats on harder boards cost more. **An agent needs a seat
   to work**, so you buy these in step with hires; if no seat is free the new hire waits on the
   **Bench**. A board can't have more seats than your OS's hire cap.
 

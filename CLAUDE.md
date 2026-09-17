@@ -144,9 +144,9 @@ new throwaway script unless none of them fits:
 
 - **`tools/smoke.mjs` is the verification entry point.** `node tools/smoke.mjs <scenario>` drives a real
   headless Chrome and prints `PASS`/`FAIL`. Current scenarios: `boots stateShape loopEarns storeHire
-  seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent bench rogue offline`. Run the whole set
+  seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline`. Run the whole set
   before calling a change done (about 15 minutes):
-  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent bench rogue offline; do node tools/smoke.mjs $s || break; done`
+  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline; do node tools/smoke.mjs $s || break; done`
   Add a scenario rather than weakening one.
 - **`tools/aq-sim.mjs` is the balance source of truth** — the expected-value model of the whole economy
   (`--checks` for the design-rule checks, `--table`, `--kps`, `--craft`, `--hours` for playthrough runs).

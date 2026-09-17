@@ -1360,7 +1360,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     return (need!=null && need>P.up.os)?need:null;
   }
   function osLockHint(u){ const n=osLock(u); return n==null?"":"🔒 needs "+OS_TIERS[n].name+" (Upgrade OS)"; }
-  function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c&&osLock(u)==null) return true; } return false; }
+  function anyAffordable(){ for(const u of UPG){ if(!isRevealed(u)) continue; const c=upCost(u); if(c!=null&&P.credits>=c&&osLock(u)==null) return true; } return false; }
   function isRevealed(u){
     if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
     // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
@@ -1430,12 +1430,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     renderShop(); save();
   }
   function autoBuyCheapest(){ let best=null,bc=Infinity;
-    // Candidates (doc §1): hire only when a seat is free; a seat only when none is; next queue; OS. All must be revealed.
-    const anyFree=!!freeSeatQueue();
+    // Candidates (doc §1): hire only when a seat is free; a seat only when none is AND another hire is still possible
+    // at this OS (the seat cap is per board, so otherwise it would keep buying seats nobody can ever sit in);
+    // next queue; OS. All must be revealed.
+    const anyFree=!!freeSeatQueue(), hireCapped=P.agents.length>=HIRE_CAP[P.up.os];
     for(const u of UPG){ if(u.cat==="Automation"||!isRevealed(u)) continue;
       if(u.id==="os" && P.settings && P.settings.themeLock) continue;   // "Lock OS look" keeps the auto-buyer from switching your theme
       if(u.kind==="hire" && !anyFree) continue;
-      if(u.kind==="seat" && anyFree) continue;
+      if(u.kind==="seat" && (anyFree||hireCapped)) continue;
       const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc&&osLock(u)==null){bc=c;best=u;} }
     if(best) buy(best);
   }
@@ -2469,7 +2471,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const w of WK){ const a=workerAgent(w); if(!a) continue; if(!a.m) agentMult(a);
       for(const id of ASTAT_IDS) w.stat[id].textContent=Math.round(a.m.st[id]);
       w.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%"; w.san.parentElement.classList.toggle("low",a.sanity/a.m.sanityMax<0.28);
-      const sq=seatedQueue(a); w.qn.textContent=(sq?queueTier(sq).name:"Bench")+(a.rogue?" · ☠ ROGUE":"");
+      const sq=seatedQueue(a); w.qn.textContent=(sq?(P.unlocked.queues?queueTier(sq).name:"on the queue"):"Bench")+(a.rogue?" · ☠ ROGUE":"");   // spec §1: the Backlog is nameless until the Queues app is owned
       w.el.classList.toggle("rogue",!!a.rogue);
       w.k9.style.display=a.rogue?"":"none"; if(a.rogue){ const k=kill9Cost(a); w.k9.textContent="Kill -9 "+money(k); w.k9.disabled=P.credits<k; }
       w.sel.classList.toggle("on",w.i===P.selectedAgent); w.sel.textContent=w.i===P.selectedAgent?"Selected":"Select"; }
