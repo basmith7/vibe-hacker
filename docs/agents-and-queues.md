@@ -347,6 +347,90 @@ faucet is thinner than the model's endgame assumes.
 - [ ] `guide.md`/`README.md` rewritten for the new systems; `CLAUDE.md` architecture section updated.
 - [ ] Full pacing pass against the targets above; validate in headless Chrome.
 
+## Phase 2 design (2026-09-17) — queues as purchases, seating, rogue
+
+Brainstormed with the user 2026-09-17; the decisions below are settled, the numbers are the sim's
+job. Scope is exactly the Phase 2 checklist above plus the Phase 1 residuals it naturally covers
+(burnout → recovery test, Backlog reveal). Bounties, Configs, rogue *types*, countermeasures and the
+Red Team stay in Phases 3–4.
+
+**Decisions (user):** Queues app is a Getting Started Store unlock (`u_queues`, $2K) — not free with
+Win 3.1 or the first hire. Seating is click-to-seat (a picker with per-queue success readout) as the
+source of truth, with drag-and-drop as sugar on the same code path. The single Phase 2 rogue mode is
+**Embezzler**. A **Bench** exists (`a.q = -1`) — hires no longer need a free seat. Queues and seats
+are sold in the Store as cards generated from `QUEUE_TIERS` (not inside the Queues app).
+
+### §1 State & Store
+
+- `P.queues[]` keeps its shape (`{tier, seats, mods, configs}`), one entry per owned tier, in tier
+  order (you can only install the next tier). `a.q = -1` is the Bench: no tickets, full-rate sanity
+  regen. `P.up.u_queues` / `P.unlocked.queues` like every other app unlock.
+- New `BAL` keys, mirrored 1:1 in `tools/aq-sim.mjs`: `queueCost` (`[0,2000,20000,200000,2e6,15e6]`
+  from the sim), `rogueSteal` (Embezzler fraction of current credits per second), `kill9PerIlvl`
+  (Kill -9 cost per point of the agent's summed gear ilvl), `rogueRegen` (sanity regen multiplier
+  while rogue, < 1), `rogueImmune` (seconds of immunity after Kill -9).
+- Store cards come from tables: `QUEUE_TIERS.slice(1)` → `{id:"q_"+t.id, kind:"queue", tier}` (needs
+  the previous tier owned, `osLock` on `t.os`, shows 🔒 like any OS-gated card); every tier →
+  `{id:"seat_"+t.id, kind:"seat", tier}` visible only once that queue is owned. This replaces the
+  hardcoded "Backlog Seat" line. Seat cost = `seatCost(q)`; per-queue seat cap = `HIRE_CAP[os]`.
+  `upCost`/`osNeed`/`buy` gain a `queue` branch; the `seat` branch reads `u.tier`.
+- `u_queues` ($2000, "Open the Queues app") is the reveal: Hire and Seat cards are hidden until it is
+  owned (nothing lost — hires are impossible before Win 3.1 at $4K anyway). Before it, agent tiles
+  drop the queue name so the Backlog stays nameless on day one; after, they show "Seated: …".
+- Hire lands on `freeSeatQueue()` else the Bench; the "needs a free seat" copy goes.
+- Auto-Buyer buys the cheapest of hire / any seat / next queue (the sim's greedy rule).
+- `SAVE_VER` bumps (`a.q` semantics and the new `a.rogue` field). No migration.
+
+### §2 Queues app & seating
+
+- `APPS` gains `queues` (`queuesPanel`, `unlocked: () => !!P.unlocked.queues`) with a `WIN_LAYOUT`
+  slot carved from the `agents` column (`deploy_mesh` and `achievements` drop to 1 half-row each,
+  `queues` takes 2; the column still totals `WIN_ROWS`). Tiled mode picks it up from the pane order.
+- Layout: one **board** per owned queue plus a **Bench** board last. Board header: emoji, name,
+  tier D, `seated/seats`, the drop ilvl band (`[D, queueBandTop(q)]`). Body: one **chip** per seated
+  agent — colour dot, name, success ★ + %, mini sanity bar, `☠ ROGUE` badge — and dashed
+  placeholders for empty seats.
+- Click-to-seat: clicking a chip opens an inline picker listing every owned queue + Bench with that
+  agent's success %, ★ and expected $/s there (from `a.m.chance/payout/dur`); full boards are greyed
+  "no free seat". Choosing calls **`seatAgent(a, qi)`** — the single mutation point: validates
+  capacity, sets `a.q`, aborts the in-flight ticket, `recompute()`, rebuilds, `save()`.
+- Drag: pointer-event drag of chips between boards, dropping into `seatAgent()`; targets highlight
+  only with a free seat; rect math divides by `uiZoom` as the window drag code does.
+- Build-once / update-on-timer: `buildQueues()` on structural change (buy, hire, seat, rogue
+  transitions), `renderQueues()` at 5 Hz for %, sanity and Kill -9 affordability.
+
+### §3 Rogue (Embezzler) + Kill -9
+
+- `burnout(a)` becomes `goRogue(a)`: sets `a.rogue = {mode:"embezzler", since, stolen}` — **persisted**,
+  replacing the runtime-only `a.down`. `P.burnouts` → `P.rogues` (the "Touch Grass" achievement
+  copy follows). `a.immune` (seconds left) is runtime-only.
+- `ROGUE_MODES` is created now with the single Embezzler row `{id, lbl, em, desc, tick(a,dt)}` so
+  Phase 4 adds rows, not branches. Embezzler tick: `P.credits -= P.credits × rogueSteal × dt`, never
+  below 0, accumulated on `a.rogue.stolen` and `P.stolen` (persisted lifetime counter for Status).
+- While rogue: no tickets; sanity regens at `rogueRegen ×` normal; auto-recovers at 50 % of
+  `sanityMax`, clearing `a.rogue`. Agent zero follows the same rules (typing does nothing while rogue).
+- Kill -9: button on the rogue's chip and Agents-app tile, cost `kill9Cost(a) = kill9PerIlvl × Σ gear
+  ilvl` on the label. Pays → `a.rogue = null`, `a.sanity = 0.5·sanityMax`, `a.immune = rogueImmune`
+  (sanity can't drop below 1 while immune). Unaffordable → shake + toast, no change.
+- Benching a rogue is allowed (`seatAgent(a,-1)`); it has no effect on Embezzler but is the path
+  Phase 4's queue-bound modes will use.
+- Terminal/HUD: a rogue line on transition (`☠ Dave went ROGUE — embezzling $X/s`), a drip line
+  throttled to ~10 s, chips/tiles turn red.
+
+### §4 Balance, verification, docs
+
+- Sim first: `aq-sim.mjs` models Embezzler (steal rate × expected rogue duration vs Kill -9 cost) and
+  derives `rogueSteal`, `kill9PerIlvl`, `rogueRegen` so that waiting out a rogue on your best queue
+  costs ~1–2 min of that queue's income and Kill -9 beats waiting once an agent's gear is above the
+  band it is failing on. `--checks` gains "Kill -9 breakeven" and "overreach loses even with instant
+  Kill -9". Numbers land in `BAL` only after `--checks` passes.
+- `tools/smoke.mjs` scenarios (added, none weakened): `queuesApp`, `buyQueue`, `seatAgent`, `rogue`
+  (covers the Phase 1 residual burnout → recovery path), `bench`. `validate-rate.mjs` fixtures gain
+  `queues`/seating so a two-queue state can be checked against `--probe`.
+- Docs in the same work: `guide.md` (Queues app, seating, Bench, rogue/Kill -9), `README.md` blurb,
+  `CLAUDE.md` (architecture bullets for `seatAgent`, `ROGUE_MODES`, `a.rogue`; the smoke list), this
+  doc's Status line and Phase 2 checkboxes.
+
 ## Review findings (adversarial review, 2026-09-16) — what changed and what's still open
 
 Cross-model review (DeepSeek reviewer, two rounds). Fixed in place above: the EV-has-no-peak flaw
