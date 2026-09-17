@@ -73,6 +73,23 @@ export const SCENARIOS = {
     assert(Array.isArray(s.queues) && s.queues.length === 1 && s.queues[0].tier === 0 && s.queues[0].seats === 1, "one Backlog queue with one seat");
     assert(s.selectedAgent === 0, "selectedAgent defaults to 0");
   },
+  // Two agents on Backlog: the hired one must earn credits idle (no typing), agent zero must not.
+  async loopEarns() {
+    const s0 = await boot({ fixture: s => {
+      s.intro = false; s.credits = 0; s.earned = 0;
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, { id: 50, slot: k, name: "x", ilvl: 10, patches: [], maxPatches: 2 }])), inv: [], sanity: 100, q: 0, done: 0, failed: 0 });
+      s.queues[0].seats = 2; s.up.hire = 1;
+    }});
+    assert(s0.agents.length === 2, "fixture has two agents");
+    await sleep(30000);
+    const s1 = await readSave();
+    assert(s1.earned > 0, "hired agent earned nothing in 30s");
+    assert(s1.agents[1].done + s1.agents[1].failed >= 3, "hired agent resolved <3 tickets in 30s");
+    assert(s1.agents[0].done + s1.agents[0].failed === 0, "agent zero must not progress without typing");
+    await type(3, 10);
+    const s2 = await readSave();
+    assert(s2.agents[0].done + s2.agents[0].failed >= 1, "typing 30 keys must resolve at least one ticket for agent zero");
+  },
 };
 
 const name = process.argv[2];
