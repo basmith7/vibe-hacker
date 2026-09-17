@@ -23,10 +23,14 @@ save-version bump with no migration; the current game stays live on `main` until
 
 ## Status
 
-**Design stage — nothing built.** Brainstormed 2026-09-16, adversarially reviewed and the open
-questions decided 2026-09-17. No `index.html` changes yet. The economy skeleton is **modelled** (2026-09-17,
-`tools/aq-sim.mjs`, see "Balance model"): formulas, drop bands and a rederived cost ladder that hit the
-pacing targets. **Next: implementation plan for Phase 1.**
+**Phase 1 shipped on branch `agents-and-queues` (2026-09-17).** The agent sheet, the Backlog queue and
+the per-agent loop are live: `P.agents[]`/`P.queues[]`, per-agent stats via `agentMult(a)`, hires and
+Backlog seats sold in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's item-level
+band, and the removal of the old stat/SP, Machine, AI Model, global rig, Toolbox, Mission and
+Legendary systems (`SAVE_VER` bumped, no migration). The economy skeleton is modelled in
+`tools/aq-sim.mjs` (see "Balance model") and the live game is checked against it with
+`tools/validate-rate.mjs` + `aq-sim.mjs --probe` (agreement within 8–15% at kps 0). **Next: Phase 2 —
+queues as purchases, seating UI, rogue proper.**
 
 Treat this doc as a living, resumable record (as with `crafting-update.md` and `window-manager.md`)
 — the phase checkboxes are the source of truth for where to pick back up.
@@ -289,20 +293,25 @@ walls, which is the intended emphasis (a real player always crafts *some*).
 bounties aren't modelled (rogue is just uptime loss). The bot sometimes shows a negative Δ for a
 seat because Configs are set to the *weakest* seated agent's safe level — a real player would keep
 weaker agents off a juiced queue. Legacy Monolith's unlimited mods aren't modelled, so it looks
-unattractive (73 h payback) — fix when modelling the endgame. Re-specify `validate-rate.mjs` for the
-new state shape in Phase 1.
+unattractive (73 h payback) — fix when modelling the endgame. `validate-rate.mjs` was re-specified for
+the new state shape in Phase 1 and agrees with `aq-sim.mjs --probe` within 8–15% at kps 0.
+
+Also note: the **Mission Board, Legendaries and the Toolbox roll were removed in Phase 1**, not Phase 3
+as planned — their code read the deleted stat/global-rig systems, so they could not survive the Phase 1
+removals. Until bounties exist (Phase 3) materials come from ordinary cleared tickets, so the material
+faucet is thinner than the model's endgame assumes.
 
 ## Phased delivery
 
 ### Phase 1 — Agent sheet + queue skeleton
 - [x] Branch decision recorded above (`agents-and-queues`, created 2026-09-17).
-- [ ] `AGENT` table + `P.agents[]` (3 stats, 4 slots, inventory, sanity — no level); agent zero = player; hires ship with a Junior starter kit.
-- [ ] One queue (Terminal, Junior, 1 seat) driving `assignTask`/`resolveTask` from agent stats vs. tier band.
-- [ ] `recompute()` becomes per-agent: `MULT` becomes a per-agent struct (`agent.mult`); the few global consumers (telemetry totals, offline earnings) sum over seated agents.
-- [ ] Remove `STATS`/SP, `MACH`, `MODEL`, global `SLOTS`/`equip`/`toolbox`. `SAVE_VER` bump. Rewrite `ACH` at the same time (it reads removed fields).
-- [ ] Minimal drop source: ordinary tickets drop items at the queue's ilvl band (so Phase 1 has progression to tune).
-- [ ] Agents app shows the roster with sheets; Equipment/Inventory/IDE operate on the selected agent.
-- [ ] Sim `rate()` rewritten; first pacing pass. Validator re-specified for the new state shape.
+- [x] `AGENT` table + `P.agents[]` (3 stats, 4 slots, inventory, sanity — no level); agent zero = player; hires ship with a Junior starter kit.
+- [x] One queue (Terminal, Junior, 1 seat) driving `assignTask`/`resolveTask` from agent stats vs. tier band.
+- [x] `recompute()` becomes per-agent: `MULT` becomes a per-agent struct (`agent.mult`); the few global consumers (telemetry totals, offline earnings) sum over seated agents.
+- [x] Remove `STATS`/SP, `MACH`, `MODEL`, global `SLOTS`/`equip`/`toolbox`. `SAVE_VER` bump. Rewrite `ACH` at the same time (it reads removed fields).
+- [x] Minimal drop source: ordinary tickets drop items at the queue's ilvl band (so Phase 1 has progression to tune).
+- [x] Agents app shows the roster with sheets; Equipment/Inventory/IDE operate on the selected agent.
+- [x] Sim `rate()` rewritten; first pacing pass. Validator re-specified for the new state shape.
 
 ### Phase 2 — Queues as purchases
 - [ ] Queue table (tier band, seats, cost, OS gate); Queues app; Store sells queues and seats.

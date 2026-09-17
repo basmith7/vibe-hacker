@@ -1,366 +1,244 @@
 # vibe hacker — player's guide
 
 Everything in the game, explained. If [README.md](README.md) is the pitch, this is the manual —
-what every stat does, how tasks and damage actually work, what each upgrade buys you, and how
-the long game (prestige, achievements, themes) fits together.
+what every stat does, how agents, queues and gear actually work, what each upgrade buys you, and
+how the long game (prestige, achievements, themes) fits together.
 
 ## The core loop
 
-1. **Workers clear tasks.** Each task is tied to one stat. Clearing it earns XP + credits and
-   levels that stat a little. Failing it costs you Sanity (HP).
-2. **Credits buy upgrades** in the 🛒 shop, which make tasks faster, more lucrative, and more
-   reliable — and unlock new panels, stats, and looks.
-3. **XP fills a level bar; a separate "plot" bar fills toward the next career stage.** Both loop
-   forever, with escalating rewards and escalating difficulty.
-4. Eventually you can **prestige (IPO)** for a permanent bonus and start a fresh, stronger run.
+1. **Agents clear tickets off a queue.** Every agent — including *you* — has the same small sheet:
+   three stats, four gear slots, an inventory and a sanity bar. The agent's **Quality** versus the
+   queue's **difficulty** sets its success chance; **Speed** sets how fast the ticket clears.
+2. **Cleared tickets pay credits** and sometimes **drop gear** at the queue's item level.
+3. **Credits buy hires, seats, apps and OS tiers** in the 🛒 Store. Gear and the 🛠 IDE raise your
+   agents' stats — there are **no agent levels**, item level *is* the progression axis.
+4. Eventually you **prestige (IPO)** for permanent Equity and start again, stronger.
 
 Everything below explains one layer of that loop in detail.
 
 ## Getting started
 
-The game starts as a **full-screen terminal** — just you, one stat (Coding), and a progress bar
+The game starts as a **full-screen terminal** — just you, one Backlog queue, and a progress bar
 that only moves when you type or tap. That's deliberate: nothing is explained up front, and you
 buy your way into each app one at a time.
 
-- Fill the bar once (clear your first task) → the **$ credits** counter appears.
-- Reach **10 credits** → the **🛒 Store** app tiles in beside the terminal — your shop for upgrades.
+- Fill the bar once (clear your first ticket) → the **$ credits** counter appears.
+- Reach **10 credits** → the **🛒 Store** app tiles in beside the terminal.
 - Your **first purchase** graduates you into the cockpit: the slim top strip fills in (logo, OS name,
-  credits) plus a **📟 Status** app — your character sheet (skill points, tasks, streak, loot,
-  uptime, sanity, level/stage bars, stat chips).
+  credits) plus a **📟 Status** app.
 - From there, **every system is its own app, bought one at a time** from the Store's "Getting Started"
-  list — each one **tiles into the screen** when you buy it: **👥 Hire an Agent** (Agent Swarm),
-  **📊 Install Telemetry** (charts), **🧰 Open Toolbox** (Inventory — roll & stash gear),
-  **🔧 Equip Hardware** (Equipment), **🛠 Launch the IDE** (crafting bench + materials),
-  **🌐 Go Global** (Deploy Mesh), and **📋 Mission Board** (bounties). The more apps you own, the more
-  the layout splits (tmux-style) to fit them beside the terminal.
+  list — each one **tiles into the screen** when you buy it: **👥 Hire an Agent** (the Agents roster),
+  **📟 Status Readout**, **🏆 Trophy Case**, **📊 Install Telemetry** (charts), **🧰 Open Inventory**,
+  **🔧 Equip Hardware**, **🛠 Launch the IDE** (crafting bench + materials) and **🌐 Go Global**
+  (Deploy Mesh). The more apps you own, the more the layout splits (tmux-style).
   (Once you buy **Windows 3.1** in Upgrade OS, these tiles become draggable windows — see below.)
 
-If you've been playing a while, everything you'd already unlocked stays unlocked — the one-by-one
-funnel only gates a brand-new save.
+## Agents
 
-## Stats
+An **agent** is a worker. You are agent zero; every **👥 Hire an Agent** purchase adds another.
+All of them share one sheet — there is no separate "player character" any more, and **no agent
+levels or skill points**.
 
-Every stat has the same job: it's checked against a task's difficulty to determine your success
-chance and your speed at that specific *kind* of task. One stat also has a global side-effect:
+### The three stats
 
-| Stat | Governs tasks like… | Extra effect |
+| Stat | Fed by | What it does |
 |---|---|---|
-| ⌨️ **Coding** | Write your first function, fix a typo, center a div, rebase, merge conflicts | — |
-| 🧠 **Focus** | Deep work, ignoring Slack, pomodoros | **Speeds up every task**, not just its own |
-| 🐛 **Debugging** | Heisenbugs, race conditions, prod fires | — |
-| 🏛 **Systems** | System design, abstractions, migrations, deploys, Kubernetes, on-call | — |
-| 🧮 **Algorithms** | Big-O, LeetCode, DP | — |
+| 🎯 **Quality** | 🤖 Model slot | Success chance against the queue's difficulty (and crit) |
+| ⚡ **Speed** | ⚙️ Compute slot | How fast a ticket clears |
+| 🧠 **Stamina** | 🧠 Memory slot | Sanity pool and sanity regen |
 
-You start with only Coding. The rest unlock one at a time via **🧠 Learn a New Skill** in the
-shop — buying it adds the next stat to the task pool *and* gives it a visible chip with a `+`
-button, at the same time. There's no stat you can see but not use.
+The fourth slot, 🧰 **Tools**, doesn't feed a stat — it's the **credit multiplier** (and a home for
+misc patches).
 
-*(Rizz and Caffeine used to be their own grindable stats — softening failure damage and speeding
-Sanity regen, respectively. They're retired as active stats for now; a future update reintroduces
-both as equippable gear patches instead, see `docs/crafting-update.md`.)*
+Every stat starts at a floor of **10** and rises purely with the **item level** of the gear in its
+slot (plus patches). So a fully-geared agent is simply an agent wearing high-ilvl, well-patched
+items — which is exactly what queues drop and what the IDE improves.
 
-### How stats raise
+### Sanity and burnout
 
-- **Clearing a task** bumps the stat that task used by a small random amount (~0.4–1.0).
-- **Loot** (see below) bumps a random stat by a bit more (~0.6–1.6) — even one you haven't
-  unlocked yet gets a tiny head start for later.
-- **Skill points** (✦ SP), earned on level-up, can be spent on *any* stat via its `+` button —
-  this is the only stat growth you fully control.
-- **Auto-Allocate SP** (an Automation upgrade) spends your skill points for you, always on
-  whichever stat is currently lowest.
+Each agent has its own **sanity** bar. Its maximum is `50 + 2 × Stamina`, and it regenerates
+continuously at `0.02 × Stamina` per second (faster with the *Well-Rested* patch or Deep Work).
 
-## Tasks: success, speed, and damage
+- Every ticket costs a little sanity, **succeed or fail** — and a **failure costs far more**
+  (roughly 30× the success cost). Running an agent on a queue it can't handle is therefore
+  self-limiting: it will drain itself faster than it regenerates.
+- If an agent's sanity hits **zero** it **burns out** and takes a forced coffee break — it stops
+  working until its sanity has climbed back to **50%**, then resumes on its own.
 
-Each worker (see **Workers & agents** below) is always doing *something*. When a task is
-assigned, its **difficulty** is `5 + (stage × 1.35) + a little randomness` — so tasks get
-harder as your career advances, independent of your stats.
+(A later phase turns burnout into agents going **rogue**; for now it's just downtime.)
 
-**Success chance** starts at 58%, then:
-- **+4.5%** for every point your stat is *above* the task's difficulty (and −4.5% per point
-  below it — a stat well below difficulty can make a task genuinely risky).
-- **+1%** per point of your current streak, capped at +15%.
-- **+ your AI Model's success bonus** (see **Rigs**, up to +16% at the top tier).
-- Clamped between 15% and 98% — nothing is ever a guaranteed win or an auto-loss.
+### Hiring and seats
 
-*(Exception: during the intro, your one manual worker always succeeds — the tutorial doesn't
-let you fail before Sanity even exists on screen.)*
+Two separate purchases, both in the Store's **Team** section:
 
-**Task duration** is `(5.5 + difficulty × 0.35) ÷ speed`, where speed combines your relevant
-stat, your Focus, and your hardware (RAM, Machine, and AI Model speed bonuses all multiply
-together). Better stats and better hardware both directly shorten every task.
+- **👥 Hire an Agent** — adds an agent to the roster. Cost is `150 × 3.2^(hires so far)`, so each
+  one is a real step up. A new hire arrives with a **Junior starter kit** (ilvl 10 in all four
+  slots) so it can work immediately. **Your OS caps the roster**: 1 agent on MS-DOS, 2 on
+  Windows 3.1, 4 on Windows 95, 6 on Windows 10, 8 on NEON//OS, 10 on STARSHIP OS.
+- **🪑 Backlog Seat** — adds a seat on the Backlog queue. Cost is `150 × 2.2^(seats so far)`.
+  **An agent needs a seat to work**, so you buy these in step with hires; the hire button tells you
+  when you have no free seat.
 
-**On success:** XP and credits both scale with difficulty and your stage, then get multiplied
-by your equipped CPU/Hard Drive and Machine/AI-Model tiers. There's also a **crit chance** (from
-your equipped GPU) for a 3× payout on that task. You gain a little Sanity back, your streak
-grows, and there's a 16% chance of a drop — see **Hardware slots** below.
+The **👥 Agents** app is the roster: one tile per agent showing its three stats, sanity bar, which
+queue it's seated on, and a **Select** button. The **selected** agent is the one the Equipment,
+Inventory and IDE apps act on.
 
-**On failure:** you take damage equal to roughly `difficulty × 0.4–0.9`, reduced by up to 50%
-if your Rizz is high. Your streak resets to zero, and you get a small consolation XP trickle.
-If Sanity hits 0, you **burn out**: you lose 40% of your current level's XP progress, Sanity
-partially recovers, your streak resets, and Caffeine takes a small hit. It's a setback, not a
-game over.
+## Queues
 
-## Sanity (HP)
+A **queue** is where tickets come from. Each tier has a base **difficulty `D`** that drives
+everything about it:
 
-Your Sanity bar is your buffer against burnout. It slowly regenerates on its own (faster with
-Caffeine and the Espresso Machine upgrade), heals a little on every successful task, and fully
-refills whenever you level up or advance a career stage. Its maximum grows with your level and
-with Espresso Machine levels. Treat it as a soft resource — running it to zero isn't fatal, just
-costly.
+| Tier | D | OS needed |
+|---|---|---|
+| 📥 Backlog | 10 | MS-DOS |
+| 🗂 Kanban | 25 | Windows 3.1 |
+| 📋 Jira | 45 | Windows 95 |
+| 📟 PagerDuty | 70 | Windows 10 |
+| 🗺 The Roadmap | 100 | NEON//OS |
+| 🏚 Legacy Monolith | 140 | STARSHIP OS |
 
-## Workers & agents
+**Only the Backlog exists right now** — the other five are the roadmap; buying and seating them is
+the next phase of work.
 
-You start as the only worker — a **manual** one, living in the **Terminal** app, meaning tasks
-only advance when you press a key or tap the screen (this is also how the day-1 hackertyper
-terminal works). Buying **👥 Hire an Agent** in the shop opens the separate **Agent Swarm** app
-and adds an *automatic* worker that codes on its own, no input needed. Each further hire adds
-another, up to 8 workers total (you + 7 hires). Auto agents
-always work; your manual slot only works when you're actively mashing/tapping — so hiring
-agents is what turns this from an active clicker into a true idle game. The **🪄 Autocomplete
-Assist** upgrade (Hardware) is a gentler alternative: instead of adding a whole new worker, it
-gives your *own* manual slot a slow passive trickle, so it makes progress even when you're not
-actively typing — up to 75% of a full auto-worker's rate at max level, on top of whatever
-mashing adds.
+For an agent on a queue of difficulty `D`:
+
+- **Success chance** = `0.5 + (Quality ÷ D − 1) × 1.25`, capped at **95%**. So Quality equal to `D`
+  is a coin flip, and about `1.36 × D` maxes you out.
+- **Ticket duration** = `(4 + 0.3 × D) ÷ (1 + Speed ÷ 40)` seconds, clamped to 1.1–16 s, plus a
+  short cooldown. Mashing keys briefly speeds everyone up (and is the *only* thing that moves
+  **your own** agent — agent zero is manual, hires are automatic).
+- **Payout** = `D^1.5 × Tools multiplier`, times your Equity and Deep Work bonuses. Harder queues
+  pay far more — which is the whole reason to gear up and climb.
+- **Drops**: a cleared ticket has a **10%** chance to drop a gear item, rolled at an item level in
+  `[D, 0.92 × next tier's D]` — and capped by your **OS item-level ceiling**. That last clamp is
+  why the OS ladder matters: it's the only thing that lets your gear outgrow the tier you're on.
 
 ## Credits, XP, and leveling
 
-- **Credits** are the shop currency, earned per successful task (plus passive income from
-  Monitors, once bought).
-- **XP** fills a level bar; each level needs progressively more (about +10% and +18 flat over the
-  last). Leveling up grants **2 + (level ÷ 8) skill points**, fully heals Sanity, and every 5th
-  level bumps your **title** — Script Kiddie → Intern → … → CTO → **Benevolent AGI** (20 titles,
-  spanning **level 1 to 100**). Level 100 is a real, deliberately hard-fought milestone — roughly
-  35 million cumulative XP — and going past it gets brutal fast (150 needs ~4 billion). Leveling
-  never hard-caps, it just keeps getting steeper.
-- A separate **stage/plot bar** fills from task progress and advances your **career stage**
-  (Day 1 → Week 1 → … → Singularity Onset, 28 stages) — each stage raises task difficulty and
-  is a slower, longer-term bar than the level bar. Running out of stages doesn't end anything;
-  it just loops into a cosmetic "New Game+" lap counter and keeps going.
+- **Credits** are the Store currency, earned per cleared ticket.
+- **XP** still fills a level bar and your **title** still climbs (Script Kiddie → … →
+  **Benevolent AGI**, 20 titles across levels 1–100), but levels are now **flavor only** — there
+  are no skill points and nothing scales off your level.
+- A separate **stage/plot bar** advances your **career stage** (Day 1 → … → Singularity Onset,
+  28 stages). This is **story only** too; it doesn't change difficulty or rewards any more.
 
 ## Telemetry (the charts)
 
-Bought via **📊 Install Telemetry**, the Telemetry app is your dashboard, four panels:
-- **Credits** — your live balance (big), your **income per second** (the sub-number), and a green
-  line graph of that income rate over the last ~15 seconds. The app's title bar mirrors the
-  balance + rate. Income counts task payouts *and* passive Monitor income.
-- **Stat sheet** — a labeled bar per skill, tallest first. **Hover any row** for a plain-English
-  explainer of what that stat governs.
-- **Failure rate** and **Sanity** — each is a live gauge with a **hover explainer** (what it
-  measures, what moves it, and why you should care).
+Bought via **📊 Install Telemetry**, four panels:
+- **Credits** — live balance, income per second, and a graph of that rate over the last ~15 s.
+- **Your stats** — a labeled bar per stat for *your own* agent. Hover a row for what it does.
+- **Failure rate** and **Sanity** — live gauges with hover explainers.
 
-## The shop
+## The Store
 
 Everything costs credits and falls into four sections:
 
 ### Getting Started
-Always visible — this is the guided path, never hidden. **Hire an Agent** (opens the Agent Swarm
-app), **Learn a New Skill**, **Install Telemetry** (opens the charts app), and **Go Global**
-(opens the Deploy Mesh app). Each app you unlock tiles into the screen beside the terminal.
+Always visible — the guided path. **🔔 Push Notifications** and **🎉 Hype Banners** (pure
+quality-of-life toggles, mutable per type once owned), then the app unlocks: **📟 Status Readout**,
+**🏆 Trophy Case**, **📊 Install Telemetry**, **🧰 Open Inventory**, **🔧 Equip Hardware**,
+**🛠 Launch the IDE**, **🌐 Go Global**.
 
-**Hire an Agent is capped by your OS.** Your operating system decides how many agents it can run
-at once — MS-DOS is single-tasking, so it runs **1** agent; Windows 3.1 (cooperative multitasking)
-runs **2**; Windows 95 (preemptive) runs **4**; Windows 10 runs **6**; NEON//OS and STARSHIP run
-the full **7**. When you hit the cap the buy button turns into a **🔒 Win 3.1**-style lock naming
-the OS you need — buy that in **Upgrade OS** (Rigs) and the next hire opens up.
+### Team
+**👥 Hire an Agent** and **🪑 Backlog Seat** — see **Hiring and seats** above.
 
-Two of these are pure quality-of-life:
-- **🔔 Push Notifications** — turns on the toast pop-ups (wins, finds, level-ups). You start with
-  **none** — day one is a bare terminal — and everything routine is always written to the Terminal
-  log anyway, so this is opt-in flavor, not information you'd otherwise miss. Once owned, a **🔔
-  Notifications** card appears in the Store letting you mute pop-up *types* individually (Grind &
-  Loot / Level & Stage / System & Buys); muted types keep logging to the Terminal.
-- **🎉 Hype Banners** — the flying meme text that streaks across the screen on unlocks and
-  milestones. Also purely cosmetic, and mutable from that same Notifications card once owned.
-
-### Hardware (repeatable — each purchase gets a bit more expensive)
-| Upgrade | Effect |
-|---|---|
-| 🪄 Autocomplete Assist | Your own manual slot auto-fills a bit on its own each second — +5%/level, capped at 15 levels (75%). You still need to type/tap for the rest; this never fully replaces you. |
-| ☕ Espresso Machine | +max Sanity and faster regen |
-
-RAM, CPU, Hard Drive, Monitor, GPU, and Modem are no longer bought here — they're **equip
-slots**, filled by drops. See **Hardware slots** below.
-
-### Rigs (one-time tier upgrades — each tier replaces the last)
-- **💻 New Machine** — Hand-me-down Laptop → … → Dyson-Sphere Cluster. Each tier multiplies
-  *everything* (XP, credits, passive income) and adds a flat speed bonus. The single biggest
-  lever in the game.
-- **🤖 Upgrade AI Model** — Naive Autocomplete → … → AGI (do not release). Adds a flat bonus to
-  every task's success chance (up to +16%) plus a speed bonus.
-- **🖥️ Upgrade OS** — see **Themes** below. Also lives here because it's the same "buy a tier,
-  it just takes effect" pattern as the other two.
+### Rigs
+**🖥️ Upgrade OS** — the one remaining tier ladder, and the spine of the game. See **OS gates**
+below. (The old **New Machine** and **Upgrade AI Model** ladders are gone: power comes from agents
+and their gear now, not from global multipliers.)
 
 ### Automation (one-time toggles)
-Automation is OS-gated too (see **OS gates** below): **Cloud Sync needs Windows 95**, and both
-**Auto-Allocate SP** and **Auto-Buyer need Windows 10**. Locked cards still show in the Store with
-a 🔒 button naming the OS, so you always know what you're saving toward.
-- **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away). Base efficiency
-  is 50%, improved by your equipped Modem (up to 90%). When you come back, a **"Welcome back"
-  summary** shows how long you were gone, what you earned, the effective rate, and your efficiency.
-- **🎯 Auto-Allocate SP** — spends skill points for you, always on your current weakest stat.
-- **🛒 Auto-Buyer** — automatically buys the cheapest *affordable* upgrade every ~1.2 seconds
-  (it'll happily buy a Rigs tier — including a new OS look — without asking, so don't be
-  surprised if your theme changes on its own once you own this).
+Automation is OS-gated: **Cloud Sync needs Windows 95**, **Auto-Buyer needs Windows 10**. Locked
+cards still show with a 🔒 button naming the OS.
+- **🌙 Cloud Sync** — earn credits while the tab is closed (up to 8 hours away), with a
+  "Welcome back" summary when you return.
+- **🛒 Auto-Buyer** — automatically buys the cheapest affordable Store item every ~1.2 seconds
+  (anything outside Automation — usually a seat or a hire, but it will happily buy an OS tier and
+  change your look unless **Lock OS look** is on in Settings).
 
-### Shop visibility
-Hardware/Rigs/Automation cards — and their category headers — stay **hidden** until your
-**peak-ever credit balance** (not your current balance) has reached **50% of that item's
-price**, at any point. Once revealed, an item stays revealed forever, even if you immediately
-spend your credits on something else. Getting Started items and the IPO card are exempt and
-always shown.
+### Store visibility
+Rigs/Automation cards — and their headers — stay **hidden** until your **peak-ever credit balance**
+has reached **50% of that item's price**. Once revealed, always revealed. Getting Started items and
+the IPO card are exempt.
 
-## Hardware slots
+## Gear: the four slots
 
-A successful task has a 16% chance to drop something — most of the time (70%) it's a real
-**Hardware item** for one of six equip slots: 🧠 RAM, ⚙️ CPU, 💾 Hard Drive, 🖥️ Monitor,
-🎮 GPU, 📡 Modem. Each item has an item level (ilvl) that scales roughly with your character
-level, and a retro-flavored name drawn from an era matching your current OS tier (e.g. an early
-OS gets "Orange II RAM"; a late one gets "Singularity Core RAM").
+Every agent has exactly four equip slots, and every slot is filled by **drops**, never bought:
 
-- If a slot is **empty**, a new item for it **auto-equips** immediately — nothing to choose
-  between yet, so there's no reason to make you do it manually.
-- If that slot is **already filled**, the new item goes to your **🧰 Toolbox** stash instead
-  (see below) so you can compare it against what's equipped before deciding.
+| Slot | Feeds |
+|---|---|
+| 🤖 **Model** | Quality |
+| 🧠 **Memory** | Stamina |
+| ⚙️ **Compute** | Speed |
+| 🧰 **Tools** | credit multiplier |
 
-Each slot has a distinct effect, scaling with the equipped item's ilvl:
-- 🧠 **RAM** — task speed
-- ⚙️ **CPU** — XP per task
-- 💾 **Hard Drive** — credits per task
-- 🖥️ **Monitor** — passive credits/sec
-- 🎮 **GPU** — crit chance (capped at 60%)
-- 📡 **Modem** — success chance and offline-earning efficiency (both capped)
+An item is `name + item level + patches`. Its name is drawn from a retro era matching your current
+OS tier. If the finding agent's slot is **empty**, the item auto-equips; otherwise it goes into
+**that agent's own inventory** (18 items, worst auto-scrapped for credits past the cap).
 
-The other 30% of drops are flavor **loot** (Mechanical Keyboard of Clackening, Rubber Duck of
-Debugging, etc.) — a small one-time stat bump with no equip slot of its own.
+The three gear apps all act on the **selected agent** (pick one in the Agents app):
 
-## The Toolbox apps
-
-Your hardware and crafting live in four apps you unlock from the Store — **🔧 Equipment**,
-**🧰 Inventory**, **🛠 The IDE**, and **📋 Missions** — each tiling in (or a window, post-Windows 3.1)
-when you buy it:
-
-- **🔧 Equipped Hardware** — the same 6 slots as before; **Unequip** returns that item to
-  your stash instead of deleting it.
-- **📦 Crafting Materials** — six materials, each with a count and a thin progress bar
-  underneath. The bar is a soft-pity meter: every task that *could* drop that material nudges the
-  bar forward even when it doesn't, so a long unlucky streak is smoothed out instead of possible
-  forever — a full bar guarantees the next one.
-- **🛠 The IDE (crafting bench)** — one **socket** in the middle of the app holding "the item
-  you're currently working on," with your six crafting materials ringed around it. **Drag** an item
-  onto the socket from the Inventory stash or straight off an equipped slot, or use its **→ IDE**
-  button. The ring runs **clockwise from the top**, in the order you'd normally reach for them —
-  which is also roughly common → rare:
-
-  | # | Material | What it does |
-  |---|---|---|
-  | 1 | 📝 Commit | add a patch |
-  | 2 | 🩹 Hotfix | reroll one patch's value |
-  | 3 | 🔀 Refactor | reroll one patch's type |
-  | 4 | 📦 Full Rewrite | reroll every patch |
-  | 5 | ⏪ Revert | strip back to Stock |
-  | 6 | 🔗 Merge | add a patch slot (up to 4) |
-
-  Each orb shows **how many of that material you hold** and lights up green only when the craft is
-  actually possible; hover any orb for its exact cost and, if it's dark, *why*. The socket is
-  outlined in the item's **rarity colour** (Stock grey → Modded blue → Custom-Built cyan →
-  Legendary amber), and the item's patches are listed under the ring alongside its remaining open
-  slots. When you're done, **Equip** it or send it **↩ Toolbox**. In a very narrow window the ring
-  flattens into a plain top-to-bottom list in the same order.
-- **🎲 Roll for Hardware** — gamble credits for a random item in a specific slot instead of
-  waiting on a task drop. Cost scales with your level and rises the same for every slot. Roll
-  once or **×10** at a time.
-- **Toolbox stash** — every item you haven't equipped or decommissioned, as a filterable card
-  list (by slot and by rarity — **Stock → Modded → Custom-Built**, based on how many patches it
-  has). Each card can **Equip** (swapping whatever's currently in that slot back into the stash),
-  send **→ IDE**, or **Decommission** for a small credit *and material* refund. The stash holds 18
-  items — past that, the single worst one auto-scraps for credits to make room.
+- **🔧 Equipment** — its four equipped items; **Unequip** returns one to that agent's inventory.
+- **🧰 Inventory** — that agent's stash, filterable by slot and rarity. Each card can **Equip**,
+  send **→ IDE**, or **Decommission** for credits + materials.
+- **🛠 The IDE** — the crafting bench: one **socket** in the middle holding the item you're working
+  on, with your six crafting materials ringed around it. Drag an item onto the socket (or use its
+  **→ IDE** button). Each orb shows how many of that material you hold and lights up only when the
+  craft is possible; hover a dark orb for why. In a very narrow window the ring flattens into a list.
+  Materials are **shared across all agents**; the item in the socket belongs to whoever owns it.
 
 ## Patches & crafting
 
-Once level 25+ items start dropping, Hardware can carry up to **4 patches** — small bonuses
-layered on top of the item's base ilvl effect. An item's **rarity** is just how many patches it
-has: **Stock** (0), **Modded** (1–2), **Custom-Built** (3–4). How many patch slots an item *can*
-hold depends on its ilvl when it dropped (2 below ilvl 25, 3 below ilvl 60, 4 above).
+An item can carry **2–4 patches** (2 below ilvl 25, 3 below ilvl 60, 4 above). Its **rarity** is
+just how many it has: **Stock** (0), **Modded** (1–2), **Custom-Built** (3–4).
 
-Patches are either **slot-specific** (a bonus to that slot's own effect — e.g. RAM can roll extra
-task speed, GPU extra crit chance) or **generic** (flat +stat to any of the 5 stats, +Max Sanity,
-or reduced failure damage) and can roll on any slot. Better patch tiers are rarer and gated by the
-item's ilvl, same as the item itself.
-
-Patches are **never bought directly** — only earned as drops, then applied in **The IDE** using a
-material + a small amount of credits:
-
-| Material | Where it comes from | What it does in the IDE |
+| Patch | Rolls on | Effect |
 |---|---|---|
-| 📝 Commit | any successful task (common) | Add a random patch to an open slot |
-| 🩹 Hotfix | Debugging tasks | Reroll one patch's *value* (same patch, new number) |
-| 🔀 Refactor Token | Systems tasks | Reroll one patch's *type* entirely |
-| 📦 Full Rewrite | rare — hit every 1,000 total lines of code | Reroll *every* patch on the item |
-| ⏪ Revert Commit | rare | Strip the item back to Stock (no patches) |
-| 🔗 Feature Branch Merge | rare, level 40+ | Add a patch slot beyond the item's current count (up to 4) |
+| **Fine-Tuned** | Model | +15 / 30 / 60% Quality |
+| **Long-Context** | Memory | +15 / 30 / 60% Stamina |
+| **Overclocked** | Compute | +15 / 30 / 60% Speed |
+| **Monetized** | Tools | +5 / 10 / 20% credits |
+| **Sharp** | any slot | +2 / 4 / 8 Quality |
+| **Snappy** | any slot | +2 / 4 / 8 Speed |
+| **Resilient** | any slot | +2 / 4 / 8 Stamina |
+| **Well-Rested** | any slot | +10 / 20 / 35% sanity regen |
 
-**Decommissioning** unwanted gear also refunds a Commit or two on top of the usual credits,
-scaled to the item's ilvl — so gear you don't want to keep still feeds the crafting economy
-instead of just disappearing.
+Higher patch tiers are gated by the item's own item level, so good patches need good items.
 
-## Missions
+Patches are never bought — they're applied in the IDE with a material plus a little credit:
 
-The **📋 Missions** app always has **3 active contracts**, each tied to
-a stat: 🐛 Debugging Sprint, 🚀 Deploy Week, 🧮 Algorithm Grind, 🎯 Focus Block, or the stat-agnostic
-⚡ Hackathon. Every task you complete counts toward *all three* — nothing stalls just because you
-weren't working on the "right" kind — but a task matching a mission's stat is both **weighted
-higher** in what gets assigned to you and gives a chance at a **bonus material** on top of the
-mission's normal drops.
+| Material | Where it comes from | What it does |
+|---|---|---|
+| 📝 Commit | any cleared ticket (common) | Add a random patch to an open slot |
+| 🩹 Hotfix | cleared tickets | Reroll one patch's *value* |
+| 🔀 Refactor Token | cleared tickets | Reroll one patch's *type* |
+| 📦 Full Rewrite | every 1,000 lines of code written | Reroll *every* patch on the item |
+| ⏪ Revert Commit | rare | Strip the item back to Stock |
+| 🔗 Feature Branch Merge | rare, Jira-tier queues and up | Add a patch slot (up to 4) |
 
-Completing a mission pays out a lump sum of its bonus material, some **⚙️ Sprint Config**, and a
-35% chance at a direct Hardware item. A slot stays "complete" on the board until *all three* are
-done, at which point the whole board rerolls at once. You can also **reroll early** for credits —
-cost scales with the level of whatever you'd be discarding, so an untouched board is cheap to
-scrap but one you've already invested Sprint Config into costs more.
-
-**Sprint Config** is missions' own crafting currency — spend it on an active mission to make it
-bigger before it pays out: **Extend** (+3 tasks, a small permanent payout boost) or **Crunch**
-(bigger payout boost, same length). Same add/reroll spirit as gear patches, applied to a mission
-instead of an item.
-
-## Endgame depth
-
-A few systems only kick in once you're deep into a run:
-
-- **Hardware slots open with your OS** — you start with just **RAM, CPU, and Hard Drive**; every
-  Upgrade OS tier opens one more (full table under **OS gates** below). The last two are the endgame
-  ones: ❄️ **Cooling** (NEON//OS; boosts Sanity regen) and 🔮 **Neural Interface** (STARSHIP OS,
-  the final tier; its base effect is a small bonus to **all 5 stats at once**, unlike every other
-  slot which only ever touches its own single effect).
-- **Item level has a ceiling** tied to your current OS tier — buying a new OS doesn't just change
-  your look, it also raises the best gear you can possibly find or roll. Outgrow MS-DOS and your
-  drops outgrow it too.
-- **Set bonus** — every **2 equipped items that are Custom-Built or better** (Legendary counts)
-  adds a stacking **+5%** to task speed, XP, and credits. Full-clearing all 8 slots at Custom-Built+
-  is a real, visible payoff, shown right in the Equipped Hardware header once it's active.
-- **Legendary Build** — a vanishingly rare (~1%) alternative to a normal roll, dropped instead of
-  crafted: a named item with fixed patches already on it (e.g. *Vim's Blessing*, *The ThinkPad X1
-  of Legend*). Shown with a gold border and a ★ next to its level. You can still craft further
-  patches onto one — it's a rare head start, not a permanently frozen item.
+Each material has a thin **soft-pity bar**: every ticket that *could* drop it nudges the bar even
+when it doesn't, so a full bar guarantees the next one. **Decommissioning** unwanted gear also
+refunds materials, so gear you don't keep still feeds the economy.
 
 ## OS gates (Upgrade OS)
 
 **🖥️ Upgrade OS** is the spine of the game, not a reskin. Every tier changes the look (see
-**Themes**), raises the item-level ceiling, and unlocks real capability:
+**Themes**), raises the **item-level ceiling**, raises the **agent cap**, and unlocks the next
+queue tier:
 
-| OS tier | Cost | Hardware slot opened | Agents it can run | Also unlocks |
-|---|---|---|---|---|
-| MS-DOS 6.22 | — | RAM, CPU, Hard Drive | 1 | tmux-style tiled apps |
-| Windows 3.1 | 650 | 🖥️ Monitor | 2 | draggable windows + Start menu |
-| Windows 95 | 7.5K | 📡 Modem | 4 | 🌙 Cloud Sync |
-| Windows 10 | 80K | 🎮 GPU | 6 | 🎯 Auto-Allocate SP, 🛒 Auto-Buyer |
-| NEON//OS v6 | 850K | ❄️ Cooling | 7 | — |
-| STARSHIP OS | 9.5M | 🔮 Neural Interface | 7 | — |
+| OS tier | Cost | Agent cap | Item-level ceiling | Queue tier opened | Also unlocks |
+|---|---|---|---|---|---|
+| MS-DOS 6.22 | — | 1 | 30 | 📥 Backlog | tmux-style tiled apps |
+| Windows 3.1 | $4K | 2 | 55 | 🗂 Kanban | draggable windows + Start menu |
+| Windows 95 | $40K | 4 | 85 | 📋 Jira | 🌙 Cloud Sync |
+| Windows 10 | $400K | 6 | 125 | 📟 PagerDuty | 🛒 Auto-Buyer |
+| NEON//OS v6 | $3M | 8 | 175 | 🗺 The Roadmap | — |
+| STARSHIP OS | $24M | 10 | none | 🏚 Legacy Monolith | — |
 
-Locked slots show as **🔒 Locked — unlocks on …** in Equipment and can't be rolled for in
-Inventory; drops never land in a slot you haven't opened. Locked Store cards keep their price
-hidden behind a **🔒 Win 95**-style button until you own that OS. Since **IPO / Cash Out** resets
-your OS to MS-DOS, every prestige run re-opens the ladder from three slots and one agent.
+The **item-level ceiling** is the important one: drops are clamped to it, so no amount of grinding
+a queue raises your gear past what your OS can run. Locked Store cards keep their price behind a
+**🔒 Win 95**-style button until you own that OS. Since **IPO / Cash Out** resets your OS to
+MS-DOS, every prestige run re-opens the ladder from one agent.
 
 ## Themes (Upgrade OS)
 
@@ -398,32 +276,30 @@ the tiled layout until you buy your way back up to Windows 3.1.
 
 ## Prestige (IPO / Equity)
 
-Once you're **level 10+** and have earned enough lifetime credits, the shop's top card lets you
-**cash out**. This is a hard reset — level, stats, credits, every upgrade (including your
-Machine, Model, and OS tier) goes back to the very start — in exchange for permanent
-**Equity**, worth **+2% XP and credits, forever**, stacking with every future cash-out.
+Once you've **earned $20,000** in a run, the Store's top card lets you **cash out**. This is a hard
+reset — credits, OS tier, hires, seats and **every agent's gear** go back to the very start — in
+exchange for permanent **Equity**, worth **+2% XP and credits, forever**, stacking with every future
+cash-out.
 
-The amount of Equity you earn depends on how much you've earned this run, your stage, and your
-level — roughly `√(total earned ÷ 15,000) + stage + level × 0.15`, rounded down. Bigger, longer
-runs bank more Equity per cash-out. Achievements, lifetime totals, and your best streak all
-survive a cash-out; only the active run resets.
+Equity earned is `floor(√(total earned ÷ 15,000) + your highest queue tier)`. Bigger, longer runs
+that reach deeper queues bank more per cash-out. Achievements, lifetime totals and your best streak
+survive; only the active run resets.
 
-This is a different thing from the stage-list "New Game+" mentioned above — that one is just a
-cosmetic lap counter for finishing all 28 stages, with no reset. IPO is the real prestige loop.
+This is a different thing from the stage-list "New Game+" — that's just a cosmetic lap counter for
+finishing all 28 stages, with no reset. IPO is the real prestige loop.
 
 ## Achievements
 
-22 achievements track your milestones, from "Hello, World" (clear one task) to "Serial Founder"
-(cash out 5 times) to "Triple Digits" (reach level 100). They live in their own **🏆 Achievements**
+20 achievements track your milestones, from "Hello, World" (clear one ticket) to "Full Floor"
+(field 8 agents at once) to "Serial Founder" (cash out 5 times). They live in their own **🏆 Achievements**
 app — a checklist with a running completion count — unlocked by buying **Trophy Case** from the
 Store's Getting Started list. **Nothing is tracked until you buy it**; the moment you do, every
 achievement you've *already* earned is granted at once (silently), and from then on new ones unlock
 as you play (popping a toast if you own **Push Notifications**, and always logging to the Terminal).
-Old saves keep their trophy case automatically.
 
 Most of the list stays **hidden** until you're close: progress-based achievements (task counts,
 level thresholds, streaks, etc.) only appear once you're **75% of the way there**, so the panel
-doesn't open as a wall of 21 distant goals. A few are single-trigger events with no meaningful
+doesn't open as a wall of distant goals. A few are single-trigger events with no meaningful
 "75%" (Touch Grass/burnout, Critical Hit, IPO Day) — those stay fully hidden until the instant
 you actually earn them. "Hello, World" is always visible as a first nudge.
 
@@ -439,8 +315,7 @@ the Store appears at 10 credits, and reaching it is quick enough that waiting is
 
 | Key / action | Effect |
 |---|---|
-| Mash any key / tap the screen | Drives your manual worker; surges the whole game briefly |
-| `Shift` + a stat's `+` | Spend **all** your skill points on that one stat |
+| Mash any key / tap the screen | Drives **your own** agent; briefly surges every agent's speed |
 | Click the OS name (top-left) | Switch to any unlocked look |
 | `T` | Cycle through your unlocked looks |
 | `?` (or the **?** button, top-right) | Show/hide the controls overlay |
@@ -450,7 +325,7 @@ the Store appears at 10 credits, and reaching it is quick enough that waiting is
 
 ## Deep Work (the fullscreen bonus)
 
-Play **fullscreen** and you earn **🎧 Deep Work**: **+25% XP, +25% credits, and +50% sanity regen**,
+Play **fullscreen** and you earn **🎧 Deep Work**: **+25% credits and +50% sanity regen**,
 for as long as you stay fullscreen. No browser chrome, no tabs, no distractions — the game pays you
 for actually focusing.
 
@@ -480,14 +355,15 @@ The **⚙ button** (top-right, next to **?**) opens a Settings panel — prefere
 
 ## A few tips
 
-- **Machine tiers are the biggest lever.** They multiply everything at once, so when you can
-  afford one, it usually beats waiting on a Hardware slot upgrade to drop.
-- **Focus helps every task, not just its own** — it's worth leveling even if you're not
-  actively doing Focus tasks.
-- **Rizz is a defensive stat.** If you're burning out a lot, it's the fix, not more Sanity
-  upgrades.
-- **Don't rush your first IPO.** Equity scales with how much you've earned *and* how far you've
-  gotten — a longer first run banks more permanent bonus than cashing out the moment you hit
-  level 10.
-- **Auto-Buyer will spend on Rigs tiers, including OS.** If you want to control when your look
-  changes, hold off on Auto-Buyer, or just enjoy the surprise.
+- **Hires and seats go together.** A hire with no free seat can't work, and a seat with nobody in it
+  earns nothing — the Store tells you which one you're short of.
+- **Quality is the stat that gates everything else.** Below ~`0.8 × D` an agent fails so often it
+  drains its own sanity into a burnout loop; Speed and Tools only pay off on tickets you actually clear.
+- **Gear your weakest agent first.** Income is a *sum* over agents, so a burned-out or under-geared
+  agent is a flat hole in your rate — not something your best agent makes up for.
+- **The OS ceiling is the real wall.** When your drops all come back at the same item level, you've hit
+  it: buy the next OS tier rather than grinding more.
+- **Don't rush your first IPO.** Equity scales with total earnings *and* your deepest queue tier, so a
+  longer first run banks more permanent bonus than cashing out the moment you can.
+- **Auto-Buyer will buy an OS tier without asking** (and switch your look with it). Turn on
+  **Lock OS look** in Settings if you'd rather control that yourself.

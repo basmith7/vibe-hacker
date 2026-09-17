@@ -193,4 +193,9 @@ function checks() {
     console.log(`    ilvl ${String(il).padStart(3)}: best=${T.TIERS[best.ti].name} (${Math.round(best.r.chance * 100)}%, up ${Math.round(best.r.uptime * 100)}%) ${best.r.chance >= 0.85 ? "✓" : "✗ overreach pays"}   [${rows.join(" | ")}]`); }
 }
 
-if (args.checks) checks(); else run();
+if (args.probe) {   // same fixture as tools/validate-rate.mjs: N agents (agent zero idle) with uniform ilvl gear on Backlog
+  const F = JSON.parse(process.env.FIX || "{}"); const n = F.agents ?? 3, il = F.ilvl ?? 10;
+  const S = initial(); S.queues[0].seats = n; for (let i = 1; i < n; i++) S.agents.push(newAgent(il, 0)); S.agents[0] = newAgent(il, 0); S.hires = n;
+  for (const k of [0, 2]) { let cr = 0, succ = 0, tot = 0; S.agents.forEach((a, i) => { const r = agentRate(a, S.queues[0], k, i === 0); cr += r.credits; succ += r.succ; tot += r.tps * r.uptime; });
+    console.log(JSON.stringify({ kps: k, creditsPerSec: +cr.toFixed(2), tasksPerSec: +tot.toFixed(2), successRate: +(succ / Math.max(1e-9, tot)).toFixed(2) })); }
+} else if (args.checks) checks(); else run();

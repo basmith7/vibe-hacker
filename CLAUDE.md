@@ -19,6 +19,8 @@ no bundler, no `npm install`.
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
 | `todo.md` | Standing backlog of future ideas (formalized, but not commitments). Root, because it's the primary agent-facing worklist. |
 | `docs/ideas.md` | **Staging inbox** — raw ideas before they're formalized. Two sections with a specific workflow; see "Idea-intake workflow" below. |
+| `docs/agents-and-queues.md` | **The active rewrite** — the phased design+delivery doc for the Agents & Queues restructure being built on branch `agents-and-queues`. Its `## Status` line and Phase checkboxes are the source of truth for where to pick up. |
+| `tools/` | Node harnesses: `smoke.mjs` (headless-Chrome scenarios — the verification entry point), `aq-sim.mjs` (balance model + `--probe`), `validate-rate.mjs` (live game vs. model), `balance-sim.mjs` (the old economy on `main`). |
 | `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
 | `docs/window-manager.md` | An **active, in-progress** phased design+delivery doc (same format as `docs/crafting-update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system. Note: the design has since shifted so the moveable-window desktop is an *earned "Windows 3.1" upgrade*, with a tmux-style tiled terminal as the pre-upgrade UI — check its `## Status` line and top sections before assuming anything about the current UI's structure. |
 
@@ -45,22 +47,21 @@ So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → `todo.md` **or** a n
 
 ## Current state (as of the last major work)
 
-The "crafting update" — a Path-of-Exile-style itemization overhaul — is fully shipped across all
-7 of its planned phases (see `docs/crafting-update.md`'s Status line for the detailed retrospective of
-each). In short: the old flat repeatable Hardware upgrades are gone, replaced by 8 equip slots fed
-by drops/gambling, a Toolbox stash + IDE crafting bench, patches/rarity, a materials economy, a
-rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legendary uniques). Any
-further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
-phase of that plan.
+**Active work: the Agents & Queues rewrite, on branch `agents-and-queues` — `docs/agents-and-queues.md`
+is the spec and the source of truth for where to pick up.** It restructures the game around two systems:
+a **Desktop** (your machine — the OS ladder, apps, queues and their seats) and **Agents** (a roster where
+every agent, including you, has the same sheet: three stats, four gear slots, its own inventory and
+sanity bar, and **no levels** — item level is the only progression axis). **Phase 1 is shipped on that
+branch**: `P.agents[]`/`P.queues[]`, the per-agent worker loop on the Backlog queue, hires and Backlog
+seats in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's ilvl band, and the removal of
+the old stat/skill-point system, Machine and AI Model ladders, global 8-slot rig, Toolbox roll, Mission
+Board and Legendaries. Phase 2 (queues as purchases, seating UI, rogue agents) is next.
 
-In progress: `docs/window-manager.md`, a phased plan (Phases 1–4 shipped, Phase 5 next — check its
-`## Status` line) reworking the UI into an OS-like progression: a day-1 minimal terminal → tmux-style
-tiled panes as apps are purchased one by one → draggable/minimizable windows + Start Menu unlocked by
-the earned "Windows 3.1" OS tier (`P.up.os >= 1`). Phase 3 moved the stats/HUD into a Status app and
-slimmed the top strip into a taskbar; Phase 4 turned the entire shop into apps (Store + Equipment/
-Inventory/IDE/Missions, each purchase-gated) and **retired the slide-out shop drawer entirely** — so
-the shop `#shop` aside and `buildShop`/`buildToolbox` now render into `#grid` app panels, not a drawer. It also absorbed two `todo.md` items (theme-CSS dedup, onboarding
-reveal polish) — see its "Backlog absorbed" section.
+**`main` still runs the previous game** and auto-deploys, so this branch merges only when the rewrite is
+playable end to end. Two earlier, fully-shipped plans describe what's on `main` and what Phase 1 replaced:
+`docs/crafting-update.md` (the 7-phase itemization overhaul) and `docs/window-manager.md` (the terminal →
+tiled-panes → floating-windows UI progression; Phases 1–4 shipped, Phase 5 next). The window-manager work
+is orthogonal to the rewrite and still applies.
 
 ## Architecture inside `index.html`
 
@@ -75,20 +76,30 @@ reveal polish) — see its "Backlog absorbed" section.
   box) and is wiped on click. So whenever a change transforms an existing field's *shape* (not just
   adds a new one), bump `SAVE_VER` and move on — don't write grandfather/backfill code. The old
   key-sniffing migration ladder that used to live in `loadState()` was deleted for this reason.
-- **The OS tier (`P.up.os`, index into `OS_TIERS`) is the milestone spine.** It gates hardware slots
-  (`SLOTS[].os`), the agent cap (`HIRE_CAP`), Automation items (`UPG[].reqOs`), the window paradigm
-  (`wmFloat()`), item-level caps and retro item names. `osLock(u)` is the single check the Store uses;
-  when gating something new behind an OS, hang it off that rather than adding a bespoke conditional.
-- `recompute()` derives the `MULT` (multipliers: speed/xp/credit/crit/etc.) and `GEAR` (equipped-item
-  patch sums) objects from current stats/upgrades/equipped hardware. Call it after anything that
-  changes equipment, upgrades, or stats-in-a-way-that-matters — it's cheap, safe to over-call.
+- **The OS tier (`P.up.os`, index into `OS_TIERS`) is the milestone spine.** It gates the queue tiers
+  (`QUEUE_TIERS[].os`), the agent cap (`HIRE_CAP`), the item-level ceiling (`ILVL_CAP`), Automation items
+  (`UPG[].reqOs`), the window paradigm (`wmFloat()`) and retro item names. `osLock(u)` is the single check
+  the Store uses; when gating something new behind an OS, hang it off that rather than a bespoke conditional.
+- **Agents and queues are the two state arrays.** `P.agents[]` — `{id, name, color, gear:{model,memory,
+  compute,tools}, inv, sanity, q, done, failed}`, agent zero is you (manual; hires are automatic) — and
+  `P.queues[]` — `{tier, seats, mods, configs}`, Backlog only so far. `P.selectedAgent` is what the
+  Equipment/Inventory/IDE apps act on; `P.craftSlot` is `{owner, item}`. The runtime-only fields `a.m`
+  (derived stats) and `a.down` (burnt out) are stripped in `save()` — never add them to `PERSIST`.
+- **`agentMult(a)` is the per-agent recompute.** It writes `a.m = {st, chance(D), dur(D), payout(D,q),
+  sanityMax, regen}` from `agentStats(a)` (gear ilvl + patches + the `BAL.floor`), Equity and Deep Work.
+  `recompute()` just loops every agent calling it — cheap, safe to over-call, call it after anything that
+  touches gear, patches or `P.equity`. (`MULT` still exists but is vestigial; don't add to it.)
+- **`BAL` is the single tunables table** — every number in the economy (stat coefficients, success and
+  duration curves, payout exponent, sanity drain/regen, drop rate, hire/seat cost ladders) lives there and
+  is mirrored 1:1 in `tools/aq-sim.mjs`. Change a number in one and change it in the other, then re-check
+  with `--probe` (below); don't inline a magic constant into the game loop.
 - **Data-driven tables, not scattered conditionals.** New content is almost always a new entry in a
-  table (`SLOTS`, `PATCH_DEFS`, `MISSION_DEFS`, `MATS`, `UPG`, `LEGENDARIES`, `ACH`, `TASKS`, `STATS`,
+  table (`AGENT_STATS`, `AGENT_SLOTS`, `QUEUE_TIERS`, `PATCH_DEFS`, `MATS`, `UPG`, `ACH`, `CRAFT_ACTIONS`,
   etc.) plus maybe a small function, rather than new branches spread through the game loop. This is
   the pattern that kept 7 phases of itemization additions easy — keep using it.
-- The shop UI (`buildShop()`/`renderShop()`, `buildToolbox()`/`renderToolbox()`) rebuilds its DOM
+- The Store/gear UI (`buildShop()`/`renderShop()`, `buildToolbox()`/`renderToolbox()`) rebuilds its DOM
   once and then just updates text/classes on a timer — look at the existing `slotEls`/`matEls`/etc.
-  caching pattern before adding a new shop section.
+  caching pattern before adding a new section.
 - **1920×1080 is the reference resolution.** Every font size/padding/border in the CSS is a fixed px
   value tuned for it. `fitScale()` sets a CSS `zoom` on `:root` for anything larger (capped at 3×),
   so the logical canvas stays ~1920 wide no matter the display; below the reference it holds at 1× and
@@ -101,7 +112,7 @@ reveal polish) — see its "Backlog absorbed" section.
   screen by editing its `h` — but every column's heights must still total `WIN_ROWS`.
 - **Deep Work (`syncFocusMode`) is the fullscreen bonus.** Detection needs *both* the Fullscreen API
   and the `display-mode: fullscreen` media query — F11 only triggers the latter. Effects are applied
-  in `recompute()` behind `focusOn`, so any new multiplier gets them for free.
+  in `agentMult()` behind `focusOn`, so any new per-agent multiplier gets them for free.
 - **The IDE crafting bench is a ring, not a list.** `CRAFT_ACTIONS` is the single table driving it:
   each row carries its material, label, unit-circle `x`/`y` position, validity predicate and the
   reason string shown when it's unavailable. `fitBench()` (a `ResizeObserver` on `#benchWrap`) sizes
@@ -114,9 +125,24 @@ reveal polish) — see its "Backlog absorbed" section.
 
 ## Verifying changes (there is no test suite)
 
-This project has no automated tests. Verification is done by driving a real headless Chrome
-instance via the Chrome DevTools Protocol (CDP) from throwaway Node scripts. The recipe, proven
-across every phase of this project:
+There are no unit tests, but there are three Node harnesses in `tools/` — use them, don't hand-roll a
+new throwaway script unless none of them fits:
+
+- **`tools/smoke.mjs` is the verification entry point.** `node tools/smoke.mjs <scenario>` drives a real
+  headless Chrome and prints `PASS`/`FAIL`. Current scenarios: `boots stateShape loopEarns storeHire
+  noOldSystems perAgentGear`. Run the whole set before calling a change done:
+  `for s in boots stateShape loopEarns storeHire noOldSystems perAgentGear; do node tools/smoke.mjs $s || break; done`
+  Add a scenario rather than weakening one.
+- **`tools/aq-sim.mjs` is the balance source of truth** — the expected-value model of the whole economy
+  (`--checks` for the design-rule checks, `--table`, `--kps`, `--craft`, `--hours` for playthrough runs).
+  Any balance change should be argued there first; `BAL` in `index.html` mirrors its `T` table.
+- **`tools/validate-rate.mjs` checks the real game against that model.** `FIX='{"agents":3,"ilvl":10}'
+  node tools/validate-rate.mjs 0 60` measures 60 s of live play for an N-agent Backlog fixture;
+  `FIX='{"agents":3,"ilvl":10}' node tools/aq-sim.mjs --probe --craft 0` prints the model's number for the
+  same state. They should agree within ~20% at kps 0; a bigger gap means a formula in one drifted from the
+  other. (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
+
+All of them use the same CDP recipe, which is also what to follow for an ad-hoc script:
 
 1. Spawn Chrome pointed at the file directly:
    `google-chrome --headless=new --disable-gpu --no-sandbox --remote-debugging-port=<N> --user-data-dir=<scratch-dir> file:///path/to/index.html`

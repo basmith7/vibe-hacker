@@ -1,5 +1,5 @@
 // Throwaway: measure real credits/sec + xp/sec in headless Chrome for a fixed state and
-// compare with tools/balance-sim.mjs's rate(). Usage: node tools/validate-rate.mjs [kps] [secs]
+// compare with tools/aq-sim.mjs's --probe. Usage: node tools/validate-rate.mjs [kps] [secs]
 import { spawn } from "node:child_process";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -27,21 +27,17 @@ await sleep(6000);
 let raw = await ev(`localStorage.getItem("vibehacker")`); if (!raw) { await sleep(4000); raw = await ev(`localStorage.getItem("vibehacker")`); }
 if (!raw) { console.error("no save yet; cookie=", await ev(`document.cookie`)); chrome.kill(); process.exit(1); }
 const fixture = JSON.parse(raw);
-const F = JSON.parse(process.env.FIX || "{}");   // {level, stage, stat, nStats, hire, os, computer, model, ilvl}
-const level = F.level ?? 20, stage = F.stage ?? 4, stat = F.stat ?? 20, nStats = F.nStats ?? 3, ilvl = F.ilvl ?? 0;
-const ALL = ["coding", "focus", "debug", "systems", "algo"];
-Object.assign(fixture, { level, xp: 0, xpNeed: 1e9, intro: false, credits: 0, earned: 0, stage, plot: 0, plotNeed: 1e9, hp: 5000, hpMax: 5000, unlockedStats: ALL.slice(0, nStats) });
-for (const k in fixture.stats) fixture.stats[k] = stat;
-fixture.up.hire = F.hire ?? 2; fixture.up.os = F.os ?? 1; fixture.up.computer = F.computer ?? 1; fixture.up.model = F.model ?? 0;
-fixture.unlocked = { telemetry: true, globe: true, status: true, inventory: true, equipment: true, ide: true, missions: true, achievements: true };
-const SLOT_OS = { ram: 0, cpu: 0, harddrive: 0, monitor: 1, modem: 2, gpu: 3, cooling: 4, neural: 5 };
-fixture.equip = {}; let seq = 100;
-for (const s in SLOT_OS) fixture.equip[s] = (ilvl && SLOT_OS[s] <= fixture.up.os) ? { id: ++seq, slot: s, name: "Fixture " + s, ilvl, patches: [], maxPatches: 4 } : null;
-fixture.toolbox = Array.from({ length: 18 }, (_, i) => ({ id: 200 + i, slot: "ram", name: "junk", ilvl: 9999, patches: [], maxPatches: 2 }));   // full stash of "better" junk so drops don't auto-equip/change state
+const F = JSON.parse(process.env.FIX || "{}");   // {agents, ilvl}
+const nAgents = F.agents ?? 3, ilvl = F.ilvl ?? 10;
+const SLOTS = ["model", "memory", "compute", "tools"]; let seq = 100;
+const kit = () => Object.fromEntries(SLOTS.map(k => [k, { id: ++seq, slot: k, name: "fixture " + k, ilvl, patches: [], maxPatches: 2 }]));
+Object.assign(fixture, { intro: false, credits: 0, earned: 0, tasksDone: 0, tasksFailed: 0, xp: 0, xpNeed: 1e9, plot: 0, plotNeed: 1e9, up: Object.assign(fixture.up, { os: 0 }) });   // freeze level/stage so the 60 s window is stationary
+fixture.agents = Array.from({ length: nAgents }, (_, i) => ({ id: i + 1, name: i ? "bot" + i : "you", color: "#0ff", gear: kit(), inv: [], sanity: 100, q: 0, done: 0, failed: 0 }));
+fixture.queues = [{ tier: 0, seats: nAgents, mods: 0, configs: [] }];
 await ev(`localStorage.setItem('vibehacker', ${JSON.stringify(JSON.stringify(fixture))}); document.cookie='vibehacker=;max-age=0'; localStorage.setItem=function(){}; 'ok'`);
 await send("Page.reload"); await sleep(3000);
 await ev(`delete localStorage.setItem; 'ok'`);
-const read = () => ev(`(()=>{const d=JSON.parse(localStorage.getItem('vibehacker')); return {credits:d.credits, earned:d.earned, xp:d.totalXp, level:d.level, done:d.tasksDone, failed:d.tasksFailed, stage:d.stage, hp:d.hp, secs:d.playSecs}})()`);
+const read = () => ev(`(()=>{const d=JSON.parse(localStorage.getItem('vibehacker')); return {credits:d.credits, earned:d.earned, xp:d.totalXp, done:d.tasksDone, failed:d.tasksFailed, secs:d.playSecs}})()`);
 await ev(`localStorage.setItem('vibehacker', JSON.stringify(Object.assign(JSON.parse(localStorage.getItem('vibehacker')),{earned:0,tasksDone:0,tasksFailed:0,totalXp:0}))); 'ok'`);
 await sleep(3500);
 const a = await read();
@@ -51,6 +47,6 @@ else await sleep(SECS * 1000);
 await sleep(3500);
 const b = await read();
 const dtS = b.secs - a.secs;
-console.log(JSON.stringify({ kps: KPS, secsPlayed: +dtS.toFixed(1), creditsPerSec: +((b.earned - a.earned) / dtS).toFixed(2), xpPerSec: +((b.xp - a.xp) / dtS).toFixed(2), tasksPerSec: +((b.done + b.failed - a.done - a.failed) / dtS).toFixed(2), successRate: +((b.done - a.done) / Math.max(1, b.done + b.failed - a.done - a.failed)).toFixed(2), levelNow: b.level, stageNow: b.stage, hp: b.hp }));
+console.log(JSON.stringify({ kps: KPS, secsPlayed: +dtS.toFixed(1), creditsPerSec: +((b.earned - a.earned) / dtS).toFixed(2), xpPerSec: +((b.xp - a.xp) / dtS).toFixed(2), tasksPerSec: +((b.done + b.failed - a.done - a.failed) / dtS).toFixed(2), successRate: +((b.done - a.done) / Math.max(1, b.done + b.failed - a.done - a.failed)).toFixed(2) }));
 chrome.kill();
 process.exit(0);
