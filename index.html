@@ -1515,8 +1515,23 @@ notify("#general", "10x-ing that shit 🔥");`,
     setTimeout(()=>document.addEventListener("click",closePicker,{once:true}),0);
   }
   function closePicker(){ const m=$("#qpicker"); if(m) m.remove(); }
-  let qdrag=null;   // Task 6 wires chipDragStart; this no-op keeps chipFor's listener valid until then
-  function chipDragStart(e,i,c){}
+  // Drag is sugar over seatAgent(): pointer events (works on touch), a 6 px dead zone so a click still opens the
+  // picker, and rect math divided by uiZoom like the window drag code. The dragged chip gets pointer-events:none so
+  // elementFromPoint sees the board underneath.
+  let qdrag=null;
+  function chipDragStart(e,i,c){ if(e.button!==0||e.target.closest(".k9")) return; qdrag={i,c,sx:e.clientX,sy:e.clientY,moved:false}; c.setPointerCapture(e.pointerId); }
+  const boardAt=(x,y)=>{ const el=document.elementFromPoint(x,y), b=el&&el.closest(".qboard"); return b?QEL.boards.find(q=>q.el===b):null; };
+  document.addEventListener("pointermove",e=>{ if(!qdrag) return;
+    const dx=(e.clientX-qdrag.sx)/uiZoom, dy=(e.clientY-qdrag.sy)/uiZoom;
+    if(!qdrag.moved){ if(Math.hypot(dx,dy)<6) return; qdrag.moved=true; qdrag.c.classList.add("dragging"); closePicker(); }
+    qdrag.c.style.transform=`translate(${dx}px,${dy}px)`;
+    const tgt=boardAt(e.clientX,e.clientY), a=P.agents[qdrag.i];
+    for(const b of QEL.boards) b.el.classList.toggle("over",!!tgt&&b===tgt&&canSeat(a,b.qi)); });
+  document.addEventListener("pointerup",e=>{ if(!qdrag) return; const d=qdrag; qdrag=null;
+    d.c.classList.remove("dragging"); d.c.style.transform=""; for(const b of QEL.boards) b.el.classList.remove("over");
+    if(!d.moved) return; d.c.__dragged=true;
+    const tgt=boardAt(e.clientX,e.clientY); if(tgt) seatAgent(P.agents[d.i],tgt.qi); });
+  document.addEventListener("pointercancel",()=>{ if(!qdrag) return; qdrag.c.classList.remove("dragging"); qdrag.c.style.transform=""; for(const b of QEL.boards) b.el.classList.remove("over"); qdrag=null; });
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
