@@ -340,6 +340,33 @@ export const SCENARIOS = {
     assert(s4.craftSlot && s4.craftSlot.item.id === 77 && s4.craftSlot.item.patches.length === 3, "Commit added a third patch");
     assert(s4.craftSlot.item.patches.every(p => p.id.startsWith("mod_")), "every patch on a Config is a mod: " + s4.craftSlot.item.patches.map(p => p.id));
   },
+  // Bounties: a bounty pre-placed on the Backlog is taken by the next free agent, pays its `pay`, bumps P.bountiesDone
+  // and (first ever) yields a Config; a bounty whose clock runs out expires unrewarded and counts as missed.
+  async bounty() {
+    const mk = (id, q) => ({ id, name: "bot" + id, color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 40)])), inv: [], sanity: 100, q, done: 0, failed: 0, rogue: null });
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      s.agents.push(mk(2, 0));
+      s.queues = [queue(0, 2, { bounty: { name: "Hotfix prod before the demo", D: 10, pay: 500, t: 40, ttl: 40, kind: "config" } })]; }});
+    // Note: an ilvl-40 bot clears a D10 ticket in ~3s real time, faster than boot()'s mandatory ~7s reload
+    // round-trip, so by the time boot() returns the bounty may already be cleared (bountiesDone===1) rather
+    // than still sitting on the board — both are evidence the restored bounty ticked/resolved correctly.
+    assert((s0.queues[0].bounty && s0.queues[0].bounty.t <= 40) || s0.bountiesDone >= 1, "bounty restored and its clock runs only in the loop");
+    let s1, waited = 0;
+    while (waited < 20000) { await sleep(2000); waited += 2000; s1 = await readSave(); if (s1.bountiesDone >= 1) break; }
+    assert(s1.bountiesDone === 1, "the bot cleared the bounty within 20 s (done=" + s1.bountiesDone + ", missed=" + s1.bountiesMissed + ")");
+    assert(s1.queues[0].bounty === null, "bounty cleared off the board");
+    assert(s1.earned >= 500, "bounty paid its pay (earned " + s1.earned + ")");
+    const cfgs = s1.agents[1].inv.filter(it => it.slot === "config");
+    assert(cfgs.length === 1 && cfgs[0].patches.length === 1 && cfgs[0].patches[0].id.startsWith("mod_"), "first bounty ever pays a Config with one mod");
+    // expiry: a 1 s bounty dies unrewarded even though the bot has already picked it up (its ticket downgrades)
+    const s2 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true; s.bountiesDone = 1; s.bountiesMissed = 0;
+      s.materials.hotfix = 0; s.materials.refactor = 0; s.agents = [s.agents[0]]; s.agents.push(mk(2, 0));
+      s.queues = [queue(0, 2, { bounty: { name: "Rotate the leaked API key", D: 10, pay: 500, t: 1, ttl: 40, kind: "mats" } })]; }});
+    await sleep(6000); const s3 = await readSave();
+    assert(s3.queues[0].bounty === null, "expired bounty is removed");
+    assert(s3.bountiesMissed === 1 && s3.bountiesDone === 1, "expiry counts as missed, not done (done=" + s3.bountiesDone + ", missed=" + s3.bountiesMissed + ")");
+    assert(s3.materials.hotfix === 0 && s3.materials.refactor === 0, "no reward on expiry");
+  },
   // Faucets: ordinary tickets grant Commits (and the LOC Full Rewrite) but never Hotfix/Refactor/Revert/Merge — those are bounty loot.
   async faucets() {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 2;

@@ -943,6 +943,8 @@
     ["Balance the binary tree","algo"],["Solve the knapsack, dynamically","algo"],["Prove the loop invariant","algo"],
     ["Shave the constant factor","algo"],["Reverse the linked list (again)","algo"],
   ];
+  const BOUNTY_NAMES=["Hotfix prod before the demo","CEO's laptop is 'slow'","Rotate the leaked API key","Migrate the billing DB tonight","Un-break the Friday deploy",
+    "Get the intern's PR merged","Make the dashboard green again","Restore the backup that 'never fails'","Ship the feature sales already sold","Find out who pushed to main"];
   // Retired task flavor (Rizz/Caffeine) — kept here for reuse as gear-patch flavor in Phase 5:
   // Charm the code reviewer, Survive the standup, Negotiate the deadline, Demo without it crashing,
   // Convince PM to cut scope, Mentor the new hire, End the tabs-vs-spaces debate, Get the giant PR approved,
@@ -2328,6 +2330,59 @@ notify("#general", "10x-ing that shit 🔥");`,
     toast("🧰 "+a.name+" found gear",item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" — equipped":" → inventory"),"#4d8cff","grind");
     termLine("t-git","🧰",a.name+" found "+item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" and equipped it":""));
   }
+  /* ============ bounties (spec Phase 3 §2) ============ */
+  // A bounty is a timed special ticket on one board: q.bounty = {name, D, pay, t, ttl, kind}. It spawns on a per-board
+  // clock (q.nextBounty) that only runs while the board is staffed, is taken by the NEXT FREE agent there (derived from
+  // the workers — never stored), pays BAL.bountyPay tickets' worth plus a reward, and expires unrewarded on a miss or a
+  // fail. Clocks tick in tickProgress, so hidden tabs, the boss key and closed tabs pause them; offline ignores bounties.
+  // Agent zero's manual ticket never locks a bounty: an idle player must not block it, so an automatic agent can take
+  // the same bounty and whoever clears first gets it (the other's ticket downgrades via the `live` check in resolveTask).
+  const bountyWorked=q=>WK.some(w=>!w.manual&&w.task&&w.task.bounty&&w.task.q===q);
+  function bountyTtl(q){ const D=queueD(q);   // a few tickets' worth for an agent geared for this D (Speed ≈ floor + D)
+    const ref=clamp((BAL.durBase+BAL.durPerD*D)/(1+(BAL.floor+D)/BAL.speedDiv),BAL.durMin,BAL.durMax)/(1+queueMods(q).speed);
+    return Math.round(BAL.bountyTtl*(ref+BAL.cooldown)); }
+  function rollBountyKind(q){
+    if(P.bountiesDone===0) return "config";   // the first clear always shows the player what a Config is
+    const s=BAL.bountyTierShift*q.tier, w={mats:BAL.bountyRewards.mats-s, gear:BAL.bountyRewards.gear+s/2, config:BAL.bountyRewards.config+s/2};
+    let r=Math.random()*(w.mats+w.gear+w.config); for(const k of ["mats","gear","config"]){ r-=w[k]; if(r<=0) return k; } return "mats";
+  }
+  function spawnBounty(q){
+    const D=queueD(q), ttl=bountyTtl(q), t=queueTier(q);
+    q.bounty={name:pick(BOUNTY_NAMES), D, pay:Math.round(Math.pow(D,BAL.payK)*(1+queueMods(q).pay)*BAL.bountyPay), t:ttl, ttl, kind:rollBountyKind(q)};
+    termLine("t-warn","⏱","BOUNTY on "+t.name+": ‹"+q.bounty.name+"› — "+money(q.bounty.pay)+" if cleared in "+ttl+"s");
+    toast("⏱ Bounty on "+t.name,q.bounty.name+" · "+money(q.bounty.pay)+" · "+ttl+"s","#ffb000","progress");
+  }
+  const KIND_EM={mats:"📦",gear:"🧰",config:"🗂"};
+  function grantBountyReward(a,q,kind){
+    if(kind==="config"){ const it=rollConfig(q); addItemToAgent(a,it); return "🗂 "+it.name+" (Lv "+it.ilvl+", "+patchSummary(it)+")"; }
+    if(kind==="gear"){ const lo=queueTier(q).D, hi=Math.max(lo,queueBandTop(q)), it=rollItem(pick(ASLOT_IDS),Math.round(rand(lo+(hi-lo)*2/3,hi)));
+      const where=addItemToAgent(a,it); return "🧰 "+it.name+" (Lv "+it.ilvl+")"+(where==="equipped"?" — equipped":""); }
+    const got=["hotfix","refactor"]; if(Math.random()<0.25) got.push("revert"); if(q.tier>=2&&Math.random()<0.15) got.push("merge");
+    for(const k of got) P.materials[k]=(P.materials[k]||0)+1;
+    return "📦 "+got.map(k=>MAT[k].lbl).join(" + ");
+  }
+  function releaseBountyTasks(q){   // any worker still holding this board's bounty goes back to an ordinary ticket look
+    for(const w of WK) if(w.task&&w.task.bounty&&w.task.q===q){ w.task.bounty=false; w.el.classList.remove("bounty"); const t=queueTier(q); w.sTag.textContent=t.em+" "+t.name; w.sTag.style.color="#00e5ff"; w.prog.style.background="linear-gradient(90deg,#00e5ff,#fff2)"; }
+  }
+  function clearBounty(a,q){
+    const b=q.bounty; q.bounty=null; P.bountiesDone++; releaseBountyTasks(q);
+    const what=grantBountyReward(a,q,b.kind);
+    celebrate("⏱ BOUNTY CLEARED","#ffb000");
+    toast("⏱ Bounty cleared — "+money(b.pay),a.name+" · "+what,"#ffb000","progress");
+    termLine("t-ok","⏱",a.name+" cleared bounty ‹"+b.name+"›  +"+money(b.pay)+"  → "+what);
+  }
+  function expireBounty(q,why){
+    const b=q.bounty; if(!b) return; q.bounty=null; P.bountiesMissed++; releaseBountyTasks(q);
+    termLine("t-warn","⏱","bounty ‹"+b.name+"› expired — "+why);
+  }
+  function tickBounties(dt){
+    if(!P.unlocked.queues) return;   // bounties live on the Queues app's boards
+    P.queues.forEach((q,qi)=>{
+      if(q.bounty){ q.bounty.t-=dt; if(q.bounty.t<=0) expireBounty(q,"nobody cleared it in time"); return; }
+      if(!P.agents.some(a=>a.q===qi&&!a.rogue)) return;   // the clock only runs on a staffed board
+      q.nextBounty-=dt; if(q.nextBounty<=0){ q.nextBounty=BAL.bountyEvery*rand(0.7,1.3); spawnBounty(q); }
+    });
+  }
   /* ============ crafting materials (crafting update Phase 5) ============ */
   const MATS=[
     {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots",                      src:"tickets"},
@@ -2538,26 +2593,28 @@ notify("#general", "10x-ing that shit 🔥");`,
   function assignTask(w){
     const a=workerAgent(w), q=workerQueue(w);
     if(!q){ w.task=null; w.tk.textContent="on the bench"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; return; }
-    const D=queueD(q);
-    const [name]=pick(TASKS);
+    const b=(q.bounty&&!bountyWorked(q))?q.bounty:null;
+    const D=b?b.D:queueD(q);
+    const name=b?b.name:pick(TASKS)[0];
     if(!a.m) agentMult(a);
     const dur=a.m.dur(D,q);
-    w.task={name,D,dur,q}; w.elapsed=0; w.flashT=0;
-    w.el.classList.remove("win","fail","crit");
+    w.task={name,D,dur,q,bounty:!!b}; w.elapsed=0; w.flashT=0;
+    w.el.classList.remove("win","fail","crit"); w.el.classList.toggle("bounty",!!b);
     const t=queueTier(q);
-    w.tk.textContent=name; w.sTag.textContent=t.em+" "+t.name; w.sTag.style.color="#00e5ff";
-    w.prog.style.background=`linear-gradient(90deg,#00e5ff,#fff2)`;
+    w.tk.textContent=name; w.sTag.textContent=b?"⏱ BOUNTY":t.em+" "+t.name; w.sTag.style.color=b?"#ffb000":"#00e5ff";
+    w.prog.style.background=b?"linear-gradient(90deg,#ffb000,#fff2)":"linear-gradient(90deg,#00e5ff,#fff2)";
     const stars=clamp(Math.round(a.m.chance(D)*5),1,5); w.dEl.textContent="★".repeat(stars); w.dEl.title=Math.round(a.m.chance(D)*100)+"% success";
     termLine("t-dim","→",a.name+" started ‹"+name+"›");
   }
   function resolveTask(w){
-    const a=workerAgent(w), {name,D,q}=w.task;
+    const a=workerAgent(w), {name,D,q,bounty}=w.task;
     if(!a.m) agentMult(a);
     const chance=(P.intro&&w.manual)?1:a.m.chance(D);
     const drainWork=D*BAL.drainC*BAL.drainWork;
     if(Math.random()<chance){
       const crit=Math.random()<0.05?3:1; if(crit>1)P.crits++;
-      const cr=Math.round(a.m.payout(D,q)*crit), xp=Math.round((D+6)*crit);
+      const live=bounty&&q.bounty;   // the bounty may have expired mid-ticket — then this pays as an ordinary ticket
+      const cr=Math.round((live?q.bounty.pay:a.m.payout(D,q))*crit), xp=Math.round((D+6)*crit);
       addXp(xp); P.credits+=cr; P.earned+=cr; checkReveal();
       P.plot+=D*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
       P.tasksDone++; a.done++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
@@ -2567,15 +2624,17 @@ notify("#general", "10x-ing that shit 🔥");`,
       if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+money(cr)+" · "+queueTier(q).name,crit>1?"#ffb000":"#00e5ff","grind");
       if(Math.random()<BAL.drop) dropHardware(a,q);
       grantMaterials(q,locBefore);
+      if(live) clearBounty(a,q);
     } else {
       const dmg=drainWork+D*BAL.drainC*BAL.drainFail;   // success drains 0.1·D·c, failure (0.1+3)·D·c → expected per ticket = D·c·(0.1+3·(1−chance)), exactly the sim's
       a.sanity=clamp(a.sanity-dmg,a.immune>0?1:0,a.m.sanityMax); P.streak=0; P.tasksFailed++; a.failed++; addXp(Math.round((D+6)*0.2));
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); if(w.manual) flashHp();
       termLine("t-bad","✗",a.name+" FAILED ‹"+name+"›  -"+Math.round(dmg)+" sanity  (streak reset)");
       toast("💥 "+name+" failed","-"+Math.round(dmg)+" sanity · "+a.name+"'s Quality too low for "+queueTier(q).name,"#ff2b5e","grind");
+      if(bounty&&q.bounty) expireBounty(q,a.name+" failed it");
       if(a.sanity<=0) goRogue(a);
     }
-    w.task=null; w.cooldown=rand(0.4,1.0);
+    w.task=null; w.cooldown=rand(0.4,1.0); w.el.classList.remove("bounty");
   }
   function revealChars(w,n){   // unchanged
     while(n-->0){ if(w.pos>=w.buf.length){ w.buf=pick(SNIPPETS)+"\n\n"; w.pos=0; } w.shown+=w.buf[w.pos++]; }
@@ -2609,6 +2668,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const passiveInc=MULT.passive*dt; P.credits+=passiveInc; P.earned+=passiveInc;   // passive income (monitors) — counts toward earned so Telemetry's credits/sec includes it
     if(P.credits>P.maxCredits) P.maxCredits=P.credits;   // peak wealth — drives shop-item reveal, never decreases on spend
     P.playSecs+=dt;
+    tickBounties(dt);
     let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
     // automation upgrades
     if(P.up.autoBuy){ autoBuyT+=dt; if(autoBuyT>=1.2){ autoBuyT=0; autoBuyCheapest(); } }
