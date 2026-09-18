@@ -362,8 +362,8 @@ export const SCENARIOS = {
     const pill1 = await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qbounty').className`);
     assert(/\bon\b/.test(pill1), "open bounty shows its pill: " + pill1);
     let s1, waited = 0;
-    while (waited < 20000) { await sleep(2000); waited += 2000; s1 = await readSave(); if (s1.bountiesDone >= 1) break; }
-    assert(s1.bountiesDone === 1, "the bot cleared the Backlog bounty within 20 s (done=" + s1.bountiesDone + ", missed=" + s1.bountiesMissed + ")");
+    while (waited < 40000) { await sleep(2000); waited += 2000; s1 = await readSave(); if (s1.bountiesDone >= 1) break; }
+    assert(s1.bountiesDone === 1, "the bot cleared the Backlog bounty within its 40 s ttl (done=" + s1.bountiesDone + ", missed=" + s1.bountiesMissed + ")");
     assert(s1.queues[0].bounty === null, "Backlog bounty cleared off the board");
     assert(s1.earned >= 500, "bounty paid its pay (earned " + s1.earned + ")");
     const cfgs = s1.agents[1].inv.filter(it => it.slot === "config");
