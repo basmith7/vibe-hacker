@@ -1498,7 +1498,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function socketConfig(qi,si,src){
     const q=P.queues[qi]; if(!q||si<0||q.configs[si]) return;
-    const it=takeItem(src); if(!it) return; if(it.slot!=="config"){ selectedAgent().inv.push(it); return; }
+    const it=takeItem(src); if(!it) return;
+    if(it.slot!=="config"){ const back=src.craft?selectedAgent():agentById(src.owner); back.inv.push(it); enforceInvCap(back); return; }   // guard: no UI can reach this today
     q.configs[si]=it; const t=queueTier(q);
     toast("🗂 Socketed",it.name+" → "+t.name+" · now D"+Math.round(queueD(q)),"#00e5ff");
     termLine("t-git","🗂","socketed "+it.name+" into "+t.name+" ("+patchSummary(it)+")");
