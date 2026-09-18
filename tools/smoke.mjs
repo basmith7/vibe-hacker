@@ -340,6 +340,18 @@ export const SCENARIOS = {
     assert(s4.craftSlot && s4.craftSlot.item.id === 77 && s4.craftSlot.item.patches.length === 3, "Commit added a third patch");
     assert(s4.craftSlot.item.patches.every(p => p.id.startsWith("mod_")), "every patch on a Config is a mod: " + s4.craftSlot.item.patches.map(p => p.id));
   },
+  // Faucets: ordinary tickets grant Commits (and the LOC Full Rewrite) but never Hotfix/Refactor/Revert/Merge — those are bounty loot.
+  async faucets() {
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 2;
+      s.materials = { commit: 0, hotfix: 0, refactor: 0, rewrite: 0, revert: 0, merge: 0 };
+      for (let i = 0; i < 4; i++) s.agents.push({ id: 2 + i, name: "bot" + i, color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 60)])), inv: [], sanity: 100, q: 1, done: 0, failed: 0, rogue: null });
+      s.queues = [queue(0, 1), queue(1, 4), queue(2, 1)]; }});   // Jira owned so the old tier≥2 Merge gate would have applied
+    await sleep(90000); const s1 = await readSave();
+    const done = s1.agents.slice(1).reduce((n, a) => n + a.done, 0);
+    assert(done >= 40, "four fast bots cleared ≥40 tickets in 90 s, got " + done);
+    assert(s1.materials.commit >= 5, "Commits still trickle from tickets, got " + s1.materials.commit);
+    for (const k of ["hotfix", "refactor", "revert", "merge"]) assert(s1.materials[k] === 0, k + " must not drop from ordinary tickets, got " + s1.materials[k]);
+  },
 };
 
 const name = process.argv[2];

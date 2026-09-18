@@ -1687,13 +1687,13 @@ notify("#general", "10x-ing that shit 🔥");`,
     core.addEventListener("drop",e=>{ e.preventDefault(); core.classList.remove("dragover"); dropOnBench(e.dataTransfer.getData("text/plain")||benchPayload); });
     if(benchRO) benchRO.disconnect();
     benchRO=new ResizeObserver(fitBench); benchRO.observe(bench);
-    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials & drop progress"; ideBody.appendChild(mh);
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials — Commits from tickets, the rest from bounties"; ideBody.appendChild(mh);
     const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; ideBody.appendChild(matsWrap);
     matEls={};
     for(const m of MATS){
       const card=document.createElement("div"); card.className="card matCard";
       card.innerHTML=`<span class="em">${m.em}</span><div class="mid"><div class="nm">${m.lbl} <span class="lv"></span></div>`+
-        `<div class="fx">${m.does}</div><div class="pity"><i></i></div></div>`;
+        `<div class="fx">${m.does}</div>`+(m.src==="tickets"?`<div class="pity"><i></i></div>`:`<div class="fx dim">${m.src==="loc"?"every 1,000 lines of code":"⏱ bounty loot"}</div>`)+`</div>`;
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
@@ -1778,7 +1778,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const m of MATS){
       const el=matEls[m.id]; if(!el) continue;
       el.lv.textContent=P.materials[m.id]||0;
-      el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
+      if(el.pity) el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
     }
   }
   function renderToolbox(){
@@ -2330,12 +2330,12 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   /* ============ crafting materials (crafting update Phase 5) ============ */
   const MATS=[
-    {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots"},
-    {id:"hotfix",  lbl:"Hotfix",                em:"🩹", does:"Reroll one patch's value (same mod, new number)"},
-    {id:"refactor",lbl:"Refactor Token",        em:"🔀", does:"Reroll one patch's type entirely"},
-    {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item"},
-    {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)"},
-    {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)"},
+    {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots",                      src:"tickets"},
+    {id:"hotfix",  lbl:"Hotfix",                em:"🩹", does:"Reroll one patch's value (same mod, new number)",                    src:"bounties"},
+    {id:"refactor",lbl:"Refactor Token",        em:"🔀", does:"Reroll one patch's type entirely",                                   src:"bounties"},
+    {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item",                                      src:"loc"},
+    {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)",                           src:"bounties"},
+    {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)",         src:"bounties"},
   ];
   const MAT=Object.fromEntries(MATS.map(m=>[m.id,m]));
   // The crafting bench ring, in the order the orbs are laid out clockwise from the top — which is
@@ -2360,18 +2360,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(got){ P.materials[key]=(P.materials[key]||0)+1; P.matPity[key]=0; }
     return got;
   }
+  // Phase 3 (spec §3): tickets are the credit economy — they trickle Commits (× the queue's Open Source mods) and pay the
+  // LOC-milestone Full Rewrite. Everything rarer (Hotfix, Refactor, Revert, Merge) is bounty loot — see clearBounty.
   function grantMaterials(q,locBefore){
-    materialAttempt("commit",0.35,true);                        // any task — common, no toast (too frequent)
-    materialAttempt("hotfix",0.2,true);
-    materialAttempt("refactor",0.2,true);
-    if(materialAttempt("revert",0.03,true)){
-      toast("⏪ Found: Revert Commit","A rare material — strips an item back to Stock","#5b6b86","grind");
-      termLine("t-git","⏪","found a Revert Commit");
-    }
-    if(materialAttempt("merge",0.02,q.tier>=2)){               // late-game gate
-      toast("🔗 Found: Feature Branch Merge","A rare material — adds a patch slot (up to 4)","#39ff14","grind");
-      termLine("t-git","🔗","found a Feature Branch Merge");
-    }
+    materialAttempt("commit",Math.min(0.95,0.35*(1+queueMods(q).mats)),true);   // common, no toast (too frequent)
     const milestone=1000;   // Full Rewrite is deterministic off P.loc crossing a milestone, not RNG+pity
     if(Math.floor(P.loc/milestone)>Math.floor(locBefore/milestone)){
       P.materials.rewrite=(P.materials.rewrite||0)+1;
