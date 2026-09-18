@@ -473,6 +473,119 @@ are sold in the Store as cards generated from `QUEUE_TIERS` (not inside the Queu
   `CLAUDE.md` (architecture bullets for `seatAgent`, `ROGUE_MODES`, `a.rogue`; the smoke list), this
   doc's Status line and Phase 2 checkboxes.
 
+## Phase 3 design (2026-09-17) — Configs, bounties, faucets
+
+Brainstormed with the user 2026-09-17; decisions settled, numbers are the sim's job. Scope is the Phase 3
+checklist above. Rogue *types*, countermeasures, the Red Team, Automation items (auto-seat, auto-Kill -9,
+Pager Integration) and Legacy Monolith's unlimited sockets stay in Phase 4.
+
+**Decisions (user):** Configs live in **agent inventories** and are socketed from there into sockets on the
+Queues app boards (no Configs app, no global stash). **Every mod changes exactly one stat** — no bundled
+"+D, ×pay, +drops" mods; the harder-and-richer coupling comes from payout already scaling as D^1.5 and
+from combining mods. Bounties are picked up **automatically by the next free agent on that queue**.
+Bounties are the crafting faucet: **materials bundles, gear and Configs come from bounties; ordinary
+tickets pay credits + Commits only** (plus the LOC-milestone Full Rewrite). This supersedes the mod table
+in "Queue Configs (mods)" above (favoured-stat is dropped — one success stat, nothing to lean on).
+
+### §1 Configs — item, mods, sockets
+
+- **Item.** A Config is a normal item with `slot:"config"`: `{id, slot:"config", name, ilvl, patches,
+  maxPatches}` — the gear shape, so stash cards, `INV_CAP`, decommission, `P.craftSlot` and every IDE bench
+  action work unchanged. `CONFIG_SLOT = {id:"config", lbl:"Config", em:"🗂", stat:null}` joins the slot
+  lookup; a `slotDef(item)` helper replaces the bare `ASLOT[it.slot]` reads. Names come from a small
+  `CONFIG_NAMES` list ("Sprint Config", "CODEOWNERS", "Runbook", "Jira Workflow", "OKR Sheet", …). ilvl
+  rolls at the queue's drop band like gear and gates patch tiers the same way (`initialMaxPatches`, Merge
+  to 4).
+- **Mods are Config patches, one lever each** — five `PATCH_DEFS` rows with `slot:"config", kind:"mod",
+  mod:<lever>`, tiers `[0.12, 0.20, 0.30]`, gates `[0, 25, 55]`, the usual ±10 % roll (so Hotfix/Refactor/
+  Rewrite/Revert all matter on Configs):
+
+  | Patch | Lever | Effect of rolled value `v` |
+  |---|---|---|
+  | Legacy Codebase | `d` | queue D × (1+v) — payout follows D^1.5, so harder *and* richer on its own |
+  | Enterprise Client | `pay` | payout × (1+v) |
+  | On-Call Rotation | `band` | drop-band top × (1+v), still `ILVL_CAP`-capped |
+  | Crunch | `speed` | ticket duration ÷ (1+v) — more tickets/s, so more sanity drain/s too |
+  | Open Source | `mats` | material chance × (1+v) |
+
+  Generic gear patches (Sharp/Snappy/Resilient/Well-Rested) never roll on Configs and mods never roll on
+  gear: one `patchFits(def, item)` predicate replaces the three copies of the slot filter in
+  `availablePatchIds`, `craftRefactor` and `craftFullRewrite`.
+- **Sockets.** `QUEUE_TIERS[].slots` = `2,2,2,3,3,3`. `q.configs` is a fixed-length `item|null` array;
+  **`q.mods` is deleted.** `queueMods(q)` sums socketed patch values into `{d, pay, band, speed, mats}`
+  (all 0 with nothing socketed) and `queueD`, `queueBandTop`, `a.m.payout`, `a.m.dur` and
+  `grantMaterials` read it. Socket changes need no `recompute()` — the multipliers are read per ticket —
+  and an in-flight ticket keeps the D it started with.
+- **UI.** Queues app: a `.qsockets` row under each board header, one tile per slot — "empty socket" or the
+  Config's name + `patchSummary` with an **Unsocket** button that returns it to the *selected* agent's
+  inventory (the Inventory app the player is looking at). Inventory stash cards for Configs swap "Equip"
+  for **→ Socket**, an inline picker (same pattern as the seating picker) listing owned queues with a
+  free socket, full ones greyed. The board header shows the effective D and band. Re-crafting a socketed
+  Config is Unsocket → IDE (one extra click; avoids a second `craftSlot` owner kind).
+- **Source.** Configs drop **only** from bounties (§2). `SAVE_VER` 9 → **10** (queue shape). No migration.
+
+### §2 Bounties
+
+- **Spawn** needs the Queues app (bounties live on its boards; before it, the Commit trickle and gear drops
+  carry the first minutes). Each owned queue with ≥1 seated, non-rogue agent runs its own clock:
+  `q.nextBounty` counts down in `tickProgress` and re-arms at `BAL.bountyEvery × rand(0.7, 1.3)`. At most
+  one bounty per queue: `q.bounty = {name, D, pay, t, ttl, reward}` — `D` = the queue's effective D at
+  spawn, `pay = D^payK × (1+mods.pay) × BAL.bountyPay`, `t` seconds left, `ttl` the full timer (for the
+  bar), `reward` rolled at spawn so the pill can show it. Names from `BOUNTY_NAMES` ("Hotfix prod before
+  the demo", "CEO's laptop is 'slow'", "Rotate the leaked key", …). Clocks only tick inside the rAF loop,
+  so a hidden tab, the boss key and a closed tab pause them for free; **`offlineEarnings` ignores
+  bounties entirely** (Pager Integration is Phase 4).
+- **Pickup — next free agent on that queue.** In `assignTask`, if the queue has a bounty nobody is working,
+  the agent takes it: `w.task.bounty = true`, tile tag `⏱ BOUNTY`, orange progress bar. Agent zero takes
+  one the same way and clears it by typing. "Nobody working it" is derived (`WK.some(w => w.task &&
+  w.task.bounty && w.task.q === q)`), never stored, so after a reload the next free agent re-takes it.
+- **Resolve.** Same D and success roll as a ticket. Success → credits `pay`, the reward, `P.bountiesDone++`,
+  toast + terminal line, `q.bounty = null`. Failure → the normal sanity drain and the bounty **expires
+  unrewarded** (`P.bountiesMissed++`, terminal "⏱ bounty ‹x› expired — Dave failed it"). Clock at zero
+  expires it the same way even mid-ticket: the in-flight ticket loses its `bounty` flag and pays as an
+  ordinary ticket.
+- **Reward roll** (`BOUNTY_REWARDS`, weights in `BAL`): **materials bundle** (1 Hotfix + 1 Refactor, 25 %
+  Revert, 15 % Merge on tier ≥ 2) / **gear** at the top third of the queue's band / **Config** at the band,
+  starting weights 60/30/10 and shifting toward gear + Configs with queue tier. The **first bounty ever
+  cleared always pays a Config** so the socket UI is discovered.
+- **UI.** Board header bounty pill `⏱ ‹name› · $pay · 0:42` with a draining bar, pulsing under 10 s;
+  terminal lines on spawn / clear / expiry; toasts on spawn and clear under the existing categories.
+- **State:** `q.bounty`, `q.nextBounty` (inside `P.queues`, persisted for free); `P.bountiesDone`,
+  `P.bountiesMissed` (persisted, kept through prestige with the other lifetime counters).
+
+### §3 Faucets & balance
+
+- **Ordinary tickets** (`grantMaterials`): keep the 35 % Commit attempt (× `(1+mods.mats)`) and the LOC
+  milestone Full Rewrite; **drop** the Hotfix/Refactor/Revert/Merge attempts. `decommissionItem` still
+  refunds Commits. The IDE materials list shows "from bounties" instead of a pity bar for the four
+  bounty-only materials.
+- **Sim first** (`tools/aq-sim.mjs`), then `BAL`. Mods become a vector `{d, pay, band, speed, mats}`
+  replacing the integer count; `MOD_D/MOD_PAY/MOD_ILVL/MOD_MAX` are replaced by `MOD_TIERS =
+  [0.12,0.20,0.30]` and `CONFIG_SLOTS`. The bot fills each queue's patch budget (`slots × 4 × craft`) with
+  Legacy up to the weakest seated agent's 90 % line, then Enterprise. Bounties enter income as an extra
+  term per queue with a seated agent: `succ × BOUNTY_PAY × payout(D) / BOUNTY_EVERY`; the pacing table is
+  re-run. **Targets:** bounties are 10–20 % of income at every tier; the reference player still reaches
+  STARSHIP in ≈ 5 h. `--checks` gains: every adjacent pair still satisfies the gear-wall rule *with*
+  Configs socketed (`ILVL_CAP` guarantees it; the check proves it), and Crunch never makes overreach pay.
+- **New `BAL` keys:** `modTiers`, `bountyEvery`, `bountyPay`, `bountyTtl` (multiple of one ticket's
+  duration + cooldown at the queue's D, e.g. 4×, so a single slow agent barely makes it), `bountyRewards`.
+  `validate-rate.mjs` and `--probe` learn `FIX.configs` (a mod vector per queue).
+- The Mission Board is already gone (Phase 1) — its checklist box closes with that note.
+
+### §4 Verification & docs
+
+- `tools/smoke.mjs`: **`configs`** (Kanban fixture + a 2-mod Config in agent zero's inventory: → Socket via
+  the picker, assert the board's D/band and the ticket payout change; Unsocket returns it to the selected
+  agent's inventory; Commit on the bench adds a `config`-slot patch, never a gear one), **`bounty`**
+  (a bounty pre-placed on the Backlog: the next ticket is the bounty, clearing pays `pay`, bumps
+  `P.bountiesDone` and — first ever — yields a Config; a near-zero-`t` fixture asserts expiry and
+  `P.bountiesMissed` with no reward), **`faucets`** (200 cleared tickets grant Commits and zero Hotfix/
+  Refactor/Revert/Merge). `stateShape` follows `SAVE_VER` 10; every fixture drops `mods:0` for
+  `configs:[null,…]`.
+- Docs in the same work: `guide.md` (Configs & mods, sockets, bounties, what drops where), `README.md`
+  blurb, `CLAUDE.md` (`queueMods`, `patchFits`/`slotDef`, the derived bounty-pickup rule, the smoke
+  list), the sim's header comment, this doc's Status line and Phase 3 checkboxes.
+
 ## Review findings (adversarial review, 2026-09-16) — what changed and what's still open
 
 Cross-model review (DeepSeek reviewer, two rounds). Fixed in place above: the EV-has-no-peak flaw
