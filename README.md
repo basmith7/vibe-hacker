@@ -33,7 +33,8 @@ run and how high an item level you can even find.
 - **Queues** — 📥 Backlog → 🗂 Kanban → 📋 Jira → 📟 PagerDuty → 🗺 The Roadmap → 🏚 Legacy Monolith,
   each harder and far richer than the last, each gated behind an OS tier — bought in order from the
   Store, managed in the **Queues app** (click or drag agents between boards, or park them on the
-  Bench).
+  Bench) — juice a board with socketed **Configs** (single-stat mods) and clear timed **bounties**
+  for crafting loot.
 - **Loot and crafting** — cleared tickets drop gear at the queue's item-level band. Spare gear lands
   in the finding agent's **🧰 Inventory**; stage anything in **🛠 The IDE** to spend materials on
   **patches** (Stock → Modded → Custom-Built).

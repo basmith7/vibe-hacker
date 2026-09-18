@@ -4,7 +4,7 @@
 // through the game's own save (localStorage "vibehacker").
 // Usage: node tools/smoke.mjs <scenario> [--keep]      (see SCENARIOS at the bottom)
 import { spawn } from "node:child_process";
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -56,7 +56,12 @@ export async function boot({ fixture } = {}) {
 export async function done(pass, why) {
   if (exceptions.length) { pass = false; why = "page exceptions: " + exceptions.join(" | "); }
   console.log(pass ? "PASS" : "FAIL " + why);
-  if (!process.argv.includes("--keep")) chrome.kill();
+  if (!process.argv.includes("--keep")) {
+    chrome.kill();
+    await new Promise(r => { chrome.once("exit", r); setTimeout(r, 3000); });
+    try { rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 }); }
+    catch (e) { console.error("(cleanup) couldn't remove " + dir + ": " + e.message); }
+  }
   process.exit(pass ? 0 : 1);
 }
 

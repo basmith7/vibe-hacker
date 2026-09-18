@@ -36,6 +36,12 @@ const kit = () => Object.fromEntries(SLOTS.map(k => [k, { id: ++seq, slot: k, na
 Object.assign(fixture, { intro: false, credits: 0, earned: 0, tasksDone: 0, tasksFailed: 0, xp: 0, xpNeed: 1e9, plot: 0, plotNeed: 1e9 });   // freeze level/stage so the 60 s window is stationary
 fixture.agents = Array.from({ length: nAgents }, (_, i) => ({ id: i + 1, name: i ? "bot" + i : "you", color: "#0ff", gear: kit(), inv: [], sanity: 100, q: seat[i], done: 0, failed: 0, rogue: null }));
 fixture.queues = queues.map(q => ({ tier: q.tier, seats: q.seats, configs: Array(q.tier >= 3 ? 3 : 2).fill(null), bounty: null, nextBounty: 1e9 }));
+// Optional: F.mods = per-queue {d,pay,band,speed,mats} lever sums → one socketed Config carrying a patch per lever, so a
+// juiced board can be measured against `aq-sim.mjs --probe` (which takes the same FIX.mods).
+const mods = F.mods ?? [];
+fixture.queues.forEach((q, i) => { const m = mods[i]; if (!m) return;
+  const patches = Object.entries(m).filter(([, v]) => v > 0).map(([k, v]) => ({ id: "mod_" + k, tier: 1, value: v }));
+  q.configs[0] = { id: ++seq, slot: "config", name: "fixture config", ilvl: 60, patches, maxPatches: Math.max(4, patches.length) }; });
 fixture.up.os = Math.max(...queues.map(q => q.tier));   // the OS that can own the highest queue (ILVL_CAP/HIRE_CAP consistent with the sim)
 await ev(`localStorage.setItem('vibehacker', ${JSON.stringify(JSON.stringify(fixture))}); document.cookie='vibehacker=;max-age=0'; localStorage.setItem=function(){}; 'ok'`);
 await send("Page.reload"); await sleep(3000);

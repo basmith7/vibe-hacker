@@ -57,8 +57,12 @@ hires and Backlog seats in the Store, per-agent Equipment/Inventory/IDE, drops a
 and the removal of the old stat/skill-point system, Machine and AI Model ladders, global 8-slot rig,
 Toolbox roll, Mission Board and Legendaries; Phase 2 added queues as Store purchases generated from
 `QUEUE_TIERS`, the Queues app (boards, chips, click-picker + drag seating through `seatAgent()`, the Bench
-at `a.q = -1`), and rogue agents (`ROGUE_MODES`, Embezzler, Kill -9 with immunity). Phase 3 (Configs +
-bounties) is next.
+at `a.q = -1`), and rogue agents (`ROGUE_MODES`, Embezzler, Kill -9 with immunity); Phase 3 added
+**Configs** (`slot:"config"` items, one mod patch per lever, 2/3 sockets per board, `queueMods(q)`
+derived from `q.configs` and read per ticket) and **bounties** (timed tickets that spawn on staffed
+boards, picked up by the next free automatic agent, paying credits + a materials/gear/Config reward),
+and rebalanced ordinary tickets down to Commits-only so bounties are the crafting faucet. **Phases 1–3
+are shipped on that branch. Phase 4 (Automation, rogue types, Red Team, docs pass) is next.**
 
 **`main` still runs the previous game** and auto-deploys, so this branch merges only when the rewrite is
 playable end to end. Two earlier, fully-shipped plans describe what's on `main` and what Phase 1 replaced:
@@ -96,6 +100,25 @@ is orthogonal to the rewrite and still applies.
 - **Rogue is a table, not branches.** `ROGUE_MODES[mode].tick(a, dt, w)` runs at the top of `tickWorker`
   (so it pauses with the boss key and never runs offline); new modes are rows. `goRogue`/`recoverRogue`/
   `kill9` are the only transitions; `kill9Cost(a)` is `BAL.kill9PerIlvl × Σ gear ilvl`.
+- **`queueMods(q)` is the only mod read.** It sums the `kind:"mod"` patches on `q.configs` into a
+  `{d, pay, band, speed, mats}` vector every time it's called — never cached on `q`, so socketing or
+  unsocketing needs no `recompute()`. `a.m.dur(D, q)` takes the queue (not just `D`) precisely so it
+  can read the `speed` lever; `queueD`, `queueBandTop`, `a.m.payout` and `grantMaterials` are the other
+  readers.
+- **Configs are items with `slot:"config"`** — same shape as gear (`id, slot, name, ilvl, patches,
+  maxPatches`), so stash cards, `INV_CAP`, decommission and `P.craftSlot` all work unchanged.
+  `slotDef(item)` and `patchFits(def, item)` are the polymorphism points that let a Config skip the
+  four equip slots and only take `kind:"mod"` patches (and gear only take non-mod ones).
+  `socketConfig`/`unsocketConfig` are the only two places that write `q.configs`; both go through the
+  same picker UI as seating (`openSocketPicker`).
+- **Bounty pickup is derived, not stored.** `bountyWorked(q)` asks `WK` whether any non-manual worker
+  already has `w.task.bounty && w.task.q === q` — so after a reload the next free agent just re-takes
+  an unclaimed bounty. `tickBounties` (spawn/countdown/expiry) runs inside `tickProgress`, so bounty
+  clocks pause with everything else the boss key and a hidden/closed tab pause; `offlineEarnings`
+  ignores bounties entirely (Pager Integration, Phase 4, is the offline exception). `releaseBountyTasks`
+  is what downgrades an in-flight bounty ticket to an ordinary one when its board's bounty expires
+  mid-ticket. Faucets: ordinary tickets pay only credits + Commits (+ the LOC-milestone Full Rewrite);
+  Hotfix/Refactor/Revert/Merge, gear near the top of a band, and Configs all come from bounties only.
 - **`agentMult(a)` is the per-agent recompute.** It writes `a.m = {st, chance(D), dur(D), payout(D,q),
   sanityMax, regen}` from `agentStats(a)` (gear ilvl + patches + the `BAL.floor`), Equity and Deep Work.
   `recompute()` just loops every agent calling it — cheap, safe to over-call, call it after anything that
@@ -143,11 +166,13 @@ There are no unit tests, but there are three Node harnesses in `tools/` — use 
 new throwaway script unless none of them fits:
 
 - **`tools/smoke.mjs` is the verification entry point.** `node tools/smoke.mjs <scenario>` drives a real
-  headless Chrome and prints `PASS`/`FAIL`. Current scenarios: `boots stateShape loopEarns storeHire
-  seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline`. Run the whole set
-  before calling a change done (about 15 minutes):
-  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline; do node tools/smoke.mjs $s || break; done`
-  Add a scenario rather than weakening one.
+  headless Chrome and prints `PASS`/`FAIL`. Current scenarios (17): `boots stateShape loopEarns
+  storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue
+  offline configs faucets bounty`. Run the whole set before calling a change done (about 15 minutes):
+  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline configs faucets bounty; do node tools/smoke.mjs $s || break; done`
+  Add a scenario rather than weakening one. It also cleans up its own Chrome profile scratch dirs
+  (`rmSync` on the `mkdtemp`'d dir in `done()`, skipped only under `--keep`) — don't reintroduce a leak
+  there.
 - **`tools/aq-sim.mjs` is the balance source of truth** — the expected-value model of the whole economy
   (`--checks` for the design-rule checks, `--table`, `--kps`, `--craft`, `--hours` for playthrough runs).
   Any balance change should be argued there first; `BAL` in `index.html` mirrors its `T` table.
@@ -157,8 +182,14 @@ new throwaway script unless none of them fits:
   same state. They should agree within ~20% at kps 0; a bigger gap means a formula in one drifted from the
   other. Both accept `queues` (`[{tier, seats}]`) and `seat` (queue index per agent, `-1` = Bench) in `FIX`
   for multi-queue states, e.g. `FIX='{"agents":3,"ilvl":30,"queues":[{"tier":0,"seats":2},{"tier":1,"seats":1}],"seat":[0,0,1]}'`.
-  A 60 s window is noisy (ticket completions are lumpy); use 120 s before calling a gap drift.
-  (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
+  Both also accept `mods` (`[{d,pay,band,speed,mats}, ...]` per queue index) — the validator synthesises
+  one socketed Config per queue carrying a patch per nonzero lever, so a juiced board can be checked the
+  same way. A 60 s window is noisy (ticket completions are lumpy); use 120 s before calling a gap drift.
+  **`aq-sim.mjs --probe` reports ticket income only** (it mirrors what the validator measures — the
+  validator's synthetic fixture sets `nextBounty` to effectively never fire, so neither side includes
+  bounty income in this comparison); a live playthrough with bounties enabled will read further above
+  the probe's number (bounties are 15–16% of income at every OS per `--checks`) — don't chase that gap
+  as drift, it's the bounty term. (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
 
 All of them use the same CDP recipe, which is also what to follow for an ad-hoc script:
 

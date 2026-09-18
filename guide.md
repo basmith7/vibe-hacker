@@ -121,6 +121,56 @@ Store's whole **Team** section.
 - **The Bench.** A benched agent works nothing and regenerates sanity at the **full** rate — it's
   where new hires wait when no seat is free, and a fine place to park an agent that keeps failing.
 
+### Configs (queue mods)
+
+A **Config** (🗂) is an item, just like gear, except it doesn't equip on an agent — it **sockets into
+a board** in the Queues app. Every board has **2 sockets** (Backlog, Kanban, Jira) or **3** (PagerDuty,
+The Roadmap, Legacy Monolith). A Config always arrives with **one mod already on it**, and each mod
+moves exactly one lever for that board:
+
+| Mod | Lever | Effect |
+|---|---|---|
+| **Legacy Codebase** | Difficulty | Raises the board's effective `D` — harder, but payout scales with `D^1.5`, so it pays more too |
+| **Enterprise Client** | Payout | Straight credits multiplier per ticket |
+| **On-Call Rotation** | Drop band | Raises the **top** of the drop-ilvl band (the floor stays the board's base `D`) |
+| **Crunch** | Speed | Tickets clear faster — more tickets per second, so more sanity drain per second too |
+| **Open Source** | Materials | Raises the chance a cleared ticket grants a Commit |
+
+Values are the same three tiers as any patch (Modded/Custom-Built), so a Config can carry more than
+one mod once it has multiple patch slots. **Socket** one from an agent's Inventory (a Config card
+shows **→ Socket** instead of Equip) or from the IDE after crafting it — either opens a picker of
+every owned board with a free socket. **Unsocket** it from the board header and it returns to
+whichever agent is currently **selected** — not necessarily the one who found it. Configs are crafted
+on the same bench, with the same materials, as gear; only the patches that land on them are different
+(mod patches never roll on gear, and gear patches never roll on Configs).
+
+The classic loop: raise your agent's Quality until a board is a comfortable success rate, then
+**mod the board with Legacy Codebase until it's barely still winnable** — squeezing the most payout
+per ticket out of the gear you already have.
+
+### Bounties
+
+Every board with at least one seated, non-rogue agent occasionally spawns a **bounty** — a one-off
+timed ticket layered on top of the normal queue, roughly every **90 seconds** (give or take 30%), one
+at a time per board. It shows as a pill on the board header: `⏱ ‹name› · $pay · time left`, counting
+down with a draining bar that pulses under 10 seconds.
+
+- **Pickup** is automatic: the next agent on that board who finishes their current ticket picks it up
+  (tagged `⏱ BOUNTY`, an orange bar). You can also work it by typing on your own agent, but **your
+  manual ticket never blocks it** — an idle player isn't punished. If you and an automatic agent both
+  end up working it, whoever clears it first gets the reward.
+- **The timer only runs while you're actually playing** — it pauses with the boss key, a hidden tab,
+  or a closed tab, same as everything else in the live loop. It does **not** advance while you're
+  away (that's a future Automation purchase, Pager Integration).
+- **Clearing it** pays roughly **five tickets' worth of credits** plus a reward: a materials bundle, a
+  gear drop near the top of the board's band, or a Config. The very **first bounty you ever clear
+  always pays a Config**, so you're guaranteed to see the socket UI early. (That's decided the moment
+  each bounty spawns, not when it clears — so if two boards happen to spawn their first-ever bounty
+  before either is cleared, both can pay a Config. Not a bug, just a quirk of how the reward is
+  pre-rolled.)
+- **Missing it** — failing the roll, or letting the clock run out — costs nothing beyond the usual
+  sanity hit; the bounty just expires and the board waits for the next one.
+
 For an agent on a queue of difficulty `D`:
 
 - **Success chance** = `0.5 + (Quality ÷ D − 1) × 1.25`, capped at **95%**. So Quality equal to `D`
@@ -163,6 +213,8 @@ quality-of-life toggles, mutable per type once owned), then the app unlocks: **�
 ### Team
 **👥 Hire an Agent**, **🪑 <Queue> Seat** (one per owned board) and **Install <Queue>** — see
 **Hiring and seats** and **Queues** above. The whole section appears once you own the Queues app.
+Every board also comes with **Config sockets** (2 on the first three tiers, 3 on the last three) —
+see **Configs (queue mods)** above.
 
 ### Rigs
 **🖥️ Upgrade OS** — the one remaining tier ladder, and the spine of the game. See **OS gates**
@@ -227,16 +279,22 @@ just how many it has: **Stock** (0), **Modded** (1–2), **Custom-Built** (3–4
 
 Higher patch tiers are gated by the item's own item level, so good patches need good items.
 
-Patches are never bought — they're applied in the IDE with a material plus a little credit:
+Patches are never bought — they're applied in the IDE with a material plus a little credit. Where
+each material actually comes from:
 
-| Material | Where it comes from | What it does |
+| Material | Comes from | What it does |
 |---|---|---|
-| 📝 Commit | any cleared ticket (common) | Add a random patch to an open slot |
-| 🩹 Hotfix | cleared tickets | Reroll one patch's *value* |
-| 🔀 Refactor Token | cleared tickets | Reroll one patch's *type* |
+| 📝 Commit | any cleared **ordinary ticket** (boosted by the Open Source mod) | Add a random patch to an open slot |
 | 📦 Full Rewrite | every 1,000 lines of code written | Reroll *every* patch on the item |
-| ⏪ Revert Commit | rare | Strip the item back to Stock |
-| 🔗 Feature Branch Merge | rare, Jira-tier queues and up | Add a patch slot (up to 4) |
+| 🩹 Hotfix | **bounties** | Reroll one patch's *value* |
+| 🔀 Refactor Token | **bounties** | Reroll one patch's *type* |
+| ⏪ Revert Commit | **bounties** (less often) | Strip the item back to Stock |
+| 🔗 Feature Branch Merge | **bounties**, Jira-tier queues and up | Add a patch slot (up to 4) |
+
+In other words: grinding ordinary tickets keeps you in Commits (and eventually a Full Rewrite), but
+**Hotfix, Refactor, Revert and Merge only drop from bounties** — they're the reason bounties matter
+even once you've out-geared a board's normal payout. Configs take the same materials as gear; the
+only difference is which patches (mods, not stat boosts) land on them.
 
 Each material has a thin **soft-pity bar**: every ticket that *could* drop it nudges the bar even
 when it doesn't, so a full bar guarantees the next one. **Decommissioning** unwanted gear also

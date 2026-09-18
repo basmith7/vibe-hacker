@@ -35,8 +35,30 @@ Embezzler rogue (`ROGUE_MODES`, steals a bank fraction per second, half-speed re
 50%) with Kill -9 (`8 × Σ gear ilvl`, restart at half sanity, 20 s immunity); offline earnings that skip
 rogue and benched agents; `BAL` rogue knobs derived in the sim's breakeven/overreach checks; and
 `validate-rate.mjs`/`--probe` accepting two-queue fixtures (`FIX.queues`/`FIX.seat`, agreement within
-~2–20% at kps 0 depending on sample length). Smoke suite is 13 scenarios. **Next: Phase 3 — Configs +
-bounties.**
+~2–20% at kps 0 depending on sample length). Smoke suite is 13 scenarios.
+
+**Phase 3 shipped on branch `agents-and-queues` (2026-09-17), `SAVE_VER` 9 → 10.** Configs are items
+with `slot:"config"` (`slotDef`/`patchFits` the polymorphism points), carrying one mod patch per
+lever off `PATCH_DEFS` (Legacy Codebase → `d`, Enterprise Client → `pay`, On-Call Rotation → `band`,
+Crunch → `speed`, Open Source → `mats`; `BAL.modTiers = [0.10, 0.16, 0.24]`), socketed into
+`q.configs` (2 slots on Backlog/Kanban/Jira, 3 on PagerDuty/The Roadmap/Legacy Monolith —
+`QUEUE_TIERS[].slots`) from an agent's Inventory or the IDE through the same picker pattern as
+seating (`openSocketPicker` → `socketConfig`/`unsocketConfig`); `queueMods(q)` derives the live
+`{d, pay, band, speed, mats}` vector from those patches on every read, never cached. Bounties spawn
+one at a time per staffed, non-rogue board every `BAL.bountyEvery` (90 s ± 30%), are picked up by the
+next free automatic agent (`bountyWorked(q)`, derived from `WK`, never stored), pay `BAL.bountyPay`
+(2.5×) a ticket's payout plus a materials-bundle/gear/Config reward (`BAL.bountyRewards`, shifting
+toward gear + Configs with `BAL.bountyTierShift` per tier; the first bounty ever cleared always pays
+a Config), run only in the live loop (`tickBounties` inside `tickProgress`; paused by the boss key, a
+hidden tab, or a closed tab; `offlineEarnings` ignores them entirely), and expire unrewarded on a
+miss or timeout (`expireBounty`/`releaseBountyTasks` downgrade an in-flight bounty ticket to
+ordinary). Ordinary tickets were rebalanced down to credits + Commits only (plus the LOC-milestone
+Full Rewrite) — Hotfix, Refactor, Revert, Merge, gear near the top of a band, and Configs now come
+from bounties only, making them the crafting faucet as designed. `tools/aq-sim.mjs` mirrors all of
+this (`MOD_TIERS`, `queuePay`/`queueD`, the bounty income term) and its `--checks` confirm bounties
+land at 15–16% of income at every OS tier and the reference player still reaches STARSHIP in ≈ 4h33.
+Smoke suite is 17 scenarios (adds `configs`, `faucets`, `bounty`). **Next: Phase 4 — Automation,
+rogue types, Red Team, docs pass.**
 
 **Whole-branch review (2026-09-17) — residuals carried forward.** Not mergeable yet *by design*
 (no bounties/Configs yet). ~~Backlog named on day one via the "Backlog Seat" Store line~~ — closed in
@@ -341,9 +363,9 @@ faucet is thinner than the model's endgame assumes.
 - [x] Hire line (with starter kit) separate from seats; OS caps hires.
 
 ### Phase 3 — Queue Configs + bounties
-- [ ] Config item type, 2–3 slots per queue, mod `PATCH_DEFS`; IDE bench crafts them.
-- [ ] Bounty tickets (timer, scaling, rewards); remove the Mission Board.
-- [ ] Materials/drops rebalanced so bounties are the main faucet.
+- [x] Config item type, 2–3 slots per queue, mod `PATCH_DEFS`; IDE bench crafts them.
+- [x] Bounty tickets (timer, scaling, rewards); remove the Mission Board (already removed in Phase 1).
+- [x] Materials/drops rebalanced so bounties are the main faucet.
 
 ### Phase 4 — Automation, polish, docs
 - [ ] Auto-seat, auto-Kill -9 and offline-bounty (Pager Integration) Automation purchases (OS-gated like today's).
@@ -612,10 +634,13 @@ Decisions log below.
 
 ## Still open (to be settled by the sim, not by decision)
 - ~~Stat floor, gear coefficients, payout exponent, sanity constants, tiers, cost ladder~~ — derived, see
-  "Balance model". Still to model: bounties, Red Team, rogue types, Legacy Monolith's unlimited mods.
+  "Balance model". ~~Bounties~~ — modelled and shipped in Phase 3. Still to model: Red Team, rogue types,
+  Legacy Monolith's unlimited sockets.
 - Three stats confirmed enough? (A fourth, player-only stat fed by typing was floated and parked.)
 - Keep the global player level as flavour (assumed yes: titles, achievements).
 - `ROGUE_MODES` numbers and countermeasure tiers.
+- Legacy Monolith unlimited sockets (Phase 4).
+- Pager Integration offline efficiency (Phase 4).
 
 ## Backlog absorbed
 From `todo.md` once this ships: agent personalities/specializations (per-agent stats + gear *are*
