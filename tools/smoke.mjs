@@ -36,6 +36,8 @@ export async function type(kps, secs) {
 export function assert(cond, msg) { if (!cond) throw new Error("assert: " + msg); }
 // Starter-kit item factory for fixtures: one ilvl-`il` item per gear slot key, ids 60..63.
 export const kit = (k, il = 10) => ({ id: 60 + ["model","memory","compute","tools"].indexOf(k), slot: k, name: "kit " + k, ilvl: il, patches: [], maxPatches: 2 });
+// Queue fixture: tier t with n seats, empty sockets, no bounty. `nextBounty` large keeps bounties out of scenarios that don't test them.
+export const queue = (tier, seats, extra = {}) => Object.assign({ tier, seats, configs: Array(tier >= 3 ? 3 : 2).fill(null), bounty: null, nextBounty: 1e9 }, extra);
 // Boot the game; optionally replace the save with `fixture(save)` (a function mutating the fresh save) and reload.
 export async function boot({ fixture } = {}) {
   await connect(); await send("Runtime.enable"); await send("Page.enable");
@@ -67,13 +69,18 @@ export const SCENARIOS = {
   },
   async stateShape() {
     const s = await boot();
-    assert(s.ver === 9, "SAVE_VER must be 9, got " + s.ver);
+    assert(s.ver === 10, "SAVE_VER must be 10, got " + s.ver);
     assert(Array.isArray(s.agents) && s.agents.length === 1, "fresh save has exactly one agent (you)");
     const a = s.agents[0];
     for (const k of ["model", "memory", "compute", "tools"]) assert(a.gear[k] && a.gear[k].ilvl === 10, "agent zero starter " + k + " ilvl 10");
     assert(Array.isArray(a.inv), "agent has inv"); assert(typeof a.sanity === "number", "agent has sanity"); assert(a.q === 0, "agent seated in queue 0");
     assert(a.rogue === null, "agent zero starts not rogue (a.rogue persisted as null)");
     assert(Array.isArray(s.queues) && s.queues.length === 1 && s.queues[0].tier === 0 && s.queues[0].seats === 1, "one Backlog queue with one seat");
+    const q = s.queues[0];
+    assert(!("mods" in q), "q.mods (integer) is gone — mods are derived from q.configs");
+    assert(Array.isArray(q.configs) && q.configs.length === 2 && q.configs.every(c => c === null), "Backlog has two empty Config sockets");
+    assert(q.bounty === null && typeof q.nextBounty === "number", "queue carries bounty/nextBounty");
+    assert(s.bountiesDone === 0 && s.bountiesMissed === 0, "bounty counters present");
     assert(s.selectedAgent === 0, "selectedAgent defaults to 0");
     assert(!("m" in a) && !("down" in a) && !("immune" in a), "runtime fields must not be persisted");
     assert(s.rogues === 0 && s.stolen === 0 && !("burnouts" in s), "P.rogues/P.stolen replace P.burnouts");
@@ -207,7 +214,7 @@ export const SCENARIOS = {
   async seatAgent() {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 30)])), inv: [], sanity: 100, q: 0, done: 0, failed: 0, rogue: null });
-      s.queues = [{ tier: 0, seats: 2, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+      s.queues = [queue(0, 2), queue(1, 1)]; }});
     assert(s0.agents[1].q === 0, "bot starts on Backlog");
     let r = await click('#queuesBody .qchip[data-agent="1"]'); assert(r === "ok", "bot chip present"); await sleep(200);
     const opts = await ev(`[...document.querySelectorAll('#qpicker .qopt')].map(o=>o.dataset.q+':'+o.textContent)`);
@@ -230,7 +237,7 @@ export const SCENARIOS = {
   async dragSeat() {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 0; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 30)])), inv: [], sanity: 100, q: 0, done: 0, failed: 0, rogue: null });
-      s.queues = [{ tier: 0, seats: 2, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+      s.queues = [queue(0, 2), queue(1, 1)]; }});
     assert(s0.agents[1].q === 0, "bot starts on Backlog");
     const pts = await ev(`(()=>{const z=parseFloat(getComputedStyle(document.documentElement).zoom)||1;
       const c=x=>{const r=x.getBoundingClientRect(); return {x:(r.left+r.width/2)*z, y:(r.top+r.height/2)*z};};
@@ -254,7 +261,7 @@ export const SCENARIOS = {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       // ilvl 10 kit → Quality 20 vs Kanban D25 → 25% success; sanity 5 → the first failure (-23) sends it rogue
       s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k)])), inv: [], sanity: 5, q: 1, done: 0, failed: 0, rogue: null });
-      s.queues = [{ tier: 0, seats: 1, mods: 0, configs: [] }, { tier: 1, seats: 1, mods: 0, configs: [] }]; }});
+      s.queues = [queue(0, 1), queue(1, 1)]; }});
     let s1, waited = 0;
     while (waited < 60000) { await sleep(3000); waited += 3000; s1 = await readSave(); if (s1.agents[1].rogue) break; }
     assert(s1.agents[1].rogue && s1.agents[1].rogue.mode === "embezzler", "bot went rogue within 60s");
@@ -283,7 +290,7 @@ export const SCENARIOS = {
     const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 1000; s.earned = 0; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
       s.up.offline = 1; s.lastReal = Date.now() - 3600 * 1000;   // an hour away with Cloud Sync
       s.agents.push(mk(2, "worker", 0), mk(3, "thief", 0, { sanity: 0, rogue: { mode: "embezzler", t: 0, stolen: 0 } }), mk(4, "bench", -1));
-      s.queues = [{ tier: 0, seats: 3, mods: 0, configs: [] }]; }});
+      s.queues = [queue(0, 3)]; }});
     const gain = s0.earned;   // offline gain is credited at boot, before the fixture's reload-save
     assert(gain > 0, "seated sane agent earned offline");
     // credits = 1000 + offline gain + ≤7 s of live play; the rogue steals live at ~0.26%/s, so allow 3%

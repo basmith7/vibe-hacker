@@ -35,7 +35,7 @@ const SLOTS = ["model", "memory", "compute", "tools"]; let seq = 100;
 const kit = () => Object.fromEntries(SLOTS.map(k => [k, { id: ++seq, slot: k, name: "fixture " + k, ilvl, patches: [], maxPatches: 2 }]));
 Object.assign(fixture, { intro: false, credits: 0, earned: 0, tasksDone: 0, tasksFailed: 0, xp: 0, xpNeed: 1e9, plot: 0, plotNeed: 1e9 });   // freeze level/stage so the 60 s window is stationary
 fixture.agents = Array.from({ length: nAgents }, (_, i) => ({ id: i + 1, name: i ? "bot" + i : "you", color: "#0ff", gear: kit(), inv: [], sanity: 100, q: seat[i], done: 0, failed: 0, rogue: null }));
-fixture.queues = queues.map(q => ({ tier: q.tier, seats: q.seats, mods: 0, configs: [] }));
+fixture.queues = queues.map(q => ({ tier: q.tier, seats: q.seats, configs: Array(q.tier >= 3 ? 3 : 2).fill(null), bounty: null, nextBounty: 1e9 }));
 fixture.up.os = Math.max(...queues.map(q => q.tier));   // the OS that can own the highest queue (ILVL_CAP/HIRE_CAP consistent with the sim)
 await ev(`localStorage.setItem('vibehacker', ${JSON.stringify(JSON.stringify(fixture))}); document.cookie='vibehacker=;max-age=0'; localStorage.setItem=function(){}; 'ok'`);
 await send("Page.reload"); await sleep(3000);
