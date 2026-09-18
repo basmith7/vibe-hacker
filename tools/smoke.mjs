@@ -301,6 +301,45 @@ export const SCENARIOS = {
     const rate1 = gain / 3600;   // per second, at the game's 50% offline efficiency
     assert(rate1 > 1.5 && rate1 < 4.5, "gain must be ONE ilvl-10 Backlog agent's rate (~$2.9/s at 50%; two agents would be ~$5.8/s), got " + rate1.toFixed(2) + "/s");
   },
+  // Configs: a Config in agent zero's inventory is socketed onto Kanban via the → Socket picker; the board's D and the
+  // ticket payout rise; Unsocket returns it to the selected agent's inventory; the IDE's Commit adds a mod, never a gear patch.
+  async configs() {
+    const cfg = { id: 77, slot: "config", name: "Sprint Config", ilvl: 30, patches: [{ id: "mod_d", tier: 1, value: 0.20 }, { id: "mod_pay", tier: 1, value: 0.20 }], maxPatches: 3 };
+    const s0 = await boot({ fixture: s => { s.intro = false; s.credits = 5000; s.maxCredits = 5000; s.reveal = { credits: true, shop: true, store: true }; s.up.os = 1; s.up.u_queues = 1; s.unlocked.queues = true;
+      s.unlocked.inventory = true; s.unlocked.equipment = true; s.unlocked.ide = true; s.up.u_inv = 1; s.up.u_equip = 1; s.up.u_ide = 1;
+      s.materials.commit = 5; s.agents[0].inv = [cfg];
+      s.agents.push({ id: 2, name: "bot", color: "#0ff", gear: Object.fromEntries(["model","memory","compute","tools"].map(k => [k, kit(k, 40)])), inv: [], sanity: 100, q: 1, done: 0, failed: 0, rogue: null });
+      s.queues = [queue(0, 1), queue(1, 1)]; }});
+    assert(s0.agents[0].inv.some(it => it.id === 77), "fixture Config in agent zero's inventory");
+    const meta0 = await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qmeta').textContent`);
+    assert(/D25\b/.test(meta0), "Kanban shows base D25 before socketing: " + meta0);
+    assert(!(await ev(`!!document.querySelector('#inventoryBody .stashCard[data-id="77"] [data-act="equip"]')`)), "Config card has no Equip button");
+    let r = await click('#inventoryBody .stashCard[data-id="77"] [data-act="socket"]'); assert(r === "ok", "→ Socket button on the Config card"); await sleep(200);
+    const opts = await ev(`[...document.querySelectorAll('#qpicker .qopt')].map(o=>o.dataset.q+':'+o.dataset.s)`);
+    assert(opts.join(",") === "0:0,1:0", "socket picker lists Backlog and Kanban with their first free socket: " + opts);
+    r = await click('#qpicker .qopt[data-q="1"]'); assert(r === "ok", "choose Kanban"); await sleep(3500);
+    const s1 = await readSave();
+    assert(s1.queues[1].configs[0] && s1.queues[1].configs[0].id === 77, "Config sits in Kanban socket 0");
+    assert(!s1.agents[0].inv.some(it => it.id === 77), "Config left the inventory");
+    const meta1 = await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qmeta').textContent`);
+    assert(/D30\b/.test(meta1), "Kanban shows D30 (25 × 1.20) after socketing: " + meta1);
+    assert(await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qsock.on') !== null`), "socket tile shows the Config");
+    // payout: plain Kanban pays 25^1.5 × tools(1.16) ≈ 145/ticket (≈160 with crits); juiced 30^1.5 × 1.2 × 1.16 ≈ 228 (≈250)
+    await sleep(25000); const s2 = await readSave();
+    assert(s2.agents[1].done >= 2, "bot cleared tickets on the juiced Kanban");
+    assert(s2.earned / Math.max(1, s2.agents[1].done) > 190, "per-ticket earnings reflect the mods (got " + Math.round(s2.earned / Math.max(1, s2.agents[1].done)) + " per ticket)");
+    // unsocket → back to the SELECTED agent's inventory (agent zero is selected)
+    r = await click('#queuesBody .qboard[data-q="1"] .qsock.on .buy'); assert(r === "ok", "Unsocket button"); await sleep(3500);
+    const s3 = await readSave();
+    assert(s3.queues[1].configs[0] === null && s3.agents[0].inv.some(it => it.id === 77), "Unsocket returns the Config to the selected agent's inventory");
+    // IDE: Commit on the Config rolls a mod, never a gear patch
+    r = await click('#inventoryBody .stashCard[data-id="77"] [data-act="ide"]'); assert(r === "ok", "send Config to IDE"); await sleep(500);
+    assert(await ev(`!document.querySelector('#ideEquip')`), "IDE offers no Equip for a Config");
+    r = await ev(`(()=>{const o=document.querySelectorAll('#benchRing .orb')[0]; if(!o||o.disabled) return 'missing'; o.click(); return 'ok';})()`); assert(r === "ok", "Commit orb enabled (5 Commits, credits for the cost)"); await sleep(3500);
+    const s4 = await readSave();
+    assert(s4.craftSlot && s4.craftSlot.item.id === 77 && s4.craftSlot.item.patches.length === 3, "Commit added a third patch");
+    assert(s4.craftSlot.item.patches.every(p => p.id.startsWith("mod_")), "every patch on a Config is a mod: " + s4.craftSlot.item.patches.map(p => p.id));
+  },
 };
 
 const name = process.argv[2];

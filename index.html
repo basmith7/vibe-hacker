@@ -276,6 +276,10 @@
   .qhead{display:flex;align-items:center;gap:6px;font-size:10.5px;margin-bottom:4px}
   .qhead .qname{color:var(--txt)} .qhead .qmeta{color:var(--dim);margin-left:auto;font-size:9.5px;white-space:nowrap}
   .qseats{display:flex;flex-wrap:wrap;gap:5px}
+  .qsockets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+  .qsock{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 6px;border:1px dashed var(--edge);border-radius:4px;color:var(--dim);max-width:100%}
+  .qsock.on{border-style:solid;color:var(--cyan)} .qsock.on .sn{font-weight:700} .qsock .sm{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qsock .buy{font-size:8.5px;padding:0 5px;margin-left:2px}
   .qseat.empty{border:1px dashed var(--edge);border-radius:14px;padding:3px 9px;font-size:9.5px;color:var(--dim)}
   .qchip{position:relative;display:flex;align-items:center;gap:5px;border:1px solid var(--edge);border-radius:14px;padding:3px 8px;font-size:10px;cursor:grab;user-select:none;background:#0b1220;touch-action:none}
   .qchip .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac)}
@@ -1485,6 +1489,41 @@ notify("#general", "10x-ing that shit 🔥");`,
     termLine("t-git","🪑",agentLabel(a)+(qi<0?" moved to the Bench":" seated on "+queueTier(P.queues[qi]).name));
     return true;
   }
+  // Phase 3 — Config sockets (spec Phase 3 §1). A Config comes from an agent's inventory (or the IDE socket) and sits
+  // in q.configs[si]; Unsocket hands it to the SELECTED agent — the Inventory app the player is looking at.
+  const freeSocket=q=>q.configs.indexOf(null);
+  function takeItem(src){   // remove and return the item a socket picker was opened for
+    if(src.craft){ const it=P.craftSlot&&P.craftSlot.item; P.craftSlot=null; return it||null; }
+    const a=agentById(src.owner), i=a.inv.findIndex(x=>x.id===src.id); return i<0?null:a.inv.splice(i,1)[0];
+  }
+  function socketConfig(qi,si,src){
+    const q=P.queues[qi]; if(!q||si<0||q.configs[si]) return;
+    const it=takeItem(src); if(!it) return; if(it.slot!=="config"){ selectedAgent().inv.push(it); return; }
+    q.configs[si]=it; const t=queueTier(q);
+    toast("🗂 Socketed",it.name+" → "+t.name+" · now D"+Math.round(queueD(q)),"#00e5ff");
+    termLine("t-git","🗂","socketed "+it.name+" into "+t.name+" ("+patchSummary(it)+")");
+    save(); buildQueues(); renderShop();
+  }
+  function unsocketConfig(qi,si){
+    const q=P.queues[qi], it=q&&q.configs[si]; if(!it) return;
+    q.configs[si]=null; const a=selectedAgent(); a.inv.push(it); enforceInvCap(a);
+    termLine("t-dim","🗂","unsocketed "+it.name+" from "+queueTier(q).name+" → "+a.name+"'s inventory");
+    save(); buildQueues(); renderShop();
+  }
+  function openSocketPicker(anchor,src){
+    closePicker(); const m=document.createElement("div"); m.className="qpicker card"; m.id="qpicker";
+    const rows=P.queues.map((q,qi)=>{ const t=queueTier(q), si=freeSocket(q), n=q.configs.filter(Boolean).length;
+      return {qi,si,lbl:t.em+" "+t.name,sub:si<0?"no free socket":n+"/"+q.configs.length+" sockets · D"+Math.round(queueD(q)),full:si<0}; });
+    m.innerHTML=rows.map(r=>`<div class="qopt${r.full?" full":""}" data-q="${r.qi}" data-s="${r.si}"><b>${r.lbl}</b><span>${r.sub}</span></div>`).join("");
+    m.addEventListener("click",e=>{ e.stopPropagation(); const o=e.target.closest(".qopt"); if(!o||o.classList.contains("full")) return; socketConfig(+o.dataset.q,+o.dataset.s,src); closePicker(); });
+    placePicker(m,anchor);
+  }
+  function placePicker(m,anchor){   // mounted on body: #queuesBody scrolls/clips; clamped to the viewport in logical px
+    const r=anchor.getBoundingClientRect(); m.style.left=(r.left/uiZoom)+"px"; m.style.top=(r.bottom/uiZoom+4)+"px";
+    document.body.appendChild(m);
+    const vw=innerWidth/uiZoom; if(r.left/uiZoom+m.offsetWidth>vw) m.style.left=Math.max(0,vw-m.offsetWidth-4)+"px";
+    setTimeout(()=>document.addEventListener("click",closePicker,{once:true}),0);
+  }
   function chipFor(a,i){
     const c=document.createElement("div"); c.className="qchip"; c.dataset.agent=i; c.style.setProperty("--ac",a.color);
     c.innerHTML=`<span class="dot"></span><span class="nm">${agentLabel(a)}</span><span class="pct"></span><span class="san" title="sanity"><i></i></span><button class="buy k9" data-act="kill9"></button>`;
@@ -1499,7 +1538,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     const boards=P.queues.map((q,qi)=>({qi,q,t:queueTier(q)})).concat([{qi:-1,q:null,t:{name:"Bench",em:"🪑",D:0}}]);
     for(const b of boards){
       const el=document.createElement("div"); el.className="qboard card"+(b.qi<0?" bench":""); el.dataset.q=b.qi;
-      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div><div class="qseats"></div>`;
+      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div>`+(b.qi>=0?`<div class="qsockets"></div>`:"")+`<div class="qseats"></div>`;
+      if(b.qi>=0){ const row=el.querySelector(".qsockets");
+        b.q.configs.forEach((c,si)=>{ const s=document.createElement("div"); s.className="qsock"+(c?" on":""); s.dataset.s=si;
+          s.innerHTML=c?`<span class="sn">🗂 ${c.name}</span><span class="sm">${patchSummary(c)}</span><button class="buy">Unsocket</button>`:`empty socket`;
+          if(c) s.querySelector(".buy").addEventListener("click",e=>{ e.stopPropagation(); unsocketConfig(b.qi,si); });
+          row.appendChild(s); }); }
       const seats=el.querySelector(".qseats"), seated=P.agents.map((a,i)=>({a,i})).filter(x=>x.a.q===b.qi);
       for(const {a,i} of seated) seats.appendChild(chipFor(a,i));
       if(b.qi>=0) for(let k=seated.length;k<b.q.seats;k++){ const e=document.createElement("div"); e.className="qseat empty"; e.textContent="empty seat"; seats.appendChild(e); }
@@ -1531,10 +1575,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     m.innerHTML=rows.map(r=>`<div class="qopt${r.cur?" cur":""}${r.full?" full":""}" data-q="${r.qi}"><b>${r.lbl}</b><span>${r.full?"no free seat":r.sub}</span></div>`).join("");
     m.addEventListener("click",e=>{ e.stopPropagation(); const o=e.target.closest(".qopt"); if(!o||o.classList.contains("full")) return; seatAgent(a,+o.dataset.q); closePicker(); });
     // mounted on body (not inside the chip): #queuesBody scrolls/clips, and Task 6's chip pointerdown drag must not see picker clicks
-    const r=anchor.getBoundingClientRect(); m.style.left=(r.left/uiZoom)+"px"; m.style.top=(r.bottom/uiZoom+4)+"px";
-    document.body.appendChild(m);
-    const vw=innerWidth/uiZoom; if(r.left/uiZoom+m.offsetWidth>vw) m.style.left=Math.max(0,vw-m.offsetWidth-4)+"px";
-    setTimeout(()=>document.addEventListener("click",closePicker,{once:true}),0);
+    placePicker(m,anchor);
   }
   function closePicker(){ const m=$("#qpicker"); if(m) m.remove(); }
   // Drag is sugar over seatAgent(): pointer events (works on touch), a 6 px dead zone so a click still opens the
@@ -1700,12 +1741,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     core.dataset.rarity=it?rarityOf(it):"";
     core.classList.toggle("empty",!it);
     if(it){
-      core.innerHTML=`<span class="cEm">${ASLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
-        `<span class="cSub">Lv ${it.ilvl} · ${ASLOT[it.slot].lbl}</span>`+
-        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`+
+      const sd=slotDef(it), cfg=it.slot==="config";
+      core.innerHTML=`<span class="cEm">${sd.em}</span><span class="cNm">${it.name}</span>`+
+        `<span class="cSub">Lv ${it.ilvl} · ${sd.lbl}</span>`+
+        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} ${cfg?"mods":"patches"}</span>`+
         `<span class="cSub">${agentById(P.craftSlot.owner).name}'s</span>`;
-      acts.innerHTML=`<button class="buy" id="ideEquip">Equip on ${agentById(P.craftSlot.owner).name}</button><button class="buy" id="ideBack">Back to inventory</button>`;
-      acts.querySelector("#ideEquip").addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
+      acts.innerHTML=(cfg?`<button class="buy" id="ideSocket">→ Socket</button>`:`<button class="buy" id="ideEquip">Equip on ${agentById(P.craftSlot.owner).name}</button>`)+`<button class="buy" id="ideBack">Back to inventory</button>`;
+      if(cfg) acts.querySelector("#ideSocket").addEventListener("click",e=>{e.stopPropagation();openSocketPicker(e.currentTarget,{craft:true});});
+      else acts.querySelector("#ideEquip").addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
       acts.querySelector("#ideBack").addEventListener("click",e=>{e.stopPropagation();returnCraftSlot();});
       const rows=it.patches.map(p=>{ const d=PATCH_DEFS[p.id];
         return `<div class="modRow card"><span class="mN">${d.lbl}</span><span class="mV">${d.fmt(p.value)}</span><span class="mT">T${p.tier+1}</span></div>`; });
@@ -1713,7 +1756,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       mods.innerHTML=rows.join("");
     } else {
       core.innerHTML=`<span class="cEm">🛠</span><span class="cNm">Empty socket</span>`+
-        `<span class="cSub">drag gear here from the selected agent's Inventory or Equipment — or use its “→ IDE” button</span>`;
+        `<span class="cSub">drag gear or a Config here from the selected agent's Inventory or Equipment — or use its "→ IDE" button</span>`;
       acts.innerHTML=""; mods.innerHTML="";
     }
     const cost=it?craftCost(it):0;
@@ -1751,13 +1794,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     const wrap=$("#stashList"); if(!wrap) return; const a=selectedAgent();
     const items=a.inv.slice().sort((x,y)=>y.ilvl-x.ilvl);
     if(!items.length){ wrap.innerHTML=`<div class="stashEmpty">${a.name} has nothing stashed — clearing tickets drops gear at the queue's item level.</div>`; return; }
-    wrap.innerHTML=items.map(it=>`<div class="card stashCard" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${ASLOT[it.slot].em}</span>`+
-      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${ASLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
-      `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
+    wrap.innerHTML=items.map(it=>{ const sd=slotDef(it), cfg=it.slot==="config";
+      return `<div class="card stashCard" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${sd.em}</span>`+
+      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${sd.lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} ${cfg?"mods":"patches"} — ${patchSummary(it)}</div></div>`+
+      `<div class="actions">${cfg?`<button class="buy" data-act="socket">→ Socket</button>`:`<button class="buy" data-act="equip">Equip</button>`}<button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`; }).join("");
     wrap.querySelectorAll(".stashCard").forEach(card=>{ const id=Number(card.dataset.id);
       card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
       card.addEventListener("dragend",()=>{benchPayload=null;});
-      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromInv(a,id);});
+      const eq=card.querySelector('[data-act="equip"]'); if(eq) eq.addEventListener("click",e=>{e.stopPropagation();equipFromInv(a,id);});
+      const so=card.querySelector('[data-act="socket"]'); if(so) so.addEventListener("click",e=>{e.stopPropagation();openSocketPicker(so,{owner:a.id,id});});
       card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(a,id);});
       card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(a,id);}); });
   }
