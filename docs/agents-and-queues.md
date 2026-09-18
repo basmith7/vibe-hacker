@@ -537,7 +537,9 @@ in "Queue Configs (mods)" above (favoured-stat is dropped — one success stat, 
   bounties entirely** (Pager Integration is Phase 4).
 - **Pickup — next free agent on that queue.** In `assignTask`, if the queue has a bounty nobody is working,
   the agent takes it: `w.task.bounty = true`, tile tag `⏱ BOUNTY`, orange progress bar. Agent zero takes
-  one the same way and clears it by typing. "Nobody working it" is derived (`WK.some(w => w.task &&
+  one the same way and clears it by typing — but **agent zero's manual ticket never locks a bounty** (an idle
+  player must not block it): an automatic agent can take the same bounty and whoever clears first gets it,
+  the other's ticket paying as ordinary. "Nobody working it" is derived (`WK.some(w => !w.manual && w.task &&
   w.task.bounty && w.task.q === q)`), never stored, so after a reload the next free agent re-takes it.
 - **Resolve.** Same D and success roll as a ticket. Success → credits `pay`, the reward, `P.bountiesDone++`,
   toast + terminal line, `q.bounty = null`. Failure → the normal sanity drain and the bounty **expires
