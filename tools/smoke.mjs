@@ -330,9 +330,12 @@ export const SCENARIOS = {
     assert(/D30\b/.test(meta1), "Kanban shows D30 (25 × 1.20) after socketing: " + meta1);
     assert(await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qsock.on') !== null`), "socket tile shows the Config");
     // payout: plain Kanban pays 25^1.5 × tools(1.16) ≈ 145/ticket (≈160 with crits); juiced 30^1.5 × 1.2 × 1.16 ≈ 228 (≈250)
+    // s1 was captured right after socketing, before any juiced tickets clear — use it as the baseline and assert on
+    // the DELTA over the 25 s window, so pre-socket plain tickets (~3% of the earlier total) don't dilute the average.
     await sleep(25000); const s2 = await readSave();
-    assert(s2.agents[1].done >= 2, "bot cleared tickets on the juiced Kanban");
-    assert(s2.earned / Math.max(1, s2.agents[1].done) > 190, "per-ticket earnings reflect the mods (got " + Math.round(s2.earned / Math.max(1, s2.agents[1].done)) + " per ticket)");
+    const dDone = s2.agents[1].done - s1.agents[1].done, dEarned = s2.earned - s1.earned;
+    assert(dDone >= 2, "bot cleared tickets on the juiced Kanban");
+    assert(dEarned / Math.max(1, dDone) > 190, "per-ticket earnings reflect the mods (got " + Math.round(dEarned / Math.max(1, dDone)) + " per ticket)");
     // unsocket → back to the SELECTED agent's inventory (agent zero is selected)
     r = await click('#queuesBody .qboard[data-q="1"] .qsock.on .buy'); assert(r === "ok", "Unsocket button"); await sleep(3500);
     const s3 = await readSave();

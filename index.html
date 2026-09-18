@@ -1017,7 +1017,7 @@
     floor:10, coeff:{model:1,memory:1,compute:1,tools:0.004},
     succK:1.25, succMax:0.95, durBase:4, durPerD:0.3, speedDiv:40, durMin:1.1, durMax:16, cooldown:0.7, surgeSpeed:0.15,
     payK:1.5, modTiers:[0.10,0.16,0.24],   // Config patch values T1–T3 — one lever each (sim MOD_TIERS)
-    bountyEvery:90, bountyPay:2.5, bountyTtl:4, bountyRewards:{mats:60,gear:30,config:10}, bountyTierShift:4,   // sim BOUNTY_*
+    bountyEvery:90, bountyPay:3.5, bountyTtl:4, bountyRewards:{mats:60,gear:30,config:10}, bountyTierShift:4,   // sim BOUNTY_*
     drainC:0.3, drainWork:0.1, drainFail:3, regenK:0.02, sanityBase:50, sanityPerStamina:2,
     drop:0.10, bandTop:0.92, starterIlvl:10,
     hireBase:150, hireGrowth:3.2, seatBase:150, seatGrowth:2.2, seatTierMult:4,
@@ -1113,11 +1113,11 @@
     return out;
   }
   function agentMult(a){
-    const st=agentStats(a), pres=1+P.equity*0.02, focus=focusOn?(1+FOCUS.credit):1;
-    a.m={ st,
+    const st=agentStats(a), pres=1+P.equity*0.02, focus=focusOn?(1+FOCUS.credit):1, mult=st.tools*pres*focus;
+    a.m={ st, mult,
       chance:D=>clamp(0.5+(st.quality/D-1)*BAL.succK,0,BAL.succMax),
       dur:(D,q)=>clamp((BAL.durBase+BAL.durPerD*D)/(1+st.speed/BAL.speedDiv),BAL.durMin,BAL.durMax)/(1+(q?queueMods(q).speed:0)),
-      payout:(D,q)=>Math.pow(D,BAL.payK)*(1+queueMods(q).pay)*st.tools*pres*focus,
+      payout:(D,q)=>Math.pow(D,BAL.payK)*(1+queueMods(q).pay)*mult,
       sanityMax:BAL.sanityBase+BAL.sanityPerStamina*st.stamina,
       regen:BAL.regenK*st.stamina*(1+st.regen)*(focusOn?(1+FOCUS.regen):1),
     };
@@ -1492,7 +1492,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!canSeat(a,qi)) return false;
     if(a.q===qi) return true;
     a.q=qi;
-    const w=WK[P.agents.indexOf(a)]; if(w){ w.task=null; w.elapsed=0; w.cooldown=0.3; w.el.classList.remove("win","fail","crit"); if(qi<0) assignTask(w); }   // in-flight ticket is abandoned; the Bench tile is relabelled now
+    const w=WK[P.agents.indexOf(a)]; if(w){ if(w.task&&w.task.bounty) clearTaskLook(w); w.task=null; w.elapsed=0; w.cooldown=0.3; w.el.classList.remove("win","fail","crit"); if(qi<0) assignTask(w); }   // in-flight ticket is abandoned; the Bench tile is relabelled now
     recompute(); buildQueues(); renderAgentSheets(); renderShop(); save();
     termLine("t-git","🪑",agentLabel(a)+(qi<0?" moved to the Bench":" seated on "+queueTier(P.queues[qi]).name));
     return true;
@@ -1701,7 +1701,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     core.addEventListener("drop",e=>{ e.preventDefault(); core.classList.remove("dragover"); dropOnBench(e.dataTransfer.getData("text/plain")||benchPayload); });
     if(benchRO) benchRO.disconnect();
     benchRO=new ResizeObserver(fitBench); benchRO.observe(bench);
-    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials — Commits from tickets, the rest from bounties"; ideBody.appendChild(mh);
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials — Commits from tickets, Full Rewrite from LOC, the rest from bounties"; ideBody.appendChild(mh);
     const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; ideBody.appendChild(matsWrap);
     matEls={};
     for(const m of MATS){
@@ -2331,7 +2331,13 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function enforceInvCap(a){
     while(a.inv.length>INV_CAP){
-      let worst=0; for(let i=1;i<a.inv.length;i++) if(a.inv[i].ilvl<a.inv[worst].ilvl) worst=i;
+      // prefer scrapping the lowest-ilvl non-Config; a Config is only fair game once nothing else is left
+      let worst=0; for(let i=1;i<a.inv.length;i++){
+        const cur=a.inv[worst], cand=a.inv[i];
+        if(cur.slot!=="config"&&cand.slot==="config") continue;
+        if(cur.slot==="config"&&cand.slot!=="config"){ worst=i; continue; }
+        if(cand.ilvl<cur.ilvl) worst=i;
+      }
       const gone=a.inv.splice(worst,1)[0], refund=salvageValue(gone); P.credits+=refund;
       termLine("t-dim","♻",a.name+"'s inventory full, auto-scrapped "+gone.name+" for "+money(refund));
     }
@@ -2373,8 +2379,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const k of got) P.materials[k]=(P.materials[k]||0)+1;
     return "📦 "+got.map(k=>MAT[k].lbl).join(" + ");
   }
+  function clearTaskLook(w){   // reset a worker tile's bounty look (amber tag/class/bar) back to an ordinary ticket
+    w.el.classList.remove("bounty"); const q=w.task&&w.task.q; if(w.task) w.task.bounty=false;
+    if(q){ const t=queueTier(q); w.sTag.textContent=t.em+" "+t.name; w.sTag.style.color="#00e5ff"; w.prog.style.background="linear-gradient(90deg,#00e5ff,#fff2)"; }
+  }
   function releaseBountyTasks(q){   // any worker still holding this board's bounty goes back to an ordinary ticket look
-    for(const w of WK) if(w.task&&w.task.bounty&&w.task.q===q){ w.task.bounty=false; w.el.classList.remove("bounty"); const t=queueTier(q); w.sTag.textContent=t.em+" "+t.name; w.sTag.style.color="#00e5ff"; w.prog.style.background="linear-gradient(90deg,#00e5ff,#fff2)"; }
+    for(const w of WK) if(w.task&&w.task.bounty&&w.task.q===q) clearTaskLook(w);
   }
   function clearBounty(a,q){
     const b=q.bounty; q.bounty=null; P.bountiesDone++; releaseBountyTasks(q);
@@ -2541,7 +2551,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   };
   function goRogue(a){
     P.rogues++; a.rogue={mode:"embezzler",t:0,stolen:0}; a.sanity=0; P.streak=0;
-    const w=WK[P.agents.indexOf(a)]; if(w){ w.task=null; w.dripT=0; w.el.classList.remove("win","fail","crit"); w.tk.textContent="gone rogue"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; }
+    const w=WK[P.agents.indexOf(a)]; if(w){ if(w.task&&w.task.bounty) clearTaskLook(w); w.task=null; w.dripT=0; w.el.classList.remove("win","fail","crit"); w.tk.textContent="gone rogue"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; }
     const M=ROGUE_MODES[a.rogue.mode], nm=agentLabel(a);
     celebrate("☠ "+nm.toUpperCase()+" WENT ROGUE","#ff2b5e"); if(a===agentZero()) flashHp();
     toast("☠ Rogue — "+M.lbl, nm+" "+M.desc+" · Kill -9 for "+money(kill9Cost(a))+" or wait it out", "#ff2b5e","progress");
@@ -2626,7 +2636,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(Math.random()<chance){
       const crit=Math.random()<0.05?3:1; if(crit>1)P.crits++;
       const live=bounty&&q.bounty;   // the bounty may have expired mid-ticket — then this pays as an ordinary ticket
-      const cr=Math.round((live?q.bounty.pay:a.m.payout(D,q))*crit), xp=Math.round((D+6)*crit);
+      const cr=Math.round((live?q.bounty.pay*a.m.mult:a.m.payout(D,q))*crit), xp=Math.round((D+6)*crit);
       addXp(xp); P.credits+=cr; P.earned+=cr; checkReveal();
       P.plot+=D*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
       P.tasksDone++; a.done++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
@@ -2643,7 +2653,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); if(w.manual) flashHp();
       termLine("t-bad","✗",a.name+" FAILED ‹"+name+"›  -"+Math.round(dmg)+" sanity  (streak reset)");
       toast("💥 "+name+" failed","-"+Math.round(dmg)+" sanity · "+a.name+"'s Quality too low for "+queueTier(q).name,"#ff2b5e","grind");
-      if(bounty&&q.bounty) expireBounty(q,a.name+" failed it");
+      if(bounty&&q.bounty&&(!w.manual||!bountyWorked(q))) expireBounty(q,a.name+" failed it");
       if(a.sanity<=0) goRogue(a);
     }
     w.task=null; w.cooldown=rand(0.4,1.0); w.el.classList.remove("bounty");

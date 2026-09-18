@@ -47,7 +47,7 @@ seating (`openSocketPicker` → `socketConfig`/`unsocketConfig`); `queueMods(q)`
 `{d, pay, band, speed, mats}` vector from those patches on every read, never cached. Bounties spawn
 one at a time per staffed, non-rogue board every `BAL.bountyEvery` (90 s ± 30%), are picked up by the
 next free automatic agent (`bountyWorked(q)`, derived from `WK`, never stored), pay `BAL.bountyPay`
-(2.5×) a ticket's payout plus a materials-bundle/gear/Config reward (`BAL.bountyRewards`, shifting
+(3.5×) a ticket's payout plus a materials-bundle/gear/Config reward (`BAL.bountyRewards`, shifting
 toward gear + Configs with `BAL.bountyTierShift` per tier; the first bounty ever cleared always pays
 a Config), run only in the live loop (`tickBounties` inside `tickProgress`; paused by the boss key, a
 hidden tab, or a closed tab; `offlineEarnings` ignores them entirely), and expire unrewarded on a
@@ -519,7 +519,7 @@ in "Queue Configs (mods)" above (favoured-stat is dropped — one success stat, 
   rolls at the queue's drop band like gear and gates patch tiers the same way (`initialMaxPatches`, Merge
   to 4).
 - **Mods are Config patches, one lever each** — five `PATCH_DEFS` rows with `slot:"config", kind:"mod",
-  mod:<lever>`, tiers `[0.12, 0.20, 0.30]`, gates `[0, 25, 55]`, the usual ±10 % roll (so Hotfix/Refactor/
+  mod:<lever>`, tiers `[0.10, 0.16, 0.24]` (sim-derived), gates `[0, 25, 55]`, the usual ±10 % roll (so Hotfix/Refactor/
   Rewrite/Revert all matter on Configs):
 
   | Patch | Lever | Effect of rolled value `v` |
@@ -593,7 +593,7 @@ in "Queue Configs (mods)" above (favoured-stat is dropped — one success stat, 
   Configs socketed (`ILVL_CAP` guarantees it; the check proves it), and Crunch never makes overreach pay.
 - **New `BAL` keys:** `modTiers`, `bountyEvery`, `bountyPay`, `bountyTtl` (multiple of one ticket's
   duration + cooldown at the queue's D, e.g. 4×, so a single slow agent barely makes it), `bountyRewards`.
-  `validate-rate.mjs` and `--probe` learn `FIX.configs` (a mod vector per queue).
+  `validate-rate.mjs` and `--probe` learn `FIX.mods` (a mod vector per queue).
 - The Mission Board is already gone (Phase 1) — its checklist box closes with that note.
 
 ### §4 Verification & docs

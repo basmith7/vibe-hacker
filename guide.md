@@ -162,7 +162,8 @@ down with a draining bar that pulses under 10 seconds.
 - **The timer only runs while you're actually playing** — it pauses with the boss key, a hidden tab,
   or a closed tab, same as everything else in the live loop. It does **not** advance while you're
   away (that's a future Automation purchase, Pager Integration).
-- **Clearing it** pays roughly **five tickets' worth of credits** plus a reward: a materials bundle, a
+- **Clearing it** pays roughly **3.5 tickets' worth of credits** — your Tools, Equity, and Deep Work
+  bonuses apply just like an ordinary ticket — plus a reward: a materials bundle, a
   gear drop near the top of the board's band, or a Config. The very **first bounty you ever clear
   always pays a Config**, so you're guaranteed to see the socket UI early. (That's decided the moment
   each bounty spawns, not when it clears — so if two boards happen to spawn their first-ever bounty
@@ -296,9 +297,10 @@ In other words: grinding ordinary tickets keeps you in Commits (and eventually a
 even once you've out-geared a board's normal payout. Configs take the same materials as gear; the
 only difference is which patches (mods, not stat boosts) land on them.
 
-Each material has a thin **soft-pity bar**: every ticket that *could* drop it nudges the bar even
-when it doesn't, so a full bar guarantees the next one. **Decommissioning** unwanted gear also
-refunds materials, so gear you don't keep still feeds the economy.
+Only **Commit** has a soft-pity bar (every ticket that could drop it nudges the bar even when it
+doesn't, so a full bar guarantees the next one) — the other five materials just show their source
+line above. **Decommissioning** unwanted gear also refunds materials, so gear you don't keep still
+feeds the economy.
 
 ## OS gates (Upgrade OS)
 

@@ -189,7 +189,10 @@ new throwaway script unless none of them fits:
   validator's synthetic fixture sets `nextBounty` to effectively never fire, so neither side includes
   bounty income in this comparison); a live playthrough with bounties enabled will read further above
   the probe's number (bounties are 15–16% of income at every OS per `--checks`) — don't chase that gap
-  as drift, it's the bounty term. (`tools/balance-sim.mjs` models the *old* economy still on `main`.)
+  as drift, it's the bounty term. Compare at a fixture with ≥90% success; at overreach the sim prices
+  Kill -9 cycling into steady state and a 120 s live sample won't match that by design — the live game
+  hasn't converged to the cycle average in that window. (`tools/balance-sim.mjs` models the *old*
+  economy still on `main`.)
 
 All of them use the same CDP recipe, which is also what to follow for an ad-hoc script:
 

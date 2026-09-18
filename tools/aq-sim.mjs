@@ -12,7 +12,8 @@
 //   rogue        ⇒ agent uptime = min(1, regen/drain) (it cycles rogue/recover) and a credit tax
 //   drops        = each success drops an item w.p. DROP at ilvl ~ U[D_t, D_t+1 band], OS-capped
 //   configs      = socketed Config patches, one lever each: d (D×), pay (payout×), band (drop band×), speed (dur÷), mats
-//   bounties     = per staffed queue: mean(chance) × BOUNTY_PAY × payout / BOUNTY_EVERY  (a throughput bonus, 10–20% of income)
+//   bounties     = a bounty REPLACES one ordinary ticket, so the extra income per staffed queue is
+//                  mean(chance) × (BOUNTY_PAY − 1) × payout / BOUNTY_EVERY  (a throughput bonus, 10–20% of income)
 //   income       = Σ seated agents  uptime · success · payout / (duration + cooldown)  (+ typing for agent zero)
 //
 // Usage: node tools/aq-sim.mjs [--kps 2] [--craft 1] [--hours 12] [--tune '{...}'] [--table] [--checks]
@@ -40,7 +41,7 @@ const T = Object.assign({
   // Bounties: each staffed queue spawns one every BOUNTY_EVERY s (±30%), paying BOUNTY_PAY × a ticket's payout if an
   // agent clears it within BOUNTY_TTL × (reference duration + cooldown). Reward kind weights mats/gear/config, with
   // BOUNTY_TIER_SHIFT points per tier moved from mats to gear+config (half each).
-  BOUNTY_EVERY: 90, BOUNTY_PAY: 2.5, BOUNTY_TTL: 4, BOUNTY_REWARDS: { mats: 60, gear: 30, config: 10 }, BOUNTY_TIER_SHIFT: 4,
+  BOUNTY_EVERY: 90, BOUNTY_PAY: 3.5, BOUNTY_TTL: 4, BOUNTY_REWARDS: { mats: 60, gear: 30, config: 10 }, BOUNTY_TIER_SHIFT: 4,
   BAND_TOP: 0.92,           // tier t drops up to BAND_TOP × next tier's D (uncrafted gear alone should NOT reach 95% at t+1)
   surge: 0.15,              // agents speed ×(1 + surge·(surgeLevel)) — small
   cooldown: 0.7,
@@ -111,10 +112,11 @@ function rate(S, kps = KPS, solo = true) {
   const seatedRates = S.queues.map(() => []);
   S.agents.forEach((a, i) => { if (a.q < 0) return; const q = S.queues[a.q]; const r = agentRate(a, q, kps, i === 0); cr += r.credits; succByQ[a.q] += r.succ; if (r.tps > 0) seatedRates[a.q].push(r); });
   // Bounties: one per BOUNTY_EVERY s on every staffed board, taken by whichever seated agent frees up first —
-  // so its clear chance is the mean over the board's working agents, and it pays BOUNTY_PAY tickets' worth.
+  // so its clear chance is the mean over the board's working agents. It REPLACES one ordinary ticket (the
+  // agent that takes it isn't also clearing a normal one), so the extra income is (BOUNTY_PAY − 1) tickets' worth.
   S.queues.forEach((q, qi) => { const rs = seatedRates[qi]; if (!rs.length) return;
     const chance = rs.reduce((s, r) => s + r.chance, 0) / rs.length, payout = rs[0].payout;
-    bounty += chance * T.BOUNTY_PAY * payout / T.BOUNTY_EVERY; });
+    bounty += chance * (T.BOUNTY_PAY - 1) * payout / T.BOUNTY_EVERY; });
   return { credits: cr + bounty, tickets: cr, bounty, succByQ };
 }
 
