@@ -351,6 +351,8 @@ export const SCENARIOS = {
         queue(1, 1, { bounty: { name: "Rotate the leaked API key", D: 25, pay: 500, t: 20, ttl: 20, kind: "mats" } })]; }});   // Kanban has no seated agent — nobody can clear its bounty
     // an hour offline plus the ~7 s boot round-trip took < 10 s off the Kanban bounty's 20 s clock — it only ticks in the live loop
     assert(s0.queues[1].bounty && s0.queues[1].bounty.t > 10, "bounty restored; clocks tick only in the live loop, not offline (t=" + (s0.queues[1].bounty && s0.queues[1].bounty.t) + ")");
+    const pill1 = await ev(`document.querySelector('#queuesBody .qboard[data-q="1"] .qbounty').className`);
+    assert(/\bon\b/.test(pill1), "open bounty shows its pill: " + pill1);
     let s1, waited = 0;
     while (waited < 20000) { await sleep(2000); waited += 2000; s1 = await readSave(); if (s1.bountiesDone >= 1) break; }
     assert(s1.bountiesDone === 1, "the bot cleared the Backlog bounty within 20 s (done=" + s1.bountiesDone + ", missed=" + s1.bountiesMissed + ")");
@@ -358,6 +360,8 @@ export const SCENARIOS = {
     assert(s1.earned >= 500, "bounty paid its pay (earned " + s1.earned + ")");
     const cfgs = s1.agents[1].inv.filter(it => it.slot === "config");
     assert(cfgs.length === 1 && cfgs[0].patches.length === 1 && cfgs[0].patches[0].id.startsWith("mod_"), "first bounty ever pays a Config with one mod");
+    const pill = await ev(`document.querySelector('#queuesBody .qboard[data-q="0"] .qbounty').className`);
+    assert(!/\bon\b/.test(pill), "bounty pill hidden after the clear: " + pill);
     // expiry: the unstaffed Kanban's bounty clock runs out with nobody able to clear it
     let s2, waited2 = 0;
     while (waited2 < 25000) { await sleep(2000); waited2 += 2000; s2 = await readSave(); if (s2.queues[1].bounty === null) break; }

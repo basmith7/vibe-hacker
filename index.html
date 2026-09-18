@@ -280,6 +280,12 @@
   .qsock{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 6px;border:1px dashed var(--edge);border-radius:4px;color:var(--dim);max-width:100%}
   .qsock.on{border-style:solid;color:var(--cyan)} .qsock.on .sn{font-weight:700} .qsock .sm{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .qsock .buy{font-size:8.5px;padding:0 5px;margin-left:2px}
+  .qbounty{display:none;align-items:center;gap:6px;font-size:9.5px;margin:0 0 4px;padding:2px 7px;border:1px dashed var(--amber);border-radius:10px;color:var(--amber)}
+  .qbounty.on{display:flex} .qbounty .bn{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qbounty .bt{font-variant-numeric:tabular-nums;white-space:nowrap} .qbounty .bk{opacity:.85}
+  .qbounty .bar{display:block;width:44px;height:4px;background:#0b1220;border:1px solid var(--edge);border-radius:2px;overflow:hidden} .qbounty .bar b{display:block;height:100%;background:var(--amber);box-shadow:0 0 6px rgba(255,176,0,.6)}
+  .qbounty.urgent{animation:blink .6s steps(2) infinite}
+  .agent.bounty{border-color:var(--amber)} .agent.bounty .ah .sTag{color:var(--amber)}
   .qseat.empty{border:1px dashed var(--edge);border-radius:14px;padding:3px 9px;font-size:9.5px;color:var(--dim)}
   .qchip{position:relative;display:flex;align-items:center;gap:5px;border:1px solid var(--edge);border-radius:14px;padding:3px 8px;font-size:10px;cursor:grab;user-select:none;background:#0b1220;touch-action:none}
   .qchip .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac)}
@@ -1541,7 +1547,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     const boards=P.queues.map((q,qi)=>({qi,q,t:queueTier(q)})).concat([{qi:-1,q:null,t:{name:"Bench",em:"🪑",D:0}}]);
     for(const b of boards){
       const el=document.createElement("div"); el.className="qboard card"+(b.qi<0?" bench":""); el.dataset.q=b.qi;
-      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div>`+(b.qi>=0?`<div class="qsockets"></div>`:"")+`<div class="qseats"></div>`;
+      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div>`+(b.qi>=0?`<div class="qsockets"></div><div class="qbounty"><span class="bk"></span><span class="bn"></span><span class="bt"></span><i class="bar"><b></b></i></div>`:"")+`<div class="qseats"></div>`;
       if(b.qi>=0){ const row=el.querySelector(".qsockets");
         b.q.configs.forEach((c,si)=>{ const s=document.createElement("div"); s.className="qsock"+(c?" on":""); s.dataset.s=si;
           s.innerHTML=c?`<span class="sn">🗂 ${c.name}</span><span class="sm">${patchSummary(c)}</span><button class="buy">Unsocket</button>`:`empty socket`;
@@ -1550,14 +1556,20 @@ notify("#general", "10x-ing that shit 🔥");`,
       const seats=el.querySelector(".qseats"), seated=P.agents.map((a,i)=>({a,i})).filter(x=>x.a.q===b.qi);
       for(const {a,i} of seated) seats.appendChild(chipFor(a,i));
       if(b.qi>=0) for(let k=seated.length;k<b.q.seats;k++){ const e=document.createElement("div"); e.className="qseat empty"; e.textContent="empty seat"; seats.appendChild(e); }
-      body.appendChild(el); QEL.boards.push({...b,el,meta:el.querySelector(".qmeta")});
+      body.appendChild(el); QEL.boards.push({...b,el,meta:el.querySelector(".qmeta"),bounty:el.querySelector(".qbounty")});
     }
     renderQueues();
   }
   function renderQueues(){
     if(!QEL.boards.length) return;
     for(const b of QEL.boards){
-      if(b.qi>=0){ const n=P.agents.filter(a=>a.q===b.qi).length; b.meta.textContent=`D${Math.round(queueD(b.q))} · ${n}/${b.q.seats} seats · drops ilvl ${b.t.D}–${Math.round(queueBandTop(b.q))}`; }
+      if(b.qi>=0){ const n=P.agents.filter(a=>a.q===b.qi).length; b.meta.textContent=`D${Math.round(queueD(b.q))} · ${n}/${b.q.seats} seats · drops ilvl ${b.t.D}–${Math.round(queueBandTop(b.q))}`;
+        const bo=b.q.bounty, pe=b.bounty;
+        pe.classList.toggle("on",!!bo);
+        if(bo){ const s=Math.max(0,Math.ceil(bo.t)); pe.querySelector(".bk").textContent=KIND_EM[bo.kind]; pe.querySelector(".bn").textContent="⏱ "+bo.name+" · "+money(bo.pay)+(bountyWorked(b.q)?" · in progress":"");
+          pe.querySelector(".bt").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); pe.querySelector(".bar b").style.width=clamp(bo.t/bo.ttl*100,0,100)+"%";
+          pe.classList.toggle("urgent",bo.t<10); pe.title="pays "+money(bo.pay)+" + "+bo.kind+" if an agent on this board clears it in time"; }
+      }
       else b.meta.textContent=P.agents.filter(a=>a.q<0).length+" benched · no tickets · full regen";
     }
     for(const [i,c] of QEL.chips){ const a=P.agents[i]; if(!a) continue; if(!a.m) agentMult(a);
@@ -1566,7 +1578,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       c.el.classList.toggle("rogue",!!a.rogue);
       if(a.rogue){ const k=kill9Cost(a); c.k9.textContent="Kill -9 "+money(k); c.k9.disabled=P.credits<k; c.k9.title="pay to restart "+agentLabel(a)+" at half sanity ("+BAL.rogueImmune+"s immunity)"; }
     }
-    const tag=$("#queuesTag"); if(tag) tag.textContent=P.queues.length+" board"+(P.queues.length>1?"s":"")+" · "+P.agents.filter(a=>a.q<0).length+" benched";
+    const tag=$("#queuesTag"); if(tag){ const nb=P.queues.filter(q=>q.bounty).length; tag.textContent=P.queues.length+" board"+(P.queues.length>1?"s":"")+" · "+P.agents.filter(a=>a.q<0).length+" benched"+(nb>0?" · "+nb+" bounty open":""); }
   }
   function openPicker(i,anchor){
     closePicker(); const a=P.agents[i]; if(!a.m) agentMult(a);
