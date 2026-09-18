@@ -60,7 +60,20 @@ land at 15–16% of income at every OS tier and the reference player still reach
 Smoke suite is 17 scenarios (adds `configs`, `faucets`, `bounty`). **Next: Phase 4 — Automation,
 rogue types, Red Team, docs pass.**
 
-**Whole-branch review (2026-09-17) — residuals carried forward.** Not mergeable yet *by design*
+**Phase 3 whole-branch review (2026-09-17) — residuals carried forward.** Fixed in the wave: bounty pay
+now applies the clearing agent's Tools/Equity/Deep Work multiplier (`a.m.mult`) and the sim models a bounty
+as *replacing* one ticket (`(BOUNTY_PAY − 1) × payout`), so the 15–16% share is what the game pays;
+`enforceInvCap` scraps Configs last; `clearTaskLook(w)` resets a tile when a bounty ticket is aborted by
+seating/rogue; agent zero failing a bounty no longer expires one an automatic agent is working. Open minors
+(none block Phase 4): agent zero alone on a board runs its bounty clock, so an idle player collects
+spawn/expiry lines every ~110 s; bounty crits pay `crit × pay` (not in the sim or guide); the pill's child
+spans are re-queried at 5 Hz; "N bounty open" isn't pluralised; the materials card's `dim` class has no
+rule; `smoke.mjs`'s scratch cleanup occasionally hits `ENOTEMPTY` (Chrome still writing) and leaks a dir;
+the Phase 2-era text below still says "≈ 5 h" for STARSHIP; the first-Config rule is evaluated at spawn so
+two boards can both pay one. Untested paths: bounty failure-path expiry, the mid-ticket downgrade, the
+manual/automatic race on one bounty.
+
+**Phase 2 whole-branch review (2026-09-17) — residuals carried forward.** Not mergeable yet *by design*
 (no bounties/Configs yet). ~~Backlog named on day one via the "Backlog Seat" Store line~~ — closed in
 Phase 2: the Team section is hidden until the Queues app is bought, so `isRevealed()` owns the reveal.
 Pacing-table caveat: the sim assumes typing until the first hire, so the "idle" rows are
