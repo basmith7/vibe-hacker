@@ -10,7 +10,7 @@ gameplay systems · **W8** data & platform · `stretch` = whenever · `fork` = a
 scheduled work. (Game speed is wanted sooner but sequenced in W5 — sequence ≠ desire.)
 
 ## Small Wins
-- [x] **🪄 Autocomplete Assist** (Hardware, repeatable, max 15 levels) — your own manual slot now
+- [x] ~~**🪄 Autocomplete Assist**~~ **(RETIRED by Agents & Queues Phase 1 — the Hardware upgrade no longer exists; kept here for history)** (Hardware, repeatable, max 15 levels) — your own manual slot now
   auto-fills +5%/sec per level (capped 75%), stacking with mashing. Baseline (0 levels) is unchanged:
   verified zero progress with zero input over 2.5s; at max level, verified 20%→63% progress over 2.5s
   with zero input. Typing/tapping is still required for the last stretch even at max level.

@@ -21,7 +21,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="vibe hacker" />
 <meta property="og:title" content="vibe hacker // AI-agent coding cockpit" />
-<meta property="og:description" content="A fake swarm of AI agents furiously coding — secretly a persistent idle-RPG about a dev career. Levels, stats, loot, and burnout included." />
+<meta property="og:description" content="A fake swarm of AI agents furiously coding — secretly a persistent idle-RPG about a dev career. Stats, loot, and rogue agents included." />
 <meta property="og:url" content="https://basmith7.github.io/vibe-hacker/" />
 <meta property="og:image" content="https://basmith7.github.io/vibe-hacker/og.png" />
 <meta property="og:image:width" content="1200" />
@@ -226,7 +226,7 @@
   #storeBody{position:absolute;inset:26px 0 42px 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #storeFooter{position:absolute;left:0;right:0;bottom:0;height:42px;border-top:1px solid var(--edge);padding:7px 10px;background:rgba(0,0,0,.2)}
   /* the four Toolbox tool-apps share a scrollable card body */
-  #equipBody,#inventoryBody,#ideBody,#missionsBody,#achBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
+  #equipBody,#inventoryBody,#ideBody,#achBody{position:absolute;inset:26px 0 0 0;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:7px}
   #statusBody .statRow{display:flex;flex-wrap:wrap;gap:6px}
   #statusBody .stat{border:1px solid rgba(22,35,61,.6);border-radius:6px;padding:5px 9px;min-width:92px}
   #statusBody .stat.grow{flex:1 1 100%;min-width:100%}
@@ -255,11 +255,52 @@
   .agent{display:flex;flex-direction:column;min-height:0;border:1px solid var(--edge);border-radius:6px;background:#070c16;overflow:hidden;transition:border-color .2s,box-shadow .2s}
   .agent.win{border-color:var(--green);box-shadow:0 0 16px rgba(57,255,20,.35) inset}
   .agent.fail{border-color:var(--red);box-shadow:0 0 16px rgba(255,43,94,.35) inset}
+  .agent.rogue{border-color:var(--red);box-shadow:0 0 16px rgba(255,43,94,.35) inset} .agent .k9{font-size:9px;padding:1px 6px}
   .agent .ah{display:flex;align-items:center;gap:7px;padding:3px 7px;font-size:10.5px;border-bottom:1px solid rgba(22,35,61,.7)}
   .agent .ah .nm{font-weight:700;white-space:nowrap}
   .agent .ah .tk{color:var(--txt);flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .agent .ah .sTag{font-size:9px;padding:1px 6px;border-radius:10px;border:1px solid currentColor;opacity:.95;white-space:nowrap}
   .agent .ah .diff{font-size:9px;color:var(--amber);letter-spacing:-1px;white-space:nowrap}
+  .agent .sheet{display:flex;align-items:center;gap:8px;padding:2px 7px;font-size:10.5px;border-bottom:1px solid rgba(22,35,61,.7)}
+  .agent .sheet .ss b{margin-left:2px}
+  .agent .sheet .sanity{flex:1;height:5px;background:#0b1220;border-radius:3px;overflow:hidden;min-width:30px}
+  .agent .sheet .sanity i{display:block;height:100%;background:var(--green);transition:width .3s}
+  .agent .sheet .sanity.low i{background:var(--red)}
+  /* ---- Queues app (A&Q Phase 2): one board per owned queue + the Bench; agents are chips ---- */
+  #queuesPanel{display:flex;flex-direction:column}
+  #queuesBody{flex:1;min-height:0;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:6px}
+  .qboard{border:1px solid var(--edge);border-radius:6px;padding:5px 7px;background:rgba(11,18,32,.6)}
+  .qboard.card{display:block;padding:5px 7px;border-radius:6px}   /* .card's flex row would put header and seats side by side */
+  .qboard.bench{border-style:dashed;opacity:.85}
+  .qboard.over{border-color:var(--green);box-shadow:0 0 12px rgba(57,255,20,.35) inset}
+  .qhead{display:flex;align-items:center;gap:6px;font-size:10.5px;margin-bottom:4px}
+  .qhead .qname{color:var(--txt)} .qhead .qmeta{color:var(--dim);margin-left:auto;font-size:9.5px;white-space:nowrap}
+  .qseats{display:flex;flex-wrap:wrap;gap:5px}
+  .qsockets{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+  .qsock{display:inline-flex;align-items:center;gap:4px;font-size:9px;padding:2px 6px;border:1px dashed var(--edge);border-radius:4px;color:var(--dim);max-width:100%}
+  .qsock.on{border-style:solid;color:var(--cyan)} .qsock.on .sn{font-weight:700} .qsock .sm{color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qsock .buy{font-size:8.5px;padding:0 5px;margin-left:2px}
+  .qbounty{display:none;align-items:center;gap:6px;font-size:9.5px;margin:0 0 4px;padding:2px 7px;border:1px dashed var(--amber);border-radius:10px;color:var(--amber)}
+  .qbounty.on{display:flex} .qbounty .bn{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qbounty .bt{font-variant-numeric:tabular-nums;white-space:nowrap} .qbounty .bk{opacity:.85}
+  .qbounty .bar{display:block;width:44px;height:4px;background:#0b1220;border:1px solid var(--edge);border-radius:2px;overflow:hidden} .qbounty .bar b{display:block;height:100%;background:var(--amber);box-shadow:0 0 6px rgba(255,176,0,.6)}
+  .qbounty.urgent{animation:blink .6s steps(2) infinite}
+  .agent.bounty{border-color:var(--amber)} .agent.bounty .ah .sTag{color:var(--amber)}
+  .qseat.empty{border:1px dashed var(--edge);border-radius:14px;padding:3px 9px;font-size:9.5px;color:var(--dim)}
+  .qchip{position:relative;display:flex;align-items:center;gap:5px;border:1px solid var(--edge);border-radius:14px;padding:3px 8px;font-size:10px;cursor:grab;user-select:none;background:#0b1220;touch-action:none}
+  .qchip .dot{width:7px;height:7px;border-radius:50%;background:var(--ac);box-shadow:0 0 6px var(--ac)}
+  .qchip .nm{font-weight:700;color:var(--ac)} .qchip .pct{color:var(--amber)}
+  .qchip .san{width:34px;height:4px;background:#0b1220;border:1px solid var(--edge);border-radius:2px;overflow:hidden} .qchip .san i{display:block;height:100%;background:var(--green)}
+  .qchip.rogue{border-color:var(--red);box-shadow:0 0 10px rgba(255,43,94,.4)} .qchip.rogue .pct{color:var(--red)}
+  .qchip .k9{display:none;font-size:9px;padding:1px 6px;margin-left:2px} .qchip.rogue .k9{display:inline-block}
+  .qchip.dragging{pointer-events:none;opacity:.8;z-index:60;cursor:grabbing}
+  .qpicker{position:fixed;min-width:210px;z-index:70;display:flex;flex-direction:column;gap:2px;padding:5px;background:#0b1220;border:1px solid var(--edge);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);cursor:default}
+  .qopt{display:flex;justify-content:space-between;gap:10px;padding:4px 7px;border-radius:4px;font-size:10px;cursor:pointer;white-space:nowrap}
+  .qopt:hover{background:rgba(0,229,255,.12)} .qopt.cur{color:var(--green)} .qopt.full{opacity:.45;cursor:not-allowed}
+  .qopt span{color:var(--dim)}
+  .agent .sheet .qn{color:#5b6b86}
+  .agent .sheet .sel{padding:1px 7px;font-size:10px}
+  .agent .sheet .sel.on{background:var(--green);color:#000}
   .agent .code{flex:1;overflow:hidden;padding:4px 8px;font-size:11px;white-space:pre-wrap;word-break:break-word;position:relative}
   .agent .code::after{content:"▊";color:var(--green);animation:blink .8s steps(1) infinite}
   .agent .prog{height:3px;background:#0a1120}
@@ -409,8 +450,7 @@
     border:1px solid var(--edge);border-radius:6px;padding:4px 6px;flex:1;min-width:0}
   .rollBtns{display:flex;gap:6px;flex-shrink:0}
   .rollBtns .buy{padding:8px 9px}
-  .stashCard .actions,.missionCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
-  .missionCard .buy{font-size:9.5px;padding:6px 8px;white-space:normal;text-align:center}
+  .stashCard .actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
   .buy.danger{border-color:var(--red);color:var(--red);background:rgba(255,43,94,.08)}
   .buy.danger:hover:not(:disabled){background:rgba(255,43,94,.18);box-shadow:0 0 12px rgba(255,43,94,.3)}
   .stashEmpty{font-size:10.5px;color:var(--dim);padding:14px 4px;text-align:center;line-height:1.4}
@@ -507,7 +547,7 @@
   body.intro.reveal-credits #statusbar .stat.credits{display:flex;animation:reveal .5s ease-out}
   body.intro #hud{display:none}
   body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
-  body.intro .agent .ah .sTag,body.intro .agent .ah .diff{display:none}
+  body.intro .agent .ah .sTag,body.intro .agent .ah .diff,body.intro .agent .sheet{display:none}
   /* day-1 immersive terminal — only until the Store reveals at 10 credits; after that the terminal is
      a normal tile beside the Store. Strips the terminal's chrome + build log and enlarges the mash surface. */
   body.intro:not(.reveal-shop) #terminalPanel{border:none;border-radius:0}
@@ -544,7 +584,7 @@
     #chartsPanel{height:300px}
     #terminalPanel{height:420px}
     #storePanel{height:460px}
-    #inventoryPanel,#idePanel,#missionsPanel,#equipPanel,#achievementsPanel{height:400px}
+    #inventoryPanel,#idePanel,#equipPanel,#achievementsPanel{height:400px}
     #statusBody{overflow:auto}
     /* day-1 on mobile: terminal is the only unlocked tile → let it fill the screen for the immersive mash */
     body.intro #cockpit{min-height:100vh}
@@ -738,10 +778,8 @@
       <div class="head"><span class="dot"></span> STATUS <span class="spacer"></span><span class="tag">character sheet</span></div>
       <div id="statusBody">
         <div class="statRow">
-          <div class="stat" id="spStat"><span class="k">✦ skill pts</span><span class="v" id="s_sp">0</span></div>
           <div class="stat g"><span class="k">tasks ✓</span><span class="v" id="s_task">0</span></div>
           <div class="stat a"><span class="k">streak 🔥</span><span class="v" id="s_streak">0</span></div>
-          <div class="stat m"><span class="k">loot 🎁</span><span class="v" id="s_loot">0</span></div>
           <div class="stat"><span class="k">uptime</span><span class="v" id="s_up">00:00:00</span></div>
           <div class="stat grow">
             <span class="k">❤ sanity — <span id="s_hp">100</span>%</span>
@@ -757,7 +795,6 @@
             <div class="hl"><span class="lbl">📅 Stage</span><span class="stgname" id="hud_stage">Day 1: The Onboarding</span><span class="pct" id="hud_plotpct">0%</span></div>
             <div class="hbar plot"><i id="hud_plot"></i></div>
           </div>
-          <div class="hud-block stats" id="statChips"></div>
         </footer>
       </div>
     </section>
@@ -773,14 +810,19 @@
       <div id="agentList"></div>
     </section>
 
+    <section class="panel" id="queuesPanel" data-app="queues">
+      <div class="head"><span class="dot"></span> QUEUES <span class="spacer"></span><span class="tag" id="queuesTag">1 board</span></div>
+      <div id="queuesBody"></div>
+    </section>
+
     <section class="panel" id="chartsPanel" data-app="telemetry">
       <div class="head"><span class="dot"></span> TELEMETRY <span class="spacer"></span><span class="tag" id="teleTag">$0 · +$0/s</span></div>
       <div id="chartsBody">
         <div class="chart credits" id="chCredits" title="Credits — your money. The big number is your current balance; the line is how fast you're earning it per second (task payouts + passive income), sampled over the last ~15 seconds.">
           <span class="ct">credits</span><span class="cv" id="cv_credits" style="color:var(--green)">$0</span><span class="cvsub" id="cv_creditRate">+$0/s</span><canvas id="cLine"></canvas></div>
-        <div class="chart statSheet" id="statSheet" title="Your five skills, tallest first. Hover any row for what it does."><span class="ct">stat sheet — hover a row</span><div class="ssBars" id="ssBars"></div></div>
-        <div class="chart" id="chFail" title="Failure rate — the share of all attempted tasks that have failed. Failures cost sanity and reset your streak. Raise the stat a task uses, or your AI Model's success bonus, to push it down."><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
-        <div class="chart" id="chSanity" title="Sanity — your mental health. Failing tasks drains it; the Espresso Machine and Cooling gear refill it. At 0% you burn out: lose XP and take a forced coffee break."><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
+        <div class="chart statSheet" id="statSheet" title="Your own agent's three stats. Hover any row for what it does."><span class="ct">your stats — hover a row</span><div class="ssBars" id="ssBars"></div></div>
+        <div class="chart" id="chFail" title="Failure rate — the share of all attempted tasks that have failed. Failures cost sanity and reset your streak. Raise your agents' Quality (the Model slot) or seat them on an easier queue to push it down."><span class="ct">failure rate</span><span class="cv" id="cv_spark" style="color:var(--red)">0%</span><canvas id="cSpark"></canvas></div>
+        <div class="chart" id="chSanity" title="Sanity — your own agent&#39;s mental health. Its Stamina (from the Memory slot) sets both the pool and how fast it refills; every ticket drains a little and a failed one drains a lot. At 0% the agent goes rogue — off the board and stealing from you — until sanity is back to 50% or you Kill -9 it."><span class="ct">sanity</span><span class="cv" id="cv_gauge" style="color:var(--green)">100%</span><canvas id="cGauge"></canvas></div>
       </div>
     </section>
 
@@ -810,10 +852,6 @@
       <div class="head"><span class="dot"></span> THE IDE <span class="spacer"></span><span class="tag">crafting bench</span></div>
       <div id="ideBody"></div>
     </section>
-    <section class="panel" id="missionsPanel" data-app="missions">
-      <div class="head"><span class="dot"></span> MISSIONS <span class="spacer"></span><span class="tag">bounty board</span></div>
-      <div id="missionsBody"></div>
-    </section>
     <section class="panel" id="achievementsPanel" data-app="achievements">
       <div class="head"><span class="dot"></span> ACHIEVEMENTS <span class="spacer"></span><span class="tag" id="achTag">trophy case</span></div>
       <div id="achBody"></div>
@@ -822,7 +860,7 @@
   <!-- Windows 3.1+ desktop taskbar (float mode only): Start button far-left, then a button per
        running/available app. Lives as the last flex child so the grid canvas shrinks above it. -->
   <div id="focusBadge" role="status" title="Fullscreen Deep Work bonus is active — click to leave fullscreen">
-    🎧 <span>DEEP WORK</span> <b>+25% XP · +25% credits · +50% sanity regen</b>
+    🎧 <span>DEEP WORK</span> <b>+25% credits · +50% sanity regen</b>
   </div>
   <div id="taskbar">
     <button id="startBtn" title="Start Menu — open any app" aria-label="Start menu — open any app" aria-haspopup="menu">⊞ Start</button>
@@ -843,10 +881,9 @@
     <div class="hsub">click / tap anywhere to grind — the rest is optional</div>
     <table>
       <tr><td class="k"><kbd>any key</kbd> / <kbd>click</kbd> / <kbd>tap</kbd></td><td class="hd">Grind — type code, advance & clear tasks</td></tr>
-      <tr><td class="k"><kbd>Shift</kbd> + click a stat's <kbd>+</kbd></td><td class="hd">Spend <b>all</b> your skill points on that one stat</td></tr>
       <tr><td class="k"><kbd>T</kbd></td><td class="hd">Cycle through your unlocked OS looks</td></tr>
       <tr><td class="k"><kbd>?</kbd></td><td class="hd">Show / hide this help</td></tr>
-      <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen — earns the 🎧 <b>Deep Work</b> bonus (+25% XP, +25% credits, +50% sanity regen)</td></tr>
+      <tr><td class="k"><kbd>F11</kbd></td><td class="hd">Fullscreen — earns the 🎧 <b>Deep Work</b> bonus (+25% credits, +50% sanity regen)</td></tr>
       <tr><td class="k"><kbd>Esc</kbd> / <kbd>`</kbd></td><td class="hd">Boss key — hide the game behind a fake spreadsheet</td></tr>
       <tr><td class="k">⊞ Start <span class="hd">(Win 3.1+)</span></td><td class="hd">Open any app · Reset Layout · click a taskbar app to focus/minimize it</td></tr>
       <tr><td class="k">Drag title bar / corner <span class="hd">(Win 3.1+)</span></td><td class="hd">Move / resize windows</td></tr>
@@ -879,7 +916,7 @@
 
 
 <div id="hint">
-  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key
+  🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · <b>hire agents</b> to work the queue · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key
 </div>
 
 <script>
@@ -906,21 +943,7 @@
   const UI={};   // cached DOM refs for the per-frame hot loop (populated in cacheUI)
   let bodyFont="ui-monospace,monospace";   // canvas font family, refreshed on theme change
 
-  /* ============ stats ============ */
-  // Stats: merged 9->5 for the crafting-expansion rework (see "crafting update.md" Phase 1).
-  // Coding absorbs the old Git-Fu; Systems absorbs the old Architect+DevOps. Rizz and Caffeine
-  // are retired as active/grindable stats — their effects return later as gear patches (Phase 5).
-  const STATS=[
-    {id:"coding",  lbl:"Coding",     em:"⌨️", color:"#eafff0"},
-    {id:"focus",   lbl:"Focus",      em:"🧠", color:"#00e5ff"},
-    {id:"debug",   lbl:"Debugging",  em:"🐛", color:"#39ff14"},
-    {id:"systems", lbl:"Systems",    em:"🏛", color:"#4d8cff"},
-    {id:"algo",    lbl:"Algorithms", em:"🧮", color:"#c77dff"},
-  ];
-  const STAT=Object.fromEntries(STATS.map(s=>[s.id,s]));
-  const STAT_IDS=STATS.map(s=>s.id);
-
-  /* ============ tasks (name, statId) ============ */
+  /* ============ tasks (name, legacy flavor tag — only the name is used) ============ */
   const TASKS=[
     ["Write your first function","coding"],["Fix a typo in prod","coding"],["Center a div","coding"],
     ["Print 'hello world'","coding"],["Add a semicolon","coding"],["Rename a variable","coding"],
@@ -945,6 +968,8 @@
     ["Balance the binary tree","algo"],["Solve the knapsack, dynamically","algo"],["Prove the loop invariant","algo"],
     ["Shave the constant factor","algo"],["Reverse the linked list (again)","algo"],
   ];
+  const BOUNTY_NAMES=["Hotfix prod before the demo","CEO's laptop is 'slow'","Rotate the leaked API key","Migrate the billing DB tonight","Un-break the Friday deploy",
+    "Get the intern's PR merged","Make the dashboard green again","Restore the backup that 'never fails'","Ship the feature sales already sold","Find out who pushed to main"];
   // Retired task flavor (Rizz/Caffeine) — kept here for reuse as gear-patch flavor in Phase 5:
   // Charm the code reviewer, Survive the standup, Negotiate the deadline, Demo without it crashing,
   // Convince PM to cut scope, Mentor the new hire, End the tabs-vs-spaces debate, Get the giant PR approved,
@@ -966,118 +991,106 @@
     "Distinguished Engineer","10x Engineer","Rockstar Dev","Ninja Coder","Code Wizard","Systems Guru","Tech Lead",
     "Chief Architect","Thought Leader","VP of Vibes","CTO","Singularity Whisperer","Benevolent AGI"];
 
-  const LOOT=["Mechanical Keyboard of Clackening +7","Standing Desk of Focus","Rubber Duck of Debugging",
-    "Noise-Cancelling Headphones +5","Ergonomic Chair of the Ancients","Second Monitor of Productivity",
-    "Artisanal Cold Brew of Awakening","Vim Cheatsheet (Legendary)","+500 Stack Overflow Reputation",
-    "Dark-Mode Theme (Mythic)","Cursed USB-C Dongle","Blue-Light Glasses of Clarity","Hoodie of Invisibility",
-    "Golden Pull Request","Sticker of the Rust Crab","Legendary Yak Shaver","Amulet of No Meetings"];
-
   /* ============ upgrade economy ============ */
-  const MACH=[   // computer tiers (index = owned tier); mult scales XP+credits+passive, speed scales task speed
-    {name:"Hand-me-down Laptop",mult:1,speed:1,cost:0},
-    {name:"Gaming Rig",mult:1.8,speed:1.15,cost:800},
-    {name:"Mac Studio",mult:3.4,speed:1.3,cost:9000},
-    {name:"Threadripper Workstation",mult:6.5,speed:1.5,cost:95000},
-    {name:"Liquid-Cooled Beast",mult:13,speed:1.7,cost:950000},
-    {name:"Quantum Rig",mult:32,speed:2.2,cost:1.3e7},
-    {name:"Dyson-Sphere Cluster",mult:90,speed:3,cost:2.2e8},
-  ];
-  const MODEL=[  // AI model tiers → flat success bonus + speed
-    {name:"Naive Autocomplete",success:0,speed:1,cost:0},
-    {name:"GPT-2 (2019)",success:.03,speed:1.05,cost:500},
-    {name:"GPT-4",success:.06,speed:1.12,cost:6500},
-    {name:"Claude Sonnet",success:.09,speed:1.2,cost:70000},
-    {name:"Claude Opus 4.8",success:.12,speed:1.32,cost:750000},
-    {name:"AGI (do not release)",success:.16,speed:1.55,cost:9e6},
-  ];
-  const HIRE=[   // hired auto-agents (total workers = 1 "you" + index)
-    {name:"just you",cost:0},{name:"1st agent",cost:60},{name:"2nd agent",cost:650},
-    {name:"3rd agent",cost:5500},{name:"4th agent",cost:42000},{name:"5th agent",cost:350000},
-    {name:"6th agent",cost:3e6},{name:"7th agent",cost:2.6e7},
-  ];
   const OS_TIERS=[   // cockpit look tiers; buying advances + auto-switches, but any owned look can be picked later
     {id:"dos",     name:"MS-DOS 6.22",  short:"DOS",      cost:0},
-    {id:"win31",   name:"Windows 3.1",  short:"Win 3.1",  cost:650},
-    {id:"win95",   name:"Windows 95",   short:"Win 95",   cost:7500},
-    {id:"win10",   name:"Windows 10",   short:"Win 10",   cost:80000},
-    {id:"neon",    name:"NEON//OS v6",  short:"NEON",     cost:850000},
-    {id:"spaceage",name:"STARSHIP OS",  short:"STARSHIP", cost:9500000},
+    {id:"win31",   name:"Windows 3.1",  short:"Win 3.1",  cost:4000},
+    {id:"win95",   name:"Windows 95",   short:"Win 95",   cost:40000},
+    {id:"win10",   name:"Windows 10",   short:"Win 10",   cost:400000},
+    {id:"neon",    name:"NEON//OS v6",  short:"NEON",     cost:3000000},
+    {id:"spaceage",name:"STARSHIP OS",  short:"STARSHIP", cost:24000000},
   ];
   // OS gates (os-gates update) — the OS ladder is the game's milestone spine, so each tier unlocks
   // real capability, not just a reskin. HIRE_CAP = max "Hire an Agent" tier per OS (DOS is
   // single-tasking: one agent; Win3.1 cooperative multitasking: two; Win95 preemptive: four; ...).
-  // Slot unlocks live in SLOTS[].os; Automation items carry a reqOs. osLock(u) is the one gate check.
-  const HIRE_CAP=[1,2,4,6,7,7];
+  // Agent gear slots live in AGENT_SLOTS; Automation items carry a reqOs. osLock(u) is the one gate check.
+  /* ============ Agents & Queues (docs/agents-and-queues.md) ============ */
+  // Three stats, all derived from gear — no levels, no skill points. Balance numbers: doc "Balance model".
+  const AGENT_STATS=[
+    {id:"quality", lbl:"Quality", em:"🎯", color:"#c77dff", expl:"Quality — success chance vs the queue's difficulty (and crit). Fed by the Model slot."},
+    {id:"speed",   lbl:"Speed",   em:"⚡", color:"#00e5ff", expl:"Speed — how fast tickets clear. Fed by the Compute slot."},
+    {id:"stamina", lbl:"Stamina", em:"🧠", color:"#39ff14", expl:"Stamina — sanity pool and regen; failures drain it, zero means it goes rogue. Fed by the Memory slot."},
+  ];
+  const ASTAT=Object.fromEntries(AGENT_STATS.map(s=>[s.id,s])), ASTAT_IDS=AGENT_STATS.map(s=>s.id);
+  const AGENT_SLOTS=[
+    {id:"model",   lbl:"Model",   em:"🤖", stat:"quality"},
+    {id:"memory",  lbl:"Memory",  em:"🧠", stat:"stamina"},
+    {id:"compute", lbl:"Compute", em:"⚙️", stat:"speed"},
+    {id:"tools",   lbl:"Tools",   em:"🧰", stat:null},      // wildcard: credit multiplier + misc patches
+  ];
+  const ASLOT=Object.fromEntries(AGENT_SLOTS.map(s=>[s.id,s])), ASLOT_IDS=AGENT_SLOTS.map(s=>s.id);
+  const CONFIG_SLOT={id:"config", lbl:"Config", em:"🗂", stat:null};   // pseudo-slot: Configs are items that socket into queues, not agents
+  const slotDef=item=>item.slot==="config"?CONFIG_SLOT:ASLOT[item.slot];
+  const CONFIG_NAMES=["Sprint Config","CODEOWNERS","Runbook","Jira Workflow","OKR Sheet","Definition of Done","On-Call Schedule","Release Checklist","Retro Notes","Style Guide"];
+  // Queue tiers: D = base difficulty; drops roll ilvl in [D, BAL.bandTop × next D]. Phase 1 only sells Backlog seats.
+  // `slots` = Config sockets (spec Phase 3 §1).
+  const QUEUE_TIERS=[
+    {id:"backlog",  name:"Backlog",         D:10,  os:0, em:"📥", slots:2},
+    {id:"kanban",   name:"Kanban",          D:25,  os:1, em:"🗂", slots:2},
+    {id:"jira",     name:"Jira",            D:45,  os:2, em:"📋", slots:2},
+    {id:"pager",    name:"PagerDuty",       D:70,  os:3, em:"📟", slots:3},
+    {id:"roadmap",  name:"The Roadmap",     D:100, os:4, em:"🗺", slots:3},
+    {id:"monolith", name:"Legacy Monolith", D:140, os:5, em:"🏚", slots:3},
+  ];
+  const BAL={   // every tunable from tools/aq-sim.mjs, in one place
+    floor:10, coeff:{model:1,memory:1,compute:1,tools:0.004},
+    succK:1.25, succMax:0.95, durBase:4, durPerD:0.3, speedDiv:40, durMin:1.1, durMax:16, cooldown:0.7, surgeSpeed:0.15,
+    payK:1.5, modTiers:[0.10,0.16,0.24],   // Config patch values T1–T3 — one lever each (sim MOD_TIERS)
+    bountyEvery:90, bountyPay:3.5, bountyTtl:4, bountyRewards:{mats:60,gear:30,config:10}, bountyTierShift:4,   // sim BOUNTY_*
+    drainC:0.3, drainWork:0.1, drainFail:3, regenK:0.02, sanityBase:50, sanityPerStamina:2,
+    drop:0.10, bandTop:0.92, starterIlvl:10,
+    hireBase:150, hireGrowth:3.2, seatBase:150, seatGrowth:2.2, seatTierMult:4,
+    queueCost:[0,2000,20000,200000,2000000,15000000],   // install cost per QUEUE_TIERS index (Backlog is free/day one)
+    rogueSteal:0.00265, rogueRegen:0.5, kill9PerIlvl:8, rogueImmune:20,   // Embezzler: bank fraction stolen /s; regen mult while rogue; Kill -9 $/Σilvl; immunity s
+    typeProg:0.09,   // fraction of agent zero's ticket one keypress completes (unchanged from today's mashCode)
+  };
+  const HIRE_CAP=[1,2,4,6,8,10];          // total agents incl. you, per OS tier
+  function queueTier(q){ return QUEUE_TIERS[q.tier]; }
+  // Phase 3 — Configs. A queue's mods are derived from the Configs in its sockets: each patch on a socketed Config
+  // moves ONE lever by its rolled value. Nothing socketed → all zeros. Read per ticket/render; never cached on q.
+  const MOD_LEVERS=["d","pay","band","speed","mats"];
+  function queueMods(q){ const m={d:0,pay:0,band:0,speed:0,mats:0};
+    for(const c of q.configs||[]){ if(!c) continue; for(const p of c.patches||[]){ const d=PATCH_DEFS[p.id]; if(d&&d.kind==="mod") m[d.mod]+=p.value; } }
+    return m; }
+  function queueD(q){ return queueTier(q).D*(1+queueMods(q).d); }
+  function queueBandTop(q){ const t=q.tier, next=QUEUE_TIERS[t+1]?QUEUE_TIERS[t+1].D:QUEUE_TIERS[t].D*1.4;
+    return Math.min(ILVL_CAP[clamp(P.up.os,0,ILVL_CAP.length-1)], BAL.bandTop*next*(1+queueMods(q).band)); }
+  function newQueue(tier){ return {tier, seats:1, configs:Array(QUEUE_TIERS[tier].slots).fill(null), bounty:null, nextBounty:BAL.bountyEvery}; }
+  function starterItem(slotId){ return {id:++P.itemSeq, slot:slotId, name:"Hand-me-down "+ASLOT[slotId].lbl, ilvl:BAL.starterIlvl, patches:[], maxPatches:2}; }
+  function newAgent(who, q){
+    const a={id:++P.agentSeq, name:who.name, color:who.color, gear:{}, inv:[], sanity:100, q:(q==null?0:q), done:0, failed:0, rogue:null};
+    for(const s of AGENT_SLOTS) a.gear[s.id]=starterItem(s.id);
+    return a;
+  }
 
-  /* ============ Hardware slots (crafting update Phase 3 — structural only, no patches yet) ============ */
-  // os = the Upgrade OS tier (index into OS_TIERS) that opens the slot. Ordered by unlock so the
-  // Equipment app reads top-down as a roadmap. Thematic: a GUI needs a Monitor, Win95 is the
-  // dial-up era (Modem), Win10 brings the GPU, NEON needs Cooling, STARSHIP jacks in the Neural Interface.
-  const SLOTS=[
-    {id:"ram",       lbl:"RAM",        em:"🧠", os:0},
-    {id:"cpu",       lbl:"CPU",        em:"⚙️", os:0},
-    {id:"harddrive", lbl:"Hard Drive", em:"💾", os:0},
-    {id:"monitor",   lbl:"Monitor",    em:"🖥️", os:1},
-    {id:"modem",     lbl:"Modem",      em:"📡", os:2},
-    {id:"gpu",       lbl:"GPU",        em:"🎮", os:3},
-    {id:"cooling",   lbl:"Cooling",    em:"❄️", os:4},
-    {id:"neural",    lbl:"Neural Interface", em:"🔮", os:5},
-  ];
-  const SLOT=Object.fromEntries(SLOTS.map(s=>[s.id,s]));
-  function slotUnlocked(slotId){ return P.up.os>=SLOT[slotId].os; }
-  function slotUnlockHint(slotId){ return "unlocks on "+OS_TIERS[SLOT[slotId].os].name; }
-  // Retro base-item flavor, indexed the same as OS_TIERS/P.up.os so your gear ages with your rig.
-  const RETRO_NAMES=[
-    ["Orange II","Trash-80","IBM PC/XT Clone","Turbo XT Card"],
-    ["386SX Turbo","Packard Smell","VESA Local Bus"],
-    ["Pentium Overdrive","SoundBlaster-Compatible","ATI Rage"],
-    ["ThinkPad-Alike","GeForce (Bootleg)","Athlon XP"],
-    ["Quantum Flux Core","Photonic Array","Neuro-Cache"],
-    ["Singularity Core","Graviton Lattice","Zero-Point Module"],
-  ];
-  const TOOLBOX_CAP=18;   // crafting update Phase 4 — stash size before the worst item auto-scraps
   // crafting update Phase 5 — patches (affixes). Slot-specific patches only roll on their matching
   // slot; generic ones (stat/no) roll on anything. `tiers` are gated by item level via `gate` (a
   // low-ilvl item can't roll the top tier), and weighted toward the common tier when multiple are
   // available. `value` on a rolled patch is the tier's number times a small ±10% roll, so Hotfix
   // (reroll value) has something to actually change.
+  // Patches (affixes) for the four agent slots. Slot patches are a % boost to that slot's stat
+  // contribution (a fully patched item ≈ ×1.6, the sim's craftBonus); generics are flat stat adds.
   const PATCH_DEFS={
-    ram_speed:  {slot:"ram",       lbl:"Overclocked",  tiers:[0.03,0.06,0.10], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% task speed"},
-    cpu_xp:     {slot:"cpu",       lbl:"JIT-Compiled", tiers:[0.04,0.08,0.14], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% XP"},
-    hdd_credit: {slot:"harddrive", lbl:"RAID-Striped", tiers:[0.04,0.08,0.14], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% credits"},
-    mon_passive:{slot:"monitor",   lbl:"Ultrawide",    tiers:[0.05,0.10,0.18], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% passive credits"},
-    gpu_crit:   {slot:"gpu",       lbl:"Liquid-Cooled",tiers:[0.02,0.04,0.07], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% crit chance"},
-    modem_succ: {slot:"modem",     lbl:"Low-Latency",  tiers:[0.02,0.04,0.06], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% success chance"},
-    gen_coding: {slot:null, statId:"coding",  lbl:"Coding",     tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Coding"},
-    gen_focus:  {slot:null, statId:"focus",   lbl:"Focus",      tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Focus"},
-    gen_debug:  {slot:null, statId:"debug",   lbl:"Debugging",  tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Debugging"},
-    gen_systems:{slot:null, statId:"systems", lbl:"Systems",    tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Systems"},
-    gen_algo:   {slot:null, statId:"algo",    lbl:"Algorithms", tiers:[1,2,4], gate:[0,20,45], fmt:v=>"+"+v+" Algorithms"},
-    gen_sanity: {slot:null, kind:"sanity", lbl:"Ergonomic", tiers:[10,20,35],       gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Max Sanity"},
-    gen_resist: {slot:null, kind:"resist", lbl:"Defensive", tiers:[0.10,0.20,0.35],gate:[0,20,45], fmt:v=>"-"+Math.round(v*100)+"% failure damage"},
-    cooling_regen:{slot:"cooling",lbl:"Liquid-Cooled Loop",tiers:[0.10,0.20,0.35], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% sanity regen"},
-    neural_succ:{slot:"neural",   lbl:"Synaptic Boost",    tiers:[0.02,0.04,0.07], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% success chance"},
+    model_quality:  {slot:"model",   kind:"pct",  lbl:"Fine-Tuned",   tiers:[0.15,0.30,0.60], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% Quality"},
+    memory_stamina: {slot:"memory",  kind:"pct",  lbl:"Long-Context", tiers:[0.15,0.30,0.60], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% Stamina"},
+    compute_speed:  {slot:"compute", kind:"pct",  lbl:"Overclocked",  tiers:[0.15,0.30,0.60], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% Speed"},
+    tools_credit:   {slot:"tools",   kind:"credit",lbl:"Monetized",   tiers:[0.05,0.10,0.20], gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% credits"},
+    gen_quality:    {slot:null, kind:"flat", statId:"quality", lbl:"Sharp",     tiers:[2,4,8], gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Quality"},
+    gen_speed:      {slot:null, kind:"flat", statId:"speed",   lbl:"Snappy",    tiers:[2,4,8], gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Speed"},
+    gen_stamina:    {slot:null, kind:"flat", statId:"stamina", lbl:"Resilient", tiers:[2,4,8], gate:[0,20,45], fmt:v=>"+"+Math.round(v)+" Stamina"},
+    gen_regen:      {slot:null, kind:"regen", lbl:"Well-Rested", tiers:[0.10,0.20,0.35], gate:[0,20,45], fmt:v=>"+"+Math.round(v*100)+"% sanity regen"},
+    // Phase 3 — Config mods (spec Phase 3 §1). One lever each; values are BAL.modTiers so the sim stays mirrored.
+    mod_d:     {slot:"config", kind:"mod", mod:"d",     lbl:"Legacy Codebase",  tiers:BAL.modTiers, gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% difficulty"},
+    mod_pay:   {slot:"config", kind:"mod", mod:"pay",   lbl:"Enterprise Client",tiers:BAL.modTiers, gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% payout"},
+    mod_band:  {slot:"config", kind:"mod", mod:"band",  lbl:"On-Call Rotation", tiers:BAL.modTiers, gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% drop ilvl"},
+    mod_speed: {slot:"config", kind:"mod", mod:"speed", lbl:"Crunch",           tiers:BAL.modTiers, gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% ticket speed"},
+    mod_mats:  {slot:"config", kind:"mod", mod:"mats",  lbl:"Open Source",      tiers:BAL.modTiers, gate:[0,25,55], fmt:v=>"+"+Math.round(v*100)+"% materials"},
   };
-  // crafting update Phase 7 — Legendary Build: named, fixed-patch items (PoE's "unique" analogue).
-  // Extremely rare, rolled instead of a normal item (see rollItem()) rather than layered on top.
-  const LEGENDARIES={
-    ram:      {name:"Vim's Blessing",              patches:[{id:"ram_speed",tier:2,value:0.10},{id:"gen_focus",tier:2,value:4}]},
-    cpu:      {name:"The ThinkPad X1 of Legend",   patches:[{id:"cpu_xp",tier:2,value:0.14},{id:"gen_coding",tier:2,value:4}]},
-    harddrive:{name:"RAID 0 of No Regrets",        patches:[{id:"hdd_credit",tier:2,value:0.14},{id:"gen_systems",tier:2,value:4}]},
-    monitor:  {name:"The Ultrawide Prophecy",      patches:[{id:"mon_passive",tier:2,value:0.18},{id:"gen_sanity",tier:2,value:35}]},
-    gpu:      {name:"Crimson Ray-Traced Fury",     patches:[{id:"gpu_crit",tier:2,value:0.07},{id:"gen_algo",tier:2,value:4}]},
-    modem:    {name:"Zero-Latency Manifesto",      patches:[{id:"modem_succ",tier:2,value:0.06},{id:"gen_resist",tier:2,value:0.35}]},
-    cooling:  {name:"Absolute Zero Cooling Loop",  patches:[{id:"cooling_regen",tier:2,value:0.35},{id:"gen_sanity",tier:2,value:35}]},
-    neural:   {name:"Ghost in the Shell.exe",      patches:[{id:"neural_succ",tier:2,value:0.07},{id:"gen_focus",tier:2,value:4}]},
-  };
-  function rollLegendary(slotId){
-    const def=LEGENDARIES[slotId]; if(!def) return null;
-    return {id:++P.itemSeq, slot:slotId, name:def.name, ilvl:Math.max(1,P.level),
-      patches:def.patches.map(p=>({...p})), maxPatches:4, legendary:true};
-  }
+  // Generic gear patches (slot null) roll on any gear slot but never on a Config; slot-specific ones only on their slot.
+  function patchFits(d,item){ return d.slot===item.slot || (d.slot===null && item.slot!=="config"); }
   // crafting update Phase 7 — item level ceiling tied to your OS tier, so upgrading your rig raises
   // the cap on how good gear you can even find, not just its own flat multiplier.
-  const ILVL_CAP=[40,80,140,220,340,520];
+  const ILVL_CAP=[30,55,85,125,175,9999];
   function initialMaxPatches(ilvl){ return ilvl>=60?4:ilvl>=25?3:2; }   // higher-ilvl drops have more room to patch
   function rollPatchTier(def,ilvl){
     const weights=[70,25,5], avail=[];
@@ -1091,79 +1104,79 @@
     const def=PATCH_DEFS[id], tier=rollPatchTier(def,ilvl), base=def.tiers[tier];
     return {id, tier, value:base*rand(0.9,1.1)};
   }
-  function availablePatchIds(item){   // patches not already rolled on this item, matching its slot or generic
-    const have=new Set((item.patches||[]).map(p=>p.id));
-    return Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===item.slot) && !have.has(id); });
-  }
+  function availablePatchIds(item){ const have=new Set((item.patches||[]).map(p=>p.id)); return Object.keys(PATCH_DEFS).filter(id=>patchFits(PATCH_DEFS[id],item)&&!have.has(id)); }
   function rarityOf(item){   // derived, not stored — Stock/Modded/Custom-Built map to PoE's Normal/Magic/Rare
     if(item.legendary) return "legendary";
     const n=(item.patches||[]).length; return n>=3?"custom-built":n>=1?"modded":"stock";
   }
-  function rollItem(slotId){
-    if(LEGENDARIES[slotId] && Math.random()<0.01){ const leg=rollLegendary(slotId); if(leg) return leg; }   // 1% Legendary Build chance
-    const era=RETRO_NAMES[clamp(P.up.os,0,RETRO_NAMES.length-1)];
-    const cap=ILVL_CAP[clamp(P.up.os,0,ILVL_CAP.length-1)];
-    const ilvl=Math.min(cap,Math.max(1,Math.round(P.level*rand(0.8,1.2))));
-    return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+SLOT[slotId].lbl, ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
+  const ERA_NAMES=[["Orange II","Trash-80","IBM PC/XT Clone"],["386SX Turbo","Packard Smell","VESA Local Bus"],["Pentium Overdrive","SoundBlaster-Compatible","ATI Rage"],
+    ["ThinkPad-Alike","GeForce (Bootleg)","Athlon XP"],["Quantum Flux Core","Photonic Array","Neuro-Cache"],["Singularity Core","Graviton Lattice","Zero-Point Module"]];
+  function rollIlvl(q){ const lo=queueTier(q).D, hi=Math.max(lo,queueBandTop(q)); return Math.round(rand(lo,hi)); }
+  function rollItem(slotId, ilvl){
+    const era=ERA_NAMES[clamp(P.up.os,0,ERA_NAMES.length-1)];
+    return {id:++P.itemSeq, slot:slotId, name:pick(era)+" "+ASLOT[slotId].lbl, ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
   }
-  function itemPower(slotId){ return P.equip[slotId]?P.equip[slotId].ilvl:0; }   // 0 if Stock/empty
-  // crafting update Phase 5 — sum of all equipped patches, folded into MULT/stats each recompute()
-  const GEAR={speed:0,xp:0,credit:0,passive:0,crit:0,success:0,sanity:0,resist:0,coolingRegen:0,setBonus:1,
-    stat:{coding:0,focus:0,debug:0,systems:0,algo:0}};
-  function countCustomBuiltPlus(){   // crafting update Phase 7 — set bonus counts Custom-Built and Legendary alike
-    let n=0; for(const s of SLOTS){ const it=P.equip[s.id]; if(it && rarityOf(it)!=="stock" && rarityOf(it)!=="modded") n++; } return n;
-  }
-  function recomputeGear(){
-    GEAR.speed=0; GEAR.xp=0; GEAR.credit=0; GEAR.passive=0; GEAR.crit=0; GEAR.success=0; GEAR.sanity=0; GEAR.resist=0; GEAR.coolingRegen=0;
-    for(const id of STAT_IDS) GEAR.stat[id]=0;
-    for(const s of SLOTS){
-      const it=P.equip[s.id]; if(!it||!it.patches) continue;
-      for(const p of it.patches){
-        const def=PATCH_DEFS[p.id]; if(!def) continue;
-        if(def.statId) GEAR.stat[def.statId]+=p.value;
-        else if(def.kind==="sanity") GEAR.sanity+=p.value;
-        else if(def.kind==="resist") GEAR.resist+=p.value;
-        else if(p.id==="ram_speed") GEAR.speed+=p.value;
-        else if(p.id==="cpu_xp") GEAR.xp+=p.value;
-        else if(p.id==="hdd_credit") GEAR.credit+=p.value;
-        else if(p.id==="mon_passive") GEAR.passive+=p.value;
-        else if(p.id==="gpu_crit") GEAR.crit+=p.value;
-        else if(p.id==="modem_succ") GEAR.success+=p.value;
-        else if(p.id==="cooling_regen") GEAR.coolingRegen+=p.value;
-        else if(p.id==="neural_succ") GEAR.success+=p.value;
-      }
+  function rollConfig(q){ const ilvl=rollIlvl(q), it={id:++P.itemSeq, slot:"config", name:pick(CONFIG_NAMES), ilvl, patches:[], maxPatches:initialMaxPatches(ilvl)};
+    it.patches.push(makePatch(pick(availablePatchIds(it)),ilvl)); return it; }
+  // Per-agent derived stats. Never persisted: recompute() rewrites a.m for every agent.
+  function agentStats(a){
+    const out={quality:BAL.floor, speed:BAL.floor, stamina:BAL.floor, tools:1, regen:0};
+    for(const s of AGENT_SLOTS){ const it=a.gear[s.id]; if(!it) continue;
+      let pct=0, credit=0;
+      for(const p of it.patches||[]){ const d=PATCH_DEFS[p.id]; if(!d) continue;
+        if(d.kind==="pct") pct+=p.value; else if(d.kind==="credit") credit+=p.value;
+        else if(d.kind==="flat") out[d.statId]+=p.value; else if(d.kind==="regen") out.regen+=p.value; }
+      if(s.stat) out[s.stat]+=it.ilvl*BAL.coeff[s.id]*(1+pct);
+      else out.tools+=it.ilvl*BAL.coeff.tools+credit;
     }
-    // Neural Interface's base (non-patch) effect: a "multi-stat pool" bonus to all 5 stats at once,
-    // distinct from every other slot which only ever affects its own single specific multiplier.
-    const neuralPower=itemPower("neural");
-    for(const id of STAT_IDS) GEAR.stat[id]+=neuralPower*0.05;
-    GEAR.coolingRegen+=itemPower("cooling")*0.01;
-    // crafting update Phase 7 — set bonus: every 2 equipped Modded-or-better items adds +5%,
-    // stacking (absorbs the "stat synergies / set bonuses" backlog item)
-    GEAR.setBonus=1+Math.floor(countCustomBuiltPlus()/2)*0.05;
+    return out;
   }
+  function agentMult(a){
+    const st=agentStats(a), pres=1+P.equity*0.02, focus=focusOn?(1+FOCUS.credit):1, mult=st.tools*pres*focus;
+    a.m={ st, mult,
+      chance:D=>clamp(0.5+(st.quality/D-1)*BAL.succK,0,BAL.succMax),
+      dur:(D,q)=>clamp((BAL.durBase+BAL.durPerD*D)/(1+st.speed/BAL.speedDiv),BAL.durMin,BAL.durMax)/(1+(q?queueMods(q).speed:0)),
+      payout:(D,q)=>Math.pow(D,BAL.payK)*(1+queueMods(q).pay)*mult,
+      sanityMax:BAL.sanityBase+BAL.sanityPerStamina*st.stamina,
+      regen:BAL.regenK*st.stamina*(1+st.regen)*(focusOn?(1+FOCUS.regen):1),
+    };
+    if(a.sanity>a.m.sanityMax) a.sanity=a.m.sanityMax;
+    return a.m;
+  }
+  const agentZero=()=>P.agents[0];
+  // Phase 2 — seating helpers. a.q === -1 is the Bench: no queue, no tickets, full-rate regen. Nothing may
+  // fall back to P.queues[0] for a benched agent (that would silently make the Bench the Backlog).
+  const seatedQueue=a=>(a.q>=0&&P.queues[a.q])||null;
+  const ownedQueue=tier=>P.queues.find(q=>q.tier===tier)||null;
+  function kill9Cost(a){ let s=0; for(const k of ASLOT_IDS){ const it=a.gear[k]; if(it) s+=it.ilvl; } return Math.round(BAL.kill9PerIlvl*s); }
+  function hireCost(){ return Math.round(BAL.hireBase*Math.pow(BAL.hireGrowth,P.agents.length-1)); }
+  function seatCost(q){ return Math.round(BAL.seatBase*Math.pow(BAL.seatGrowth,q.seats-1)*Math.pow(BAL.seatTierMult,q.tier)); }
+  function freeSeatQueue(){ return P.queues.find((q,qi)=>q.seats>P.agents.filter(a=>a.q===qi).length)||null; }
   const UPG=[
-    {id:"hire",    kind:"tier",  emoji:"👥",name:"Hire an Agent",    cat:"Getting Started", tiers:HIRE, fx:i=>i===0?"just you, coding by hand":((1+i)+" agents auto-coding in parallel")},
-    {id:"skill",   kind:"skill", emoji:"🧠",name:"Learn a New Skill",base:120,growth:2.15, cat:"Getting Started", fx:()=>{const n=P.unlockedStats.length; return n>=STATS.length?"every skill learned":("unlock "+(STATS[n]?STATS[n].em+" "+STATS[n].lbl:""));}},
+    {id:"hire",    kind:"hire",  emoji:"👥",name:"Hire an Agent",     cat:"Team",  fx:()=>P.agents.length+" on the team · a new hire ships with a Junior starter kit"+(freeSeatQueue()?"":" · no free seat — it'll wait on the Bench")},
     {id:"notify",  kind:"tier",  emoji:"🔔",name:"Push Notifications",cat:"Getting Started", tiers:[{cost:0},{cost:40,name:"ON"}],  fx:i=>i?"toast pop-ups are ON — mute types below in the Store":"pop-up toasts for wins & finds (routine logs still go to the Terminal)"},
-    {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",     cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
-    {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",   cost:25,   unlocks:"status",    meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your character sheet — level, stats, sanity"},
-    {id:"u_achv",  kind:"unlock",emoji:"🏆",name:"Trophy Case",      cost:150,  unlocks:"achievements",meme:"ACHIEVEMENTS", cat:"Getting Started", fx:()=>"open the Achievements app — and retro-unlock every one you've already earned"},
-    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry",cost:400,  unlocks:"telemetry", meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
-    {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Toolbox",     cost:500,  unlocks:"inventory", meme:"TOOLBOX",      cat:"Getting Started", fx:()=>"reveal the Inventory — roll & stash hardware"},
-    {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",   cost:700,  unlocks:"equipment", meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipped Hardware — gear up your rig"},
-    {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",   cost:1000, unlocks:"ide",       meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch your gear"},
-    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",        cost:1400, unlocks:"globe",     meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
-    {id:"u_missions",kind:"unlock",emoji:"📋",name:"Mission Board",  cost:1800, unlocks:"missions",  meme:"MISSIONS",     cat:"Getting Started", fx:()=>"reveal the Mission Board — bounties for rewards"},
-    {id:"assist",  kind:"repeat",emoji:"🪄",name:"Autocomplete Assist",base:150,growth:1.25, max:15, cat:"Hardware", fx:l=>"your own typing auto-fills "+(l*5)+"%/sec on its own (max 75%)"},
-    {id:"coffee",  kind:"repeat",emoji:"☕",name:"Espresso Machine",base:90, growth:1.22, cat:"Hardware", fx:l=>"+"+(l*15)+" max sanity, +regen"},
-    {id:"computer",kind:"tier",  emoji:"💻",name:"New Machine",      cat:"Rigs", tiers:MACH, fx:i=>MACH[i].name+" · everything ×"+MACH[i].mult},
-    {id:"model",   kind:"tier",  emoji:"🤖",name:"Upgrade AI Model", cat:"Rigs", tiers:MODEL,fx:i=>MODEL[i].name+" · +"+Math.round(MODEL[i].success*100)+"% success"},
-    {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",       cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name:" (final look)")},
-    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",       cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
-    {id:"autoAlloc",kind:"tier", emoji:"🎯",name:"Auto-Allocate SP", cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:1800}], fx:i=>i?"skill points auto-spent on weakest stat":"spends skill points for you"},
-    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",       cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest hardware":"reinvest credits automatically"},
+    {id:"hype",    kind:"tier",  emoji:"🎉",name:"Hype Banners",      cat:"Getting Started", tiers:[{cost:0},{cost:120,name:"ON"}], fx:i=>i?"flying hype text on big wins — mute below in the Store":"flying meme banners across the screen on unlocks & milestones"},
+    {id:"u_status",kind:"unlock",emoji:"📟",name:"Status Readout",    cost:25,   unlocks:"status",      meme:"STATUS",       cat:"Getting Started", fx:()=>"reveal your sheet — sanity, streak, level"},
+    {id:"u_achv",  kind:"unlock",emoji:"🏆",name:"Trophy Case",       cost:150,  unlocks:"achievements",meme:"ACHIEVEMENTS", cat:"Getting Started", fx:()=>"open the Achievements app — and retro-unlock every one you've already earned"},
+    {id:"u_tele",  kind:"unlock",emoji:"📊",name:"Install Telemetry", cost:400,  unlocks:"telemetry",   meme:"TELEMETRY",    cat:"Getting Started", fx:()=>"reveal the live charts panel"},
+    {id:"u_inv",   kind:"unlock",emoji:"🧰",name:"Open Inventory",    cost:500,  unlocks:"inventory",   meme:"INVENTORY",    cat:"Getting Started", fx:()=>"reveal each agent's inventory — the gear they've found"},
+    {id:"u_equip", kind:"unlock",emoji:"🔧",name:"Equip Hardware",    cost:700,  unlocks:"equipment",   meme:"HARDWARE",     cat:"Getting Started", fx:()=>"reveal Equipment — gear up the selected agent"},
+    {id:"u_ide",   kind:"unlock",emoji:"🛠️",name:"Launch the IDE",    cost:1000, unlocks:"ide",         meme:"THE IDE",      cat:"Getting Started", fx:()=>"reveal the IDE — craft & patch gear"},
+    {id:"u_globe", kind:"unlock",emoji:"🌐",name:"Go Global",         cost:1400, unlocks:"globe",       meme:"GLOBAL DEPLOY", cat:"Getting Started", fx:()=>"reveal the global deploy mesh"},
+    {id:"u_queues",kind:"unlock",emoji:"📋",name:"Open the Queues app", cost:2000, unlocks:"queues", meme:"QUEUES", cat:"Getting Started", fx:()=>"reveal the Queues app — every board, its seats, and who sits where"},
+    {id:"os",      kind:"tier",  emoji:"🖥️",name:"Upgrade OS",        cat:"Rigs", tiers:OS_TIERS,fx:i=>"now on "+OS_TIERS[i].name+(i<OS_TIERS.length-1?" · next: "+OS_TIERS[i+1].name+" (+hires, higher item levels)":" (final)")},
+    {id:"offline", kind:"tier",  emoji:"🌙",name:"Cloud Sync",        cat:"Automation", reqOs:2, tiers:[{cost:0},{cost:2500}], fx:i=>i?"earning credits while away (up to 8h)":"earn credits while the tab is closed"},
+    {id:"autoBuy", kind:"tier",  emoji:"🛒",name:"Auto-Buyer",        cat:"Automation", reqOs:3, tiers:[{cost:0},{cost:45000}], fx:i=>i?"auto-buys the cheapest seat/hire":"reinvest credits automatically"},
   ];
+  // Phase 2 — queue + seat cards are generated from QUEUE_TIERS once at load (buildShop is build-once);
+  // isRevealed() decides which are visible. Backlog has no install card (owned day one), every tier has a seat card.
+  for(const [i,t] of QUEUE_TIERS.entries()){
+    if(i>0) UPG.push({id:"q_"+t.id, kind:"queue", tier:i, emoji:t.em, name:"Install "+t.name, cat:"Team",
+      fx:()=>ownedQueue(i)?("a tier-"+i+" board · difficulty "+t.D+" · drops up to ilvl "+Math.round(queueBandTop(ownedQueue(i)))):("a harder board (difficulty "+t.D+") with richer tickets and higher item levels")});
+    UPG.push({id:"seat_"+t.id, kind:"seat", tier:i, emoji:"🪑", name:t.name+" Seat", cat:"Team",
+      fx:()=>{ const q=ownedQueue(i); return q?("seats on "+t.name+": "+q.seats+" → "+(q.seats+1)):""; }});
+  }
+  UPG.sort((a,b)=>(a.cat==="Team")===(b.cat==="Team")?0:(a.cat==="Team"?-1:1));   // stable: keeps Team first so the Store's category order is unchanged
   function money(n){ n=Math.floor(n);
     const f=P.settings&&P.settings.numFormat;                                  // number-format setting (Settings panel)
     if(f==="full") return "$"+n.toLocaleString("en-US");                       // 1,234,567
@@ -1230,7 +1243,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ state + persistence (cookie, with localStorage fallback) ============ */
-  const SAVE_VER=7;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
+  const SAVE_VER=10;   // bump on ANY save-shape change: mismatched saves are wiped (Guru Meditation), never migrated
   // window-manager Phase 2 — default floating-window geometry per app (relative to the #grid canvas).
   // Used by the floating WM (Windows 3.1+ era) and by "Reset Layout". Positions get clamped into the
   // canvas on apply, so these are just sensible starting spots; drag rearranges from there.
@@ -1248,11 +1261,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     telemetry:   {c:0, r:3, h:2, z:5},
     equipment:   {c:0, r:5, h:2, z:7},
     agents:      {c:1, r:0, h:3, z:2},
-    deploy_mesh: {c:1, r:3, h:2, z:4},
-    missions:    {c:1, r:5, h:2, z:9},
+    deploy_mesh: {c:1, r:3, h:1, z:4},
+    queues:      {c:1, r:4, h:2, z:12},
+    achievements:{c:1, r:6, h:1, z:11},
     status:      {c:2, r:0, h:3, z:3},
-    inventory:   {c:2, r:3, h:2, z:6},
-    achievements:{c:2, r:5, h:2, z:11},
+    inventory:   {c:2, r:3, h:4, z:6},
     store:       {c:3, r:0, h:3, z:10},
     ide:         {c:3, r:3, h:4, z:8},   // widest content of the lot — the crafting bench ring needs the room
   };
@@ -1270,32 +1283,34 @@ notify("#general", "10x-ing that shit 🔥");`,
   const defaultWindow=id=>defaultWindows()[id]||{x:8,y:8,w:306,h:210,z:1,open:true};
   const cloneWindows=()=>defaultWindows();
   function defaults(){
-    const stats={}; STAT_IDS.forEach(id=>stats[id]=rand(6,12));
-    return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,hp:100,hpMax:100,stage:0,plot:0,plotNeed:120,prestige:0,
-      stats,tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,loot:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
-      playSecs:0,burnouts:0,crits:0,
-      credits:0,maxCredits:0,sp:0,earned:0,lastReal:0,equity:0,ipos:0,
-      up:{hire:0,skill:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_inv:0,u_equip:0,u_ide:0,u_missions:0,assist:0,ram:0,cpu:0,ssd:0,monitors:0,coffee:0,gpu:0,computer:0,model:0,os:0,offline:0,autoAlloc:0,autoBuy:0},
-      equip:{ram:null,cpu:null,harddrive:null,monitor:null,gpu:null,modem:null},
-      toolbox:[], itemSeq:0, craftSlot:null,
+    return {ver:SAVE_VER,level:1,xp:0,xpNeed:100,stage:0,plot:0,plotNeed:120,prestige:0,
+      tasksDone:0,tasksFailed:0,streak:0,bestStreak:0,deploys:0,bugsFixed:0,loc:0,totalXp:0,
+      playSecs:0,rogues:0,stolen:0,crits:0,bountiesDone:0,bountiesMissed:0,
+      credits:0,maxCredits:0,earned:0,lastReal:0,equity:0,ipos:0,
+      up:{hire:0,seat:0,notify:0,hype:0,u_tele:0,u_globe:0,u_status:0,u_achv:0,u_inv:0,u_equip:0,u_ide:0,u_queues:0,queue:0,os:0,offline:0,autoBuy:0},
+      itemSeq:0, craftSlot:null,
+      agentSeq:0, agents:null,   // seeded right after construction (newAgent needs P.itemSeq) — see below
+      queues:[newQueue(0)], selectedAgent:0,
       materials:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
       matPity:{commit:0,hotfix:0,refactor:0,rewrite:0,revert:0,merge:0},
-      missions:[], sprintConfig:0, missionSeq:0,
       themeChoice:"dos",
-      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,missions:false,achievements:false}, unlockedStats:["coding"],
+      unlocked:{telemetry:false,globe:false,status:false,inventory:false,equipment:false,ide:false,achievements:false,queues:false},
       intro:true, reveal:{credits:false,shop:false,store:false},
       notify:{grind:true,progress:true,system:true,hype:true},
       settings:{numFormat:"short",reduceMotion:"system",ambient:true,themeLock:false},
       windows:null,   // seeded at boot, after fitScale() — defaults() runs before the UI zoom exists, so measuring the canvas here would be wrong
-      achv:{},seenTips:{shop:false,sp:false}};
+      achv:{},seenTips:{shop:false}};
   }
   let P=defaults();
-  const PERSIST=["ver","level","xp","xpNeed","hp","hpMax","stage","plot","plotNeed","prestige","stats",
-    "tasksDone","tasksFailed","streak","bestStreak","loot","deploys","bugsFixed","loc","totalXp","playSecs","burnouts","crits",
-    "credits","maxCredits","sp","earned","lastReal","equity","ipos","up","equip","toolbox","itemSeq","craftSlot",
-    "materials","matPity","missions","sprintConfig","missionSeq",
-    "themeChoice","unlocked","unlockedStats","intro","reveal","notify","settings","windows","achv","seenTips"];
-  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,missions:true,achievements:true}; P.unlockedStats=STAT_IDS.slice(); }
+  function seedAgents(){ if(!P.agents||!P.agents.length){ P.agents=[newAgent({name:"you",color:"#eafff0"},0)]; } }
+  seedAgents();
+  const PERSIST=["ver","level","xp","xpNeed","stage","plot","plotNeed","prestige",
+    "tasksDone","tasksFailed","streak","bestStreak","deploys","bugsFixed","loc","totalXp","playSecs","rogues","stolen","crits","bountiesDone","bountiesMissed",
+    "credits","maxCredits","earned","lastReal","equity","ipos","up","itemSeq","craftSlot",
+    "agentSeq","agents","queues","selectedAgent",
+    "materials","matPity",
+    "themeChoice","unlocked","intro","reveal","notify","settings","windows","achv","seenTips"];
+  function unlockAll(){ P.unlocked={telemetry:true,globe:true,status:true,inventory:true,equipment:true,ide:true,achievements:true,queues:true}; }
   function readStore(){
     const m=document.cookie.match(/(?:^|;\s*)vibehacker=([^;]+)/);
     if(m){ try{ return decodeURIComponent(m[1]); }catch(e){} }
@@ -1312,7 +1327,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!d||typeof d!=="object") return "stale";
     if(d.ver!==SAVE_VER){ STALE_VER=d.ver; return "stale"; }
     for(const k of PERSIST) if(k in d) P[k]=d[k];
-    for(const s of SLOTS) if(!(s.id in P.equip)) P.equip[s.id]=null;
+    seedAgents();
     const tcIdx=OS_TIERS.findIndex(t=>t.id===P.themeChoice);
     if(tcIdx<0||tcIdx>P.up.os) P.themeChoice=OS_TIERS[P.up.os].id;
     return true;
@@ -1332,6 +1347,11 @@ notify("#general", "10x-ing that shit 🔥");`,
   function save(){
     P.lastReal=Date.now();
     const o={}; for(const k of PERSIST) o[k]=P[k];
+    // a.m (derived stats) and a.immune (Kill -9 grace) are runtime-only — recompute()/the tick rebuild them.
+    // Persisting them bloats the save, which is written to document.cookie first (~4 KB cap); an
+    // oversized cookie write fails silently and readStore() prefers the cookie, so the game would
+    // boot from a stale one.
+    o.agents=P.agents.map(a=>{ const {m,immune,...rest}=a; return rest; });
     const json=JSON.stringify(o);
     try{ document.cookie="vibehacker="+encodeURIComponent(json)+";path=/;max-age="+(3600*24*365)+";SameSite=Lax"; }catch(e){}
     try{ localStorage.setItem("vibehacker",json); }catch(e){}
@@ -1343,30 +1363,10 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
 
   /* ============ derived multipliers ============ */
-  const MULT={mult:1,speed:1,xp:1,credit:1,passive:0,success:0,crit:0,regen:.5,hpBonus:0,workers:4,assist:0,offlineEff:0.5,resist:0};
-  function updateHpMax(){ P.hpMax=100+P.level*6+MULT.hpBonus; if(P.hp>P.hpMax)P.hp=P.hpMax; }
+  const MULT={workers:1,passive:0};   // all that survives the Agents & Queues rework: agent count + (future) passive income
   function recompute(){
-    recomputeGear();   // crafting update Phase 5 — sum equipped patches before folding into MULT
-    const u=P.up, m=MACH[u.computer]||MACH[0], md=MODEL[u.model]||MODEL[0];
-    const ram=itemPower("ram"), cpu=itemPower("cpu"), hdd=itemPower("harddrive"),
-          mon=itemPower("monitor"), gpu=itemPower("gpu"), modem=itemPower("modem");
-    MULT.speed=(1+ram*0.02+GEAR.speed)*m.speed*md.speed*GEAR.setBonus;
-    const pres=1+P.equity*0.02;                        // permanent prestige bonus (+2% per Equity)
-    MULT.xp=(1+cpu*0.03+GEAR.xp)*m.mult*pres*GEAR.setBonus;
-    MULT.credit=(1+hdd*0.025+GEAR.credit)*m.mult*pres*GEAR.setBonus;
-    MULT.passive=mon*0.15*m.mult*(1+GEAR.passive);
-    MULT.success=md.success+Math.min(0.10,modem*0.002)+GEAR.success;   // AI Model + Modem (Hardware slot) + patches all help success
-    MULT.crit=Math.min(0.6,gpu*0.005+GEAR.crit);
-    MULT.regen=0.5+u.coffee*0.35+GEAR.coolingRegen;   // Cooling slot (Phase 7) also boosts sanity regen
-    // Deep Work — playing fullscreen (no browser chrome, no tabs) is genuinely fewer distractions,
-    // so it pays. Ungated and free: a reward for how you play, not another thing to buy.
-    if(focusOn){ MULT.xp*=1+FOCUS.xp; MULT.credit*=1+FOCUS.credit; MULT.regen*=1+FOCUS.regen; }
-    MULT.hpBonus=u.coffee*15+GEAR.sanity;
-    MULT.resist=Math.min(0.5,GEAR.resist);   // failure-damage reduction from gear (old Rizz effect, returned as a patch)
-    MULT.assist=Math.min(0.75,u.assist*0.05);   // fraction of full auto-speed your own manual slot fills passively
-    MULT.workers=Math.min(8,1+u.hire);   // 1 = you (manual); each hire adds an auto agent
-    MULT.offlineEff=Math.min(0.9,0.5+modem*0.005);   // Modem also improves offline-earning efficiency
-    updateHpMax();
+    for(const a of P.agents) agentMult(a);
+    MULT.workers=P.agents.length;
   }
 
   /* ---- Deep Work: a live bonus while the game is fullscreen. Two detection paths, because they
@@ -1374,7 +1374,7 @@ notify("#general", "10x-ing that shit 🔥");`,
      or our own badge triggers) does NOT fire when the user presses F11 — that's browser-chrome
      fullscreen, which instead makes the `display-mode: fullscreen` media query match. Watch both,
      or F11 (the way most people do it, and what the help overlay lists) silently does nothing. ---- */
-  const FOCUS={xp:0.25,credit:0.25,regen:0.5};
+  const FOCUS={credit:0.25,regen:0.5};
   let focusOn=false;
   const fsQuery=(window.matchMedia?matchMedia("(display-mode: fullscreen)"):null);
   function fullscreenNow(){ return !!document.fullscreenElement || !!(fsQuery&&fsQuery.matches); }
@@ -1383,8 +1383,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(on===focusOn) return;
     focusOn=on; recompute();
     document.body.classList.toggle("focusmode",on);
-    if(on){ termLine("t-git","🎧","deep work engaged — fullscreen bonus active (+25% XP, +25% credits, +50% sanity regen)");
-      toast("🎧 Deep Work","Fullscreen — +25% XP, +25% credits, +50% sanity regen","#39ff14","system"); }
+    if(on){ termLine("t-git","🎧","deep work engaged — fullscreen bonus active (+25% credits, +50% sanity regen)");
+      toast("🎧 Deep Work","Fullscreen — +25% credits, +50% sanity regen","#39ff14","system"); }
     else  { termLine("t-dim","🎧","deep work broken — fullscreen bonus off");
       toast("🎧 Deep Work off","Back in a window — bonus removed","#5b6b86","system"); }
   }
@@ -1393,25 +1393,34 @@ notify("#general", "10x-ing that shit 🔥");`,
 
   /* ============ shop / upgrades ============ */
   function upCost(u){
-    if(u.kind==="repeat"){ if(u.max&&P.up[u.id]>=u.max) return null; return Math.floor(u.base*Math.pow(u.growth,P.up[u.id])); }
+    if(u.kind==="hire"){ return P.agents.length>=HIRE_CAP[HIRE_CAP.length-1]?null:hireCost(); }   // OS caps are osLock()'s job, so the card shows 🔒 Win 3.1 rather than MAX
+    if(u.kind==="seat"){ const q=ownedQueue(u.tier); return q?seatCost(q):null; }
+    if(u.kind==="queue"){ return ownedQueue(u.tier)?null:BAL.queueCost[u.tier]; }
     if(u.kind==="unlock"){ return P.up[u.id]>=1?null:u.cost; }
-    if(u.kind==="skill"){ const n=P.unlockedStats.length; if(n>=STATS.length) return null; return Math.floor(u.base*Math.pow(u.growth,n-1)); }
     const nxt=P.up[u.id]+1; return u.tiers[nxt]?u.tiers[nxt].cost:null;   // tier
   }
   // OS gate for the NEXT purchase of u: returns the OS tier index it needs, or null if not locked.
-  function osLock(u){
+  function osLock(u){   // OS tier index the NEXT purchase of u needs, or null if not locked
     let need=null;
-    if(u.id==="hire") need=HIRE_CAP.findIndex(c=>c>=P.up.hire+1);       // -1 (never) only past the last tier, which upCost already nulls
+    if(u.kind==="hire") need=HIRE_CAP.findIndex(c=>c>=P.agents.length+1);   // -1 only past the last cap, which upCost already nulls
+    // A seat nobody can ever sit in is a day-one credit trap: gate it on the OS that could hire into it.
+    else if(u.kind==="seat"){ const q=ownedQueue(u.tier); const n=q?HIRE_CAP.findIndex(c=>c>=q.seats+1):-1; need=n<0?null:n; }
+    else if(u.kind==="queue") need=QUEUE_TIERS[u.tier].os;
     else if(u.reqOs!=null) need=u.reqOs;
     return (need!=null && need>P.up.os)?need:null;
   }
   function osLockHint(u){ const n=osLock(u); return n==null?"":"🔒 needs "+OS_TIERS[n].name+" (Upgrade OS)"; }
-  function anyAffordable(){ for(const u of UPG){ const c=upCost(u); if(c!=null&&P.credits>=c&&osLock(u)==null) return true; } return false; }
+  function anyAffordable(){ for(const u of UPG){ if(!isRevealed(u)) continue; const c=upCost(u); if(c!=null&&P.credits>=c&&osLock(u)==null) return true; } return false; }
   function isRevealed(u){
     if(u.kind==="unlock" && P.up[u.id]>=1) return false;   // one-time unlocks vanish from the store once bought
     // "Getting Started" is the guided funnel — hire/skill are always shown as the roadmap, but the
     // app-unlocks reveal progressively (at 50%-saved) so the store isn't a wall of options on day one.
-    if(u.cat==="Getting Started" && u.kind!=="unlock") return true;
+    if(u.cat==="Team"){   // the whole Team section is the Queues app's to reveal (doc §1)
+      if(!P.unlocked.queues) return false;
+      if(u.kind==="seat") return !!ownedQueue(u.tier);
+      if(u.kind==="queue") return !!ownedQueue(u.tier-1);   // tiers install in order; hidden (never OWNED) until the previous one exists
+      return true;
+    }
     if(P.up[u.id]>0) return true;   // already invested in it — never re-hide something owned, even after spending elsewhere
     const c=upCost(u);
     if(c==null) return true;        // maxed/owned edge case
@@ -1430,11 +1439,22 @@ notify("#general", "10x-ing that shit 🔥");`,
         let got=0; for(const a of ACH) if(P.achv[a.id]) got++;
         if(got) termLine("t-warn","🏆","trophy case opened — "+got+" achievement"+(got>1?"s":"")+" retro-unlocked");
       }
-    } else if(u.kind==="skill"){
-      const next=STATS[P.unlockedStats.length];
-      if(next){ P.unlockedStats.push(next.id); P.up.skill++; applyUnlocks(); recompute();
-        toast("🧠 New skill — "+next.lbl, next.em+" now in the task pool · spend SP on it", next.color);
-        termLine("t-git","🧠","learned a new skill: "+next.lbl); }
+    } else if(u.kind==="hire"){
+      const q=freeSeatQueue(), qi=q?P.queues.indexOf(q):-1;
+      const who=pick(AGENTS.filter(x=>!P.agents.some(a=>a.name===x.name)))||pick(AGENTS);
+      const a=newAgent(who,qi); P.agents.push(a); P.up.hire++;
+      recompute(); buildWorkers(); applyLayout(); assignTask(WK[WK.length-1]); buildQueues();
+      toast("👥 Hired — "+a.name, q?("seated on "+queueTier(q).name+" with a starter kit"):"no free seat — waiting on the Bench (seat them in the Queues app)", "#39ff14");
+      termLine("t-git","👥","hired "+a.name+(q?"":" → Bench"));
+    } else if(u.kind==="seat"){
+      const q=ownedQueue(u.tier); q.seats++; P.up.seat++; buildQueues();
+      toast("🪑 New seat",queueTier(q).name+" now seats "+q.seats,"#00e5ff"); termLine("t-git","🪑","added a "+queueTier(q).name+" seat");
+    } else if(u.kind==="queue"){
+      P.queues.push(newQueue(u.tier)); P.up.queue++; buildQueues();
+      const t=QUEUE_TIERS[u.tier];
+      celebrate(t.em+" "+t.name.toUpperCase()+" INSTALLED","#00e5ff"); flyMeme(t.name.toUpperCase());
+      toast(t.em+" "+t.name+" installed","difficulty "+t.D+" · one seat · seat agents in the Queues app","#00e5ff");
+      termLine("t-git",t.em,"installed the "+t.name+" board");
     } else if(u.id==="os"){
       const wasFloat=wmFloat();
       P.up.os++; const t=OS_TIERS[P.up.os];
@@ -1452,7 +1472,7 @@ notify("#general", "10x-ing that shit 🔥");`,
       toast("🔔 "+u.name+" enabled", u.fx(1), "#00e5ff", "system");
     } else {
       P.up[u.id]++; const lvl=P.up[u.id];
-      if(u.id==="hire"){ recompute(); buildWorkers(); applyLayout(); } else recompute();   // first hire = agents app tiles in
+      recompute();
       const label=u.kind==="tier"?(u.tiers[lvl].name||u.name):(u.name+" Lv"+lvl);
       termLine("t-git","$","bought "+label+" — "+money(c));
       toast("🛠 "+u.emoji+" "+u.name, u.kind==="tier"?("→ "+(u.tiers[lvl].name||"")):("now level "+lvl), "#ffb000");
@@ -1460,8 +1480,14 @@ notify("#general", "10x-ing that shit 🔥");`,
     renderShop(); save();
   }
   function autoBuyCheapest(){ let best=null,bc=Infinity;
-    for(const u of UPG){ if(u.cat==="Automation") continue;
+    // Candidates (doc §1): hire only when a seat is free; a seat only when none is AND another hire is still possible
+    // at this OS (the seat cap is per board, so otherwise it would keep buying seats nobody can ever sit in);
+    // next queue; OS. All must be revealed.
+    const anyFree=!!freeSeatQueue(), hireCapped=P.agents.length>=HIRE_CAP[P.up.os];
+    for(const u of UPG){ if(u.cat==="Automation"||!isRevealed(u)) continue;
       if(u.id==="os" && P.settings && P.settings.themeLock) continue;   // "Lock OS look" keeps the auto-buyer from switching your theme
+      if(u.kind==="hire" && !anyFree) continue;
+      if(u.kind==="seat" && (anyFree||hireCapped)) continue;
       const c=upCost(u); if(c!=null&&c<=P.credits&&c<bc&&osLock(u)==null){bc=c;best=u;} }
     if(best) buy(best);
   }
@@ -1473,7 +1499,136 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"system",  lbl:"System & Buys"},
     {id:"hype",    lbl:"Hype Banners"},
   ];
-  let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up",toolFilter={slot:"all",rarity:"all"};
+  let toolboxBuilt=false,slotEls={},rollEls={},matEls={},shopTab="up";
+  /* ============ Queues app (A&Q Phase 2) ============ */
+  // Build-once/update-on-timer like the Store: buildQueues() on structural change (buy, hire, seat, prestige),
+  // renderQueues() at 5 Hz for the % / sanity / Kill -9 readouts. Seating always goes through seatAgent().
+  const QEL={boards:[],chips:new Map()};
+  const agentLabel=a=>a===agentZero()?"you":a.name;
+  function canSeat(a,qi){ if(qi<0) return true; const q=P.queues[qi]; if(!q) return false; return a.q===qi || P.agents.filter(x=>x.q===qi).length<q.seats; }
+  function seatAgent(a,qi){
+    qi=qi<0?-1:qi|0;
+    if(!canSeat(a,qi)) return false;
+    if(a.q===qi) return true;
+    a.q=qi;
+    const w=WK[P.agents.indexOf(a)]; if(w){ if(w.task&&w.task.bounty) clearTaskLook(w); w.task=null; w.elapsed=0; w.cooldown=0.3; w.el.classList.remove("win","fail","crit"); if(qi<0) assignTask(w); }   // in-flight ticket is abandoned; the Bench tile is relabelled now
+    recompute(); buildQueues(); renderAgentSheets(); renderShop(); save();
+    termLine("t-git","🪑",agentLabel(a)+(qi<0?" moved to the Bench":" seated on "+queueTier(P.queues[qi]).name));
+    return true;
+  }
+  // Phase 3 — Config sockets (spec Phase 3 §1). A Config comes from an agent's inventory (or the IDE socket) and sits
+  // in q.configs[si]; Unsocket hands it to the SELECTED agent — the Inventory app the player is looking at.
+  const freeSocket=q=>q.configs.indexOf(null);
+  function takeItem(src){   // remove and return the item a socket picker was opened for
+    if(src.craft){ const it=P.craftSlot&&P.craftSlot.item; P.craftSlot=null; return it||null; }
+    const a=agentById(src.owner), i=a.inv.findIndex(x=>x.id===src.id); return i<0?null:a.inv.splice(i,1)[0];
+  }
+  function socketConfig(qi,si,src){
+    const q=P.queues[qi]; if(!q||si<0||q.configs[si]) return;
+    const it=takeItem(src); if(!it) return;
+    if(it.slot!=="config"){ const back=src.craft?selectedAgent():agentById(src.owner); back.inv.push(it); enforceInvCap(back); return; }   // guard: no UI can reach this today
+    q.configs[si]=it; const t=queueTier(q);
+    toast("🗂 Socketed",it.name+" → "+t.name+" · now D"+Math.round(queueD(q)),"#00e5ff");
+    termLine("t-git","🗂","socketed "+it.name+" into "+t.name+" ("+patchSummary(it)+")");
+    save(); buildQueues(); renderShop();
+  }
+  function unsocketConfig(qi,si){
+    const q=P.queues[qi], it=q&&q.configs[si]; if(!it) return;
+    q.configs[si]=null; const a=selectedAgent(); a.inv.push(it); enforceInvCap(a);
+    termLine("t-dim","🗂","unsocketed "+it.name+" from "+queueTier(q).name+" → "+a.name+"'s inventory");
+    save(); buildQueues(); renderShop();
+  }
+  function openSocketPicker(anchor,src){
+    closePicker(); const m=document.createElement("div"); m.className="qpicker card"; m.id="qpicker";
+    const rows=P.queues.map((q,qi)=>{ const t=queueTier(q), si=freeSocket(q), n=q.configs.filter(Boolean).length;
+      return {qi,si,lbl:t.em+" "+t.name,sub:si<0?"no free socket":n+"/"+q.configs.length+" sockets · D"+Math.round(queueD(q)),full:si<0}; });
+    m.innerHTML=rows.map(r=>`<div class="qopt${r.full?" full":""}" data-q="${r.qi}" data-s="${r.si}"><b>${r.lbl}</b><span>${r.sub}</span></div>`).join("");
+    m.addEventListener("click",e=>{ e.stopPropagation(); const o=e.target.closest(".qopt"); if(!o||o.classList.contains("full")) return; socketConfig(+o.dataset.q,+o.dataset.s,src); closePicker(); });
+    placePicker(m,anchor);
+  }
+  function placePicker(m,anchor){   // mounted on body: #queuesBody scrolls/clips; clamped to the viewport in logical px
+    const r=anchor.getBoundingClientRect(); m.style.left=(r.left/uiZoom)+"px"; m.style.top=(r.bottom/uiZoom+4)+"px";
+    document.body.appendChild(m);
+    const vw=innerWidth/uiZoom; if(r.left/uiZoom+m.offsetWidth>vw) m.style.left=Math.max(0,vw-m.offsetWidth-4)+"px";
+    setTimeout(()=>document.addEventListener("click",closePicker,{once:true}),0);
+  }
+  function chipFor(a,i){
+    const c=document.createElement("div"); c.className="qchip"; c.dataset.agent=i; c.style.setProperty("--ac",a.color);
+    c.innerHTML=`<span class="dot"></span><span class="nm">${agentLabel(a)}</span><span class="pct"></span><span class="san" title="sanity"><i></i></span><button class="buy k9" data-act="kill9"></button>`;
+    c.addEventListener("click",e=>{ if(c.__dragged){ c.__dragged=false; return; } if(e.target.closest(".k9")) return; e.stopPropagation(); openPicker(i,c); });
+    c.querySelector(".k9").addEventListener("click",e=>{ e.stopPropagation(); kill9(P.agents[i]); });
+    c.addEventListener("pointerdown",e=>chipDragStart(e,i,c));
+    QEL.chips.set(i,{el:c,pct:c.querySelector(".pct"),san:c.querySelector(".san i"),k9:c.querySelector(".k9")});
+    return c;
+  }
+  function buildQueues(){
+    const body=$("#queuesBody"); if(!body) return; closePicker(); body.innerHTML=""; QEL.boards=[]; QEL.chips=new Map();
+    const boards=P.queues.map((q,qi)=>({qi,q,t:queueTier(q)})).concat([{qi:-1,q:null,t:{name:"Bench",em:"🪑",D:0}}]);
+    for(const b of boards){
+      const el=document.createElement("div"); el.className="qboard card"+(b.qi<0?" bench":""); el.dataset.q=b.qi;
+      el.innerHTML=`<div class="qhead"><span class="qem">${b.t.em}</span><b class="qname">${b.t.name}</b><span class="qmeta"></span></div>`+(b.qi>=0?`<div class="qsockets"></div><div class="qbounty"><span class="bk"></span><span class="bn"></span><span class="bt"></span><i class="bar"><b></b></i></div>`:"")+`<div class="qseats"></div>`;
+      if(b.qi>=0){ const row=el.querySelector(".qsockets");
+        b.q.configs.forEach((c,si)=>{ const s=document.createElement("div"); s.className="qsock"+(c?" on":""); s.dataset.s=si;
+          s.innerHTML=c?`<span class="sn">🗂 ${c.name}</span><span class="sm">${patchSummary(c)}</span><button class="buy">Unsocket</button>`:`empty socket`;
+          if(c) s.querySelector(".buy").addEventListener("click",e=>{ e.stopPropagation(); unsocketConfig(b.qi,si); });
+          row.appendChild(s); }); }
+      const seats=el.querySelector(".qseats"), seated=P.agents.map((a,i)=>({a,i})).filter(x=>x.a.q===b.qi);
+      for(const {a,i} of seated) seats.appendChild(chipFor(a,i));
+      if(b.qi>=0) for(let k=seated.length;k<b.q.seats;k++){ const e=document.createElement("div"); e.className="qseat empty"; e.textContent="empty seat"; seats.appendChild(e); }
+      body.appendChild(el); QEL.boards.push({...b,el,meta:el.querySelector(".qmeta"),bounty:el.querySelector(".qbounty")});
+    }
+    renderQueues();
+  }
+  function renderQueues(){
+    if(!QEL.boards.length) return;
+    for(const b of QEL.boards){
+      if(b.qi>=0){ const n=P.agents.filter(a=>a.q===b.qi).length; b.meta.textContent=`D${Math.round(queueD(b.q))} · ${n}/${b.q.seats} seats · drops ilvl ${b.t.D}–${Math.round(queueBandTop(b.q))}`;
+        const bo=b.q.bounty, pe=b.bounty;
+        pe.classList.toggle("on",!!bo);
+        if(bo){ const s=Math.max(0,Math.ceil(bo.t)); pe.querySelector(".bk").textContent=KIND_EM[bo.kind]; pe.querySelector(".bn").textContent="⏱ "+bo.name+" · "+money(bo.pay)+(bountyWorked(b.q)?" · in progress":"");
+          pe.querySelector(".bt").textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); pe.querySelector(".bar b").style.width=clamp(bo.t/bo.ttl*100,0,100)+"%";
+          pe.classList.toggle("urgent",bo.t<10); pe.title="pays "+money(bo.pay)+" + "+bo.kind+" if an agent on this board clears it in time"; }
+      }
+      else b.meta.textContent=P.agents.filter(a=>a.q<0).length+" benched · no tickets · full regen";
+    }
+    for(const [i,c] of QEL.chips){ const a=P.agents[i]; if(!a) continue; if(!a.m) agentMult(a);
+      const q=seatedQueue(a); c.pct.textContent=q?Math.round(a.m.chance(queueD(q))*100)+"%":"—";
+      c.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%";
+      c.el.classList.toggle("rogue",!!a.rogue);
+      if(a.rogue){ const k=kill9Cost(a); c.k9.textContent="Kill -9 "+money(k); c.k9.disabled=P.credits<k; c.k9.title="pay to restart "+agentLabel(a)+" at half sanity ("+BAL.rogueImmune+"s immunity)"; }
+    }
+    const tag=$("#queuesTag"); if(tag){ const nb=P.queues.filter(q=>q.bounty).length; tag.textContent=P.queues.length+" board"+(P.queues.length>1?"s":"")+" · "+P.agents.filter(a=>a.q<0).length+" benched"+(nb>0?" · "+nb+" bounty open":""); }
+  }
+  function openPicker(i,anchor){
+    closePicker(); const a=P.agents[i]; if(!a.m) agentMult(a);
+    const m=document.createElement("div"); m.className="qpicker card"; m.id="qpicker";
+    const rows=P.queues.map((q,qi)=>{ const D=queueD(q), ch=a.m.chance(D), t=queueTier(q);
+      const ps=i===0?0:ch*a.m.payout(D,q)/(a.m.dur(D,q)+BAL.cooldown);
+      return {qi, lbl:t.em+" "+t.name, sub:"★".repeat(clamp(Math.round(ch*5),1,5))+" "+Math.round(ch*100)+"%"+(i===0?" · typing only":" · "+money(ps)+"/s"), full:!canSeat(a,qi), cur:a.q===qi}; })
+      .concat([{qi:-1, lbl:"🪑 Bench", sub:"no tickets · full regen", full:false, cur:a.q<0}]);
+    m.innerHTML=rows.map(r=>`<div class="qopt${r.cur?" cur":""}${r.full?" full":""}" data-q="${r.qi}"><b>${r.lbl}</b><span>${r.full?"no free seat":r.sub}</span></div>`).join("");
+    m.addEventListener("click",e=>{ e.stopPropagation(); const o=e.target.closest(".qopt"); if(!o||o.classList.contains("full")) return; seatAgent(a,+o.dataset.q); closePicker(); });
+    // mounted on body (not inside the chip): #queuesBody scrolls/clips, and Task 6's chip pointerdown drag must not see picker clicks
+    placePicker(m,anchor);
+  }
+  function closePicker(){ const m=$("#qpicker"); if(m) m.remove(); }
+  // Drag is sugar over seatAgent(): pointer events (works on touch), a 6 px dead zone so a click still opens the
+  // picker, and rect math divided by uiZoom like the window drag code. The dragged chip gets pointer-events:none so
+  // elementFromPoint sees the board underneath.
+  let qdrag=null;
+  function chipDragStart(e,i,c){ if(e.button!==0||e.target.closest(".k9")) return; qdrag={i,c,sx:e.clientX,sy:e.clientY,moved:false}; c.setPointerCapture(e.pointerId); }
+  const boardAt=(x,y)=>{ const el=document.elementFromPoint(x,y), b=el&&el.closest(".qboard"); return b?QEL.boards.find(q=>q.el===b):null; };
+  document.addEventListener("pointermove",e=>{ if(!qdrag) return;
+    const dx=(e.clientX-qdrag.sx)/uiZoom, dy=(e.clientY-qdrag.sy)/uiZoom;
+    if(!qdrag.moved){ if(Math.hypot(dx,dy)<6) return; qdrag.moved=true; qdrag.c.classList.add("dragging"); closePicker(); }
+    qdrag.c.style.transform=`translate(${dx}px,${dy}px)`;
+    const tgt=boardAt(e.clientX,e.clientY), a=P.agents[qdrag.i];
+    for(const b of QEL.boards) b.el.classList.toggle("over",!!tgt&&b===tgt&&canSeat(a,b.qi)); });
+  document.addEventListener("pointerup",e=>{ if(!qdrag) return; const d=qdrag; qdrag=null;
+    d.c.classList.remove("dragging"); d.c.style.transform=""; for(const b of QEL.boards) b.el.classList.remove("over");
+    if(!d.moved) return; d.c.__dragged=true;
+    const tgt=boardAt(e.clientX,e.clientY); if(tgt) seatAgent(P.agents[d.i],tgt.qi); });
+  document.addEventListener("pointercancel",()=>{ if(!qdrag) return; qdrag.c.classList.remove("dragging"); qdrag.c.style.transform=""; for(const b of QEL.boards) b.el.classList.remove("over"); qdrag=null; });
   function buildShop(){   // builds the Store app content (upgrades + prestige + achievements)
     const body=$("#storeBody"); body.innerHTML=""; shopCards=[]; catHeaderEls={}; let cat=null;
     // prestige / IPO card at the top
@@ -1482,12 +1637,12 @@ notify("#general", "10x-ing that shit 🔥");`,
     body.appendChild(pc);
     pc.querySelector("#eqBtn").addEventListener("click",e=>{ e.stopPropagation();
       if(!canPrestige()) return;
-      if(confirm("Cash out now?\n\nResets your level, stats, credits, and all upgrades — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% XP & credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
+      if(confirm("Cash out now?\n\nResets credits, OS, seats, hires and every agent\u2019s gear — but you permanently bank +"+equityGain()+" Equity (+"+(equityGain()*2)+"% credits, forever). Total after: +"+((P.equity+equityGain())*2)+"%.")) doPrestige();
     });
     // upgrades
     for(const u of UPG){
       if(u.cat!==cat){ cat=u.cat; const h=document.createElement("div"); h.className="shopCat"; h.textContent=cat; body.appendChild(h); catHeaderEls[cat]=h; }
-      const card=document.createElement("div"); card.className="card";
+      const card=document.createElement("div"); card.className="card"; card.dataset.upg=u.id;
       card.innerHTML=`<span class="em">${u.emoji}</span><div class="mid"><div class="nm">${u.name} <span class="lv"></span></div><div class="fx"></div></div><button class="buy"></button>`;
       body.appendChild(card);
       const btn=card.querySelector(".buy"); btn.addEventListener("click",e=>{e.stopPropagation();buy(u);});
@@ -1526,26 +1681,20 @@ notify("#general", "10x-ing that shit 🔥");`,
   // base item (absorbs the old "Bulk-buy" backlog idea as x1/x10 rolls), and the stash of
   // unequipped candidates (filterable card list rather than a spatial grid — see the plan's
   // "Inventory & crafting workflow" section for why a list beats inventory Tetris here).
-  function buildToolbox(){   // builds the four Toolbox tool-apps: Equipment, The IDE, Missions, Inventory
-    const eqBody=$("#equipBody"), invBody=$("#inventoryBody"), ideBody=$("#ideBody"), misBody=$("#missionsBody");
-    if(!eqBody||!invBody||!ideBody||!misBody) return;
-    eqBody.innerHTML=invBody.innerHTML=ideBody.innerHTML=misBody.innerHTML=""; slotEls={}; rollEls={};
-    // Equipment app — equipped-hardware slots
+  function buildToolbox(){   // builds the Equipment, Inventory and IDE apps — all three render the selected agent
+    const eqBody=$("#equipBody"), invBody=$("#inventoryBody"), ideBody=$("#ideBody");
+    if(!eqBody||!invBody||!ideBody) return;
+    eqBody.innerHTML=invBody.innerHTML=ideBody.innerHTML=""; slotEls={}; rollEls={};
+    // Equipment app — the selected agent's four hardware slots
     const eh=document.createElement("div"); eh.className="shopCat"; eh.id="equipCat"; eqBody.appendChild(eh);
-    for(const s of SLOTS){
+    for(const sl of AGENT_SLOTS){
       const card=document.createElement("div"); card.className="card slotCard"; card.draggable=true; card.title="Drag me onto the IDE bench socket to craft";
-      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
+      card.innerHTML=`<span class="em">${sl.em}</span><div class="mid"><div class="nm">${sl.lbl} <span class="lv"></span></div><div class="fx"></div></div><button class="buy">Unequip</button>`;
       eqBody.appendChild(card);
-      card.addEventListener("dragstart",e=>{ if(!P.equip[s.id]){e.preventDefault();return;} benchPayload="eq:"+s.id; e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragstart",e=>{ if(!selectedAgent().gear[sl.id]){e.preventDefault();return;} benchPayload="eq:"+sl.id; e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
       card.addEventListener("dragend",()=>{benchPayload=null;});
-      const btn=card.querySelector(".buy");
-      btn.addEventListener("click",e=>{ e.stopPropagation();
-        const it=P.equip[s.id]; if(!it) return;
-        if(it.id==null) it.id=++P.itemSeq;
-        P.toolbox.push(it); enforceToolboxCap(); P.equip[s.id]=null; recompute();
-        renderShop(); save();
-      });
-      slotEls[s.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn};
+      card.querySelector(".buy").addEventListener("click",e=>{ e.stopPropagation(); unequipSlot(selectedAgent(),sl.id); });
+      slotEls[sl.id]={card,lv:card.querySelector(".lv"),fx:card.querySelector(".fx"),btn:card.querySelector(".buy")};
     }
     // The IDE app — the crafting bench (item in the middle, materials ringed around it) + materials
     const ih=document.createElement("div"); ih.className="shopCat"; ih.textContent="🛠 Crafting Bench"; ideBody.appendChild(ih);
@@ -1571,73 +1720,24 @@ notify("#general", "10x-ing that shit 🔥");`,
     core.addEventListener("drop",e=>{ e.preventDefault(); core.classList.remove("dragover"); dropOnBench(e.dataTransfer.getData("text/plain")||benchPayload); });
     if(benchRO) benchRO.disconnect();
     benchRO=new ResizeObserver(fitBench); benchRO.observe(bench);
-    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials & drop progress"; ideBody.appendChild(mh);
+    const mh=document.createElement("div"); mh.className="shopCat"; mh.textContent="📦 Materials — Commits from tickets, Full Rewrite from LOC, the rest from bounties"; ideBody.appendChild(mh);
     const matsWrap=document.createElement("div"); matsWrap.id="matsList"; matsWrap.className="stashWrap"; ideBody.appendChild(matsWrap);
     matEls={};
     for(const m of MATS){
       const card=document.createElement("div"); card.className="card matCard";
       card.innerHTML=`<span class="em">${m.em}</span><div class="mid"><div class="nm">${m.lbl} <span class="lv"></span></div>`+
-        `<div class="fx">${m.does}</div><div class="pity"><i></i></div></div>`;
+        `<div class="fx">${m.does}</div>`+(m.src==="tickets"?`<div class="pity"><i></i></div>`:`<div class="fx dim">${m.src==="loc"?"every 1,000 lines of code":"⏱ bounty loot"}</div>`)+`</div>`;
       matsWrap.appendChild(card);
       matEls[m.id]={lv:card.querySelector(".lv"),pity:card.querySelector(".pity i")};
     }
-    // Missions app — bounty board
-    const mbh=document.createElement("div"); mbh.className="shopCat"; mbh.id="missionCat"; misBody.appendChild(mbh);
-    const missionsWrap=document.createElement("div"); missionsWrap.id="missionList"; missionsWrap.className="stashWrap"; misBody.appendChild(missionsWrap);
-    const rerollCard=document.createElement("div"); rerollCard.className="card"; rerollCard.innerHTML=
-      `<span class="em">🔄</span><div class="mid"><div class="nm">Reroll Board</div><div class="fx">Scrap every not-yet-complete mission for a fresh set of 3. Cost scales with their level — cheap early, pricier the more you've invested.</div></div>`+
-      `<button class="buy" id="rerollBtn"></button>`;
-    misBody.appendChild(rerollCard);
-    rerollCard.querySelector("#rerollBtn").addEventListener("click",e=>{e.stopPropagation();rerollBoard();});
-    // Inventory app — roll for hardware + stash
-    const rh=document.createElement("div"); rh.className="shopCat"; rh.textContent="🎲 Roll for Hardware"; invBody.appendChild(rh);
-    for(const s of SLOTS){
-      const card=document.createElement("div"); card.className="card";
-      card.innerHTML=`<span class="em">${s.em}</span><div class="mid"><div class="nm">${s.lbl}</div>`+
-        `<div class="fx">Gamble credits for a random ${s.lbl} — lands in the stash below, or equips right away if that slot is empty</div></div>`+
-        `<div class="rollBtns"><button class="buy" data-n="1"></button><button class="buy" data-n="10"></button></div>`;
-      invBody.appendChild(card);
-      const b1=card.querySelector('[data-n="1"]'), b10=card.querySelector('[data-n="10"]');
-      b1.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,1);});
-      b10.addEventListener("click",e=>{e.stopPropagation();rollForSlot(s.id,10);});
-      rollEls[s.id]={btn1:b1,btn10:b10};
-    }
-    const sh=document.createElement("div"); sh.className="shopCat"; sh.textContent="🧰 Stash"; invBody.appendChild(sh);
-    const filters=document.createElement("div"); filters.className="toolFilters";
-    filters.innerHTML=`<select id="toolFilterSlot"><option value="all">All slots</option>`+
-      SLOTS.map(s=>`<option value="${s.id}">${s.lbl}</option>`).join("")+`</select>`+
-      `<select id="toolFilterRarity"><option value="all">All rarities</option><option value="stock">Stock</option>`+
-      `<option value="modded">Modded</option><option value="custom-built">Custom-Built</option><option value="legendary">Legendary</option></select>`;
-    invBody.appendChild(filters);
-    filters.querySelector("#toolFilterSlot").addEventListener("change",e=>{toolFilter.slot=e.target.value;renderStashList();});
-    filters.querySelector("#toolFilterRarity").addEventListener("change",e=>{toolFilter.rarity=e.target.value;renderStashList();});
+    // Inventory app — the selected agent's stash
+    const sh=document.createElement("div"); sh.className="shopCat"; sh.id="invCat"; invBody.appendChild(sh);
     const stash=document.createElement("div"); stash.id="stashList"; stash.className="stashWrap"; invBody.appendChild(stash);
     toolboxBuilt=true; renderToolbox();
   }
   function patchSummary(item){
     if(!item.patches||!item.patches.length) return "no patches";
     return item.patches.map(p=>PATCH_DEFS[p.id].fmt(p.value)).join(", ");
-  }
-  function renderStashList(){
-    const wrap=$("#stashList"); if(!wrap) return;
-    const items=P.toolbox.filter(it=>(toolFilter.slot==="all"||it.slot===toolFilter.slot) && (toolFilter.rarity==="all"||rarityOf(it)===toolFilter.rarity));
-    items.sort((a,b)=>b.ilvl-a.ilvl);
-    if(!items.length){
-      wrap.innerHTML=`<div class="stashEmpty">`+(P.toolbox.length?"No stashed hardware matches that filter.":"Toolbox is empty — clear tasks or roll for gear above, and any extra items you don't equip land here.")+`</div>`;
-      return;
-    }
-    wrap.innerHTML=items.map(it=>`<div class="card stashCard${it.legendary?" legendary":""}" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${SLOT[it.slot].em}</span>`+
-      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div>`+
-      `<div class="fx">${SLOT[it.slot].lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches — ${patchSummary(it)}</div></div>`+
-      `<div class="actions"><button class="buy" data-act="equip">Equip</button><button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`).join("");
-    wrap.querySelectorAll(".stashCard").forEach(card=>{
-      const id=Number(card.dataset.id);
-      card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
-      card.addEventListener("dragend",()=>{benchPayload=null;});
-      card.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromToolbox(id);});
-      card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(id);});
-      card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(id);});
-    });
   }
   let orbEls={}, benchRO=null, benchPayload=null;
   // Sizes the bench ring to the app's actual width: an ellipse a little wider than tall, with the
@@ -1664,33 +1764,33 @@ notify("#general", "10x-ing that shit 🔥");`,
   // one entry point for both drag sources: a stash item id, or "eq:<slot>" for an equipped item
   function dropOnBench(payload){
     if(!payload) return;
-    if(payload.startsWith("eq:")){
-      const sid=payload.slice(3), it=P.equip[sid]; if(!it) return;
-      if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
-      P.equip[sid]=null; P.craftSlot=it; recompute();
-      termLine("t-git","🛠","pulled "+it.name+" out of the rig and onto the bench");
-      save(); renderShop();
-    } else sendToCraftSlot(Number(payload));
+    if(payload.startsWith("eq:")){ const a=selectedAgent(), sid=payload.slice(3), it=a.gear[sid]; if(!it) return;
+      if(P.craftSlot){ const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); }
+      a.gear[sid]=null; P.craftSlot={owner:a.id,item:it}; recompute(); save(); renderShop(); }
+    else sendToCraftSlot(selectedAgent(),Number(payload));
   }
   function renderIdeCard(){
     const core=$("#benchCore"), acts=$("#benchActs"), mods=$("#benchMods"); if(!core||!acts||!mods) return;
-    const it=P.craftSlot;
+    const it=P.craftSlot&&P.craftSlot.item;
     core.dataset.rarity=it?rarityOf(it):"";
     core.classList.toggle("empty",!it);
     if(it){
-      core.innerHTML=`<span class="cEm">${SLOT[it.slot].em}</span><span class="cNm">${it.name}</span>`+
-        `<span class="cSub">Lv ${it.ilvl} · ${SLOT[it.slot].lbl}</span>`+
-        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} patches</span>`;
-      acts.innerHTML=`<button class="buy" data-act="equip">Equip</button><button class="buy" data-act="return">↩ Toolbox</button>`;
-      acts.querySelector('[data-act="equip"]').addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
-      acts.querySelector('[data-act="return"]').addEventListener("click",e=>{e.stopPropagation();returnCraftSlotToToolbox();});
+      const sd=slotDef(it), cfg=it.slot==="config";
+      core.innerHTML=`<span class="cEm">${sd.em}</span><span class="cNm">${it.name}</span>`+
+        `<span class="cSub">Lv ${it.ilvl} · ${sd.lbl}</span>`+
+        `<span class="cSub">${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} ${cfg?"mods":"patches"}</span>`+
+        `<span class="cSub">${agentById(P.craftSlot.owner).name}'s</span>`;
+      acts.innerHTML=(cfg?`<button class="buy" id="ideSocket">→ Socket</button>`:`<button class="buy" id="ideEquip">Equip on ${agentById(P.craftSlot.owner).name}</button>`)+`<button class="buy" id="ideBack">Back to inventory</button>`;
+      if(cfg) acts.querySelector("#ideSocket").addEventListener("click",e=>{e.stopPropagation();openSocketPicker(e.currentTarget,{craft:true});});
+      else acts.querySelector("#ideEquip").addEventListener("click",e=>{e.stopPropagation();equipFromCraftSlot();});
+      acts.querySelector("#ideBack").addEventListener("click",e=>{e.stopPropagation();returnCraftSlot();});
       const rows=it.patches.map(p=>{ const d=PATCH_DEFS[p.id];
         return `<div class="modRow card"><span class="mN">${d.lbl}</span><span class="mV">${d.fmt(p.value)}</span><span class="mT">T${p.tier+1}</span></div>`; });
       for(let i=it.patches.length;i<it.maxPatches;i++) rows.push(`<div class="modRow card open">open patch slot</div>`);
       mods.innerHTML=rows.join("");
     } else {
       core.innerHTML=`<span class="cEm">🛠</span><span class="cNm">Empty socket</span>`+
-        `<span class="cSub">drag hardware here from Inventory or Equipment — or use its “→ IDE” button</span>`;
+        `<span class="cSub">drag gear or a Config here from the selected agent's Inventory or Equipment — or use its "→ IDE" button</span>`;
       acts.innerHTML=""; mods.innerHTML="";
     }
     const cost=it?craftCost(it):0;
@@ -1711,65 +1811,68 @@ notify("#general", "10x-ing that shit 🔥");`,
     for(const m of MATS){
       const el=matEls[m.id]; if(!el) continue;
       el.lv.textContent=P.materials[m.id]||0;
-      el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
+      if(el.pity) el.pity.style.width=Math.round(Math.min(1,P.matPity[m.id]||0)*100)+"%";
     }
-  }
-  function renderMissionBoard(){
-    const cat=$("#missionCat"), wrap=$("#missionList"), btn=$("#rerollBtn");
-    if(!cat||!wrap) return;
-    cat.textContent="📋 Mission Board — "+(P.sprintConfig||0)+" ⚙️ Sprint Config";
-    wrap.innerHTML=(P.missions||[]).map(m=>{
-      const def=MISSION_DEF[m.defId];
-      const pct=Math.round(Math.min(1,1-Math.max(0,m.tasksLeft)/m.totalTasks)*100);
-      const status=m.done?"Complete — waiting on the rest of the board":(Math.max(0,m.tasksLeft)+"/"+m.totalTasks+" tasks left");
-      return `<div class="card missionCard" data-id="${m.id}"><span class="em">${def.em}</span>`+
-        `<div class="mid"><div class="nm">${def.lbl} <span class="lv">Lv ${m.level}</span></div>`+
-        `<div class="fx">${status} · bonus ${def.bonusMat} on ${def.allStats?"any":STAT[def.favorStat].lbl} task${m.rewardMult>1?" · ×"+m.rewardMult.toFixed(2)+" payout":""}</div>`+
-        `<div class="pity"><i style="width:${pct}%"></i></div></div>`+
-        `<div class="actions">`+
-        `<button class="buy" data-act="extend" ${m.done||(P.sprintConfig||0)<2?"disabled":""}>+3 tasks (2⚙️)</button>`+
-        `<button class="buy" data-act="crunch" ${m.done||(P.sprintConfig||0)<3?"disabled":""}>×1.35 (3⚙️)</button>`+
-        `</div></div>`;
-    }).join("");
-    wrap.querySelectorAll(".missionCard").forEach(card=>{
-      const id=Number(card.dataset.id);
-      card.querySelector('[data-act="extend"]').addEventListener("click",e=>{e.stopPropagation();missionExtend(id);});
-      card.querySelector('[data-act="crunch"]').addEventListener("click",e=>{e.stopPropagation();missionCrunch(id);});
-    });
-    if(btn){ const cost=rerollCost(); btn.textContent="Reroll — "+money(cost); btn.disabled=P.credits<cost; }
   }
   function renderToolbox(){
     if(!toolboxBuilt) return;
-    const equipCat=$("#equipCat");
-    if(equipCat) equipCat.textContent="🔧 Equipped Hardware"+(GEAR.setBonus>1?" — Set Bonus ×"+GEAR.setBonus.toFixed(2):"");
-    for(const s of SLOTS){
-      const el=slotEls[s.id]; if(!el) continue;
-      const item=P.equip[s.id], unlocked=slotUnlocked(s.id);
-      el.card.classList.toggle("legendary",!!(item&&item.legendary));
-      if(!unlocked){ el.lv.textContent=""; el.fx.textContent="🔒 Locked — "+slotUnlockHint(s.id); el.btn.disabled=true; }
-      else if(item){ el.lv.textContent="Lv "+item.ilvl+(item.legendary?" ★":""); el.fx.textContent=item.name; el.btn.disabled=false; }
-      else { el.lv.textContent=""; el.fx.textContent="Stock — nothing equipped yet. Clear tasks for a chance to find gear."; el.btn.disabled=true; }
-    }
-    renderMaterials();
-    renderMissionBoard();
-    renderIdeCard();
-    const c=rollCost();
-    for(const s of SLOTS){
-      const r=rollEls[s.id]; if(!r) continue;
-      const unlocked=slotUnlocked(s.id);
-      if(!unlocked){ r.btn1.textContent="🔒"; r.btn10.textContent=slotUnlockHint(s.id); r.btn1.disabled=true; r.btn10.disabled=true; }
-      else{ r.btn1.textContent=money(c); r.btn1.disabled=P.credits<c; r.btn10.textContent="×10 "+money(c*10); r.btn10.disabled=P.credits<c*10; }
-    }
-    renderStashList();
+    const a=selectedAgent(); if(!a.m) agentMult(a);
+    const equipCat=$("#equipCat"); if(equipCat) equipCat.textContent="🔧 "+a.name+"'s rig";
+    for(const sl of AGENT_SLOTS){ const el=slotEls[sl.id]; if(!el) continue; const item=a.gear[sl.id];
+      if(item){ el.lv.textContent="Lv "+item.ilvl; el.fx.textContent=item.name+" · "+patchSummary(item); el.btn.disabled=false; }
+      else { el.lv.textContent=""; el.fx.textContent="empty — "+(sl.stat?ASTAT[sl.stat].lbl+" falls to the floor":"no credit bonus"); el.btn.disabled=true; } }
+    const invCat=$("#invCat"); if(invCat) invCat.textContent="🧰 "+a.name+"'s inventory ("+a.inv.length+"/"+INV_CAP+")";
+    renderMaterials(); renderIdeCard(); renderStashList();
   }
+  function renderStashList(){
+    const wrap=$("#stashList"); if(!wrap) return; const a=selectedAgent();
+    const items=a.inv.slice().sort((x,y)=>y.ilvl-x.ilvl);
+    if(!items.length){ wrap.innerHTML=`<div class="stashEmpty">${a.name} has nothing stashed — clearing tickets drops gear at the queue's item level.</div>`; return; }
+    wrap.innerHTML=items.map(it=>{ const sd=slotDef(it), cfg=it.slot==="config";
+      return `<div class="card stashCard" draggable="true" data-id="${it.id}" title="Drag me onto the IDE bench socket to craft"><span class="em">${sd.em}</span>`+
+      `<div class="mid"><div class="nm">${it.name} <span class="lv">Lv ${it.ilvl}</span></div><div class="fx">${sd.lbl} · ${rarityOf(it)} · ${it.patches.length}/${it.maxPatches} ${cfg?"mods":"patches"} — ${patchSummary(it)}</div></div>`+
+      `<div class="actions">${cfg?`<button class="buy" data-act="socket">→ Socket</button>`:`<button class="buy" data-act="equip">Equip</button>`}<button class="buy" data-act="ide">→ IDE</button><button class="buy danger" data-act="dec">+${salvageValue(it)}</button></div></div>`; }).join("");
+    wrap.querySelectorAll(".stashCard").forEach(card=>{ const id=Number(card.dataset.id);
+      card.addEventListener("dragstart",e=>{ benchPayload=String(id); e.dataTransfer.setData("text/plain",benchPayload); e.dataTransfer.effectAllowed="move"; });
+      card.addEventListener("dragend",()=>{benchPayload=null;});
+      const eq=card.querySelector('[data-act="equip"]'); if(eq) eq.addEventListener("click",e=>{e.stopPropagation();equipFromInv(a,id);});
+      const so=card.querySelector('[data-act="socket"]'); if(so) so.addEventListener("click",e=>{e.stopPropagation();openSocketPicker(so,{owner:a.id,id});});
+      card.querySelector('[data-act="ide"]').addEventListener("click",e=>{e.stopPropagation();sendToCraftSlot(a,id);});
+      card.querySelector('[data-act="dec"]').addEventListener("click",e=>{e.stopPropagation();decommissionItem(a,id);}); });
+  }
+  /* ---- per-agent item operations (Equipment / Inventory / IDE socket) ---- */
+  function equipItem(a,item){ if(item.slot==="config"){ a.inv.push(item); enforceInvCap(a); return; }   // Configs socket into queues (Task 3), never onto an agent
+    const old=a.gear[item.slot]; if(old){ a.inv.push(old); enforceInvCap(a); }
+    a.gear[item.slot]=item; recompute();
+    toast("🔧 "+a.name+" equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" to inventory":""),"#4d8cff");
+    termLine("t-git","🔧",a.name+" equipped "+item.name+" → "+ASLOT[item.slot].lbl);
+  }
+  function equipFromInv(a,itemId){ const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return; equipItem(a,a.inv.splice(i,1)[0]); save(); renderShop(); }
+  function unequipSlot(a,slotId){ const it=a.gear[slotId]; if(!it) return; a.inv.push(it); enforceInvCap(a); a.gear[slotId]=null; recompute(); save(); renderShop(); }
+  function decommissionItem(a,itemId){
+    const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return;
+    const item=a.inv.splice(i,1)[0], refund=salvageValue(item), matGain=Math.max(1,Math.round(item.ilvl/15));
+    P.credits+=refund; P.materials.commit=(P.materials.commit||0)+matGain;
+    toast("♻️ Decommissioned",item.name+" → +"+money(refund)+" · +"+matGain+" Commit","#5b6b86"); termLine("t-dim","♻",a.name+" decommissioned "+item.name);
+    save(); renderShop();
+  }
+  const agentById=id=>P.agents.find(a=>a.id===id)||agentZero();
+  function sendToCraftSlot(a,itemId){
+    const i=a.inv.findIndex(x=>x.id===itemId); if(i<0) return;
+    if(P.craftSlot){ const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); }
+    P.craftSlot={owner:a.id,item:a.inv.splice(i,1)[0]};
+    termLine("t-git","🛠",a.name+" sent "+P.craftSlot.item.name+" to the IDE"); save(); renderShop();
+  }
+  function returnCraftSlot(){ if(!P.craftSlot) return; const o=agentById(P.craftSlot.owner); o.inv.push(P.craftSlot.item); enforceInvCap(o); P.craftSlot=null; save(); renderShop(); }
+  function equipFromCraftSlot(){ if(!P.craftSlot) return; const o=agentById(P.craftSlot.owner), it=P.craftSlot.item; P.craftSlot=null; equipItem(o,it); save(); renderShop(); }
   function renderStore(){   // Store app content — runs on the timer whenever the store is on screen
     if(!shopBuilt) return;
     const sb=$("#storeBal"); if(sb) sb.textContent=money(P.credits)+" · +"+money(MULT.passive)+"/s";
     const eqLv=$("#eqLv"),eqFx=$("#eqFx"),eqBtn=$("#eqBtn");
     if(eqLv){ const g=equityGain();
       eqLv.textContent=P.equity?("· "+P.equity+" Equity (+"+(P.equity*2)+"%)"):"";
-      eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at Lv 10 (worth +"+g+" now)");
-      eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 Lv 10"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
+      eqFx.textContent=canPrestige()?("cash out for +"+g+" Equity → permanent boost"):("unlocks at $20K earned (worth +"+g+" now)");
+      eqBtn.textContent=canPrestige()?("IPO +"+g):"🔒 $20K earned"; eqBtn.disabled=!canPrestige(); eqBtn.classList.toggle("maxed",canPrestige());
     }
     const catVisible={};
     for(const s of shopCards){
@@ -1778,13 +1881,14 @@ notify("#general", "10x-ing that shit 🔥");`,
       s.card.style.display=revealed?"":"none";
       if(revealed) catVisible[u.cat]=true;
       if(!revealed) continue;   // skip formatting hidden cards — nothing depends on it, just saves a little work
-      if(u.kind==="repeat"){ s.lv.textContent="Lv "+lvl; }
-      else if(u.kind==="skill"){ s.lv.textContent=(P.unlockedStats.length)+"/"+STATS.length; }
+      if(u.kind==="hire"){ s.lv.textContent=P.agents.length+"/"+HIRE_CAP[P.up.os]; }
+      else if(u.kind==="seat"){ const q=ownedQueue(u.tier); s.lv.textContent=(q?q.seats:0)+" seats"; }
+      else if(u.kind==="queue"){ s.lv.textContent=ownedQueue(u.tier)?"✓":""; }
       else if(u.kind==="unlock"){ s.lv.textContent=lvl?"✓":""; }
       else { s.lv.textContent=lvl?("· "+(u.tiers[lvl].name||("T"+lvl))):""; }
       const lock=osLock(u);
       s.fx.textContent=u.fx(lvl)+(lock!=null&&c!=null?" · "+osLockHint(u):"");
-      if(c==null){ s.btn.textContent=(u.kind==="repeat"||u.kind==="skill")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
+      if(c==null){ s.btn.textContent=(u.kind==="hire")?"MAX":"OWNED"; s.btn.disabled=true; s.btn.classList.add("maxed"); s.card.classList.remove("hot"); }
       else if(lock!=null){ s.btn.textContent="🔒 "+OS_TIERS[lock].short; s.btn.disabled=true; s.btn.classList.remove("maxed"); s.card.classList.remove("hot"); }
       else { s.btn.textContent=money(c); s.btn.disabled=P.credits<c; s.btn.classList.remove("maxed"); s.card.classList.toggle("hot",P.credits>=c); }
     }
@@ -1799,26 +1903,21 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   // full refresh (store + the four Toolbox apps) — used after any buy/craft/roll that can touch both
   function renderShop(){ renderStore(); renderToolbox(); }
-  function allocate(id,all){ if(P.sp<=0) return; const n=all?P.sp:1; P.sp-=n; statUp(id,n); updateSPui(); save(); }   // shift-click = pour all skill points into one stat
-  function updateSPui(){
-    if(UI.s_sp) UI.s_sp.textContent=P.sp;
-    if(UI.spStat) UI.spStat.classList.toggle("sppulse",P.sp>0);
-    if(HUD.chip) for(const id of STAT_IDS){ const b=HUD.chip[id]&&HUD.chip[id].plus; if(b) b.classList.toggle("on",P.sp>0); }
-  }
 
   /* ============ prestige (IPO → permanent Equity) ============ */
-  function equityGain(){ return Math.floor(Math.sqrt(Math.max(0,P.earned)/15000) + P.stage + P.level*0.15); }
-  function canPrestige(){ return P.level>=10 && equityGain()>=1; }
+  function highestQueueTier(){ return P.queues.reduce((m,q)=>Math.max(m,q.tier),0); }
+  function equityGain(){ return Math.floor(Math.sqrt(Math.max(0,P.earned)/15000) + highestQueueTier()); }
+  function canPrestige(){ return P.earned>=20000 && equityGain()>=1; }
   function doPrestige(){
-    const g=equityGain(); if(g<1||P.level<10) return;
+    const g=equityGain(); if(!canPrestige()) return;
     const keep={equity:P.equity+g, ipos:P.ipos+1, achv:P.achv, seenTips:P.seenTips,
-      bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed, loot:P.loot,
-      burnouts:P.burnouts, crits:P.crits, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
-    P=Object.assign(defaults(),keep);
-    recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w));   // reset drops hire/unlocks → re-tile to terminal-only
-    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme(); updateSPui();
+      bestStreak:P.bestStreak, tasksDone:P.tasksDone, tasksFailed:P.tasksFailed,
+      rogues:P.rogues, stolen:P.stolen, crits:P.crits, bountiesDone:P.bountiesDone, bountiesMissed:P.bountiesMissed, playSecs:P.playSecs, totalXp:P.totalXp, prestige:P.prestige, lastReal:P.lastReal};
+    P=Object.assign(defaults(),keep); seedAgents();
+    recompute(); buildWorkers(); applyUnlocks(); WK.forEach(w=>assignTask(w)); buildQueues();   // reset drops hire/unlocks → re-tile to terminal-only
+    HUD.title.textContent=titleFor(); HUD.stage.textContent=STAGES[0]; applyTheme();
     celebrate("💰 IPO! +"+g+" EQUITY","#39ff14"); flyMeme("CASHED OUT 💰");
-    toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% XP & credits","#39ff14");
+    toast("💰 Cashed out","+"+g+" Equity · permanent +"+(P.equity*2)+"% credits","#39ff14");
     termLine("t-git","💰","IPO #"+P.ipos+" — banked "+g+" Equity (total "+P.equity+" · +"+(P.equity*2)+"%)");
     renderShop(); save();
   }
@@ -1829,17 +1928,15 @@ notify("#general", "10x-ing that shit 🔥");`,
     {id:"t100",   em:"💯",name:"Centurion",           desc:"Clear 100 tasks",              chk:()=>P.tasksDone>=100,   pct:()=>P.tasksDone/100},
     {id:"t1000",  em:"🏭",name:"Feature Factory",     desc:"Clear 1,000 tasks",            chk:()=>P.tasksDone>=1000,  pct:()=>P.tasksDone/1000},
     {id:"lv10",   em:"⭐",name:"Getting the Hang",     desc:"Reach level 10",               chk:()=>P.level>=10,        pct:()=>P.level/10},
-    {id:"lv25",   em:"🌟",name:"Seasoned",            desc:"Reach level 25",               chk:()=>P.level>=25,        pct:()=>P.level/25},
     {id:"lv50",   em:"👑",name:"Living Legend",       desc:"Reach level 50",               chk:()=>P.level>=50,        pct:()=>P.level/50},
-    {id:"lv100",  em:"🏆",name:"Triple Digits",       desc:"Reach level 100",              chk:()=>P.level>=100,       pct:()=>P.level/100},
+    {id:"team4",  em:"👥",name:"Squad Goals",         desc:"Field 4 agents at once",       chk:()=>P.agents.length>=4, pct:()=>P.agents.length/4},
+    {id:"team8",  em:"🏢",name:"Full Floor",          desc:"Field 8 agents at once",       chk:()=>P.agents.length>=8, pct:()=>P.agents.length/8},
+    {id:"ilvl50", em:"🔧",name:"Serious Hardware",    desc:"Equip a Lv 50 item on anyone", chk:()=>P.agents.some(a=>ASLOT_IDS.some(s=>a.gear[s]&&a.gear[s].ilvl>=50)), pct:()=>Math.max(0,...P.agents.map(a=>Math.max(0,...ASLOT_IDS.map(s=>a.gear[s]?a.gear[s].ilvl:0))))/50},
+    {id:"patched",em:"📝",name:"Custom Build",        desc:"Own an item with 3 patches",   chk:()=>P.agents.some(a=>[...ASLOT_IDS.map(s=>a.gear[s]),...a.inv].some(it=>it&&it.patches.length>=3)), binary:true},
     {id:"strk25", em:"🔥",name:"On Fire",             desc:"Hit a 25× streak",             chk:()=>P.bestStreak>=25,   pct:()=>P.bestStreak/25},
     {id:"strk100",em:"☄️",name:"Unstoppable",         desc:"Hit a 100× streak",            chk:()=>P.bestStreak>=100,  pct:()=>P.bestStreak/100},
-    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Suffer your first burnout",    chk:()=>P.burnouts>=1,  binary:true},
+    {id:"burn",   em:"☠️",name:"Touch Grass",          desc:"Watch an agent go rogue",      chk:()=>P.rogues>=1,    binary:true},
     {id:"crit",   em:"💥",name:"Critical Hit",        desc:"Land a critical success",      chk:()=>P.crits>=1,     binary:true},
-    {id:"loot25", em:"🎁",name:"Packrat",             desc:"Collect 25 loot",              chk:()=>P.loot>=25,         pct:()=>P.loot/25},
-    {id:"rig",    em:"💻",name:"Quantum Leap",        desc:"Own the Quantum Rig",          chk:()=>P.up.computer>=5,   pct:()=>P.up.computer/5},
-    {id:"agi",    em:"🤖",name:"Do Not Release",      desc:"Unlock the AGI model",         chk:()=>P.up.model>=5,      pct:()=>P.up.model/5},
-    {id:"team8",  em:"👥",name:"Full Squad",          desc:"Field 8 agents at once",       chk:()=>P.up.hire>=7,       pct:()=>P.up.hire/7},
     {id:"earn1m", em:"💰",name:"Seven Figures",       desc:"Earn $1M in a single run",     chk:()=>P.earned>=1e6,      pct:()=>P.earned/1e6},
     {id:"win95",  em:"🪟",name:"Start Me Up",         desc:"Reach the Windows 95 era",     chk:()=>P.up.os>=2,         pct:()=>P.up.os/2},
     {id:"neon",   em:"🌈",name:"Cyberpunk",           desc:"Reach the NEON//OS era",       chk:()=>P.up.os>=4,         pct:()=>P.up.os/4},
@@ -1938,15 +2035,6 @@ notify("#general", "10x-ing that shit 🔥");`,
   const HUD={};
   function buildHUD(){
     for(const id of ["lv","title","xp","xppct","stage","plot","plotpct"]) HUD[id]=$("#hud_"+id);
-    const wrap=$("#statChips"); wrap.innerHTML="";
-    HUD.chip={};
-    STATS.forEach(s=>{
-      const el=document.createElement("div"); el.className="statchip";
-      el.innerHTML=`<span class="em">${s.em}</span><span class="sk">${s.lbl}</span><span class="sv" style="color:${s.color}">0</span><button class="sp" title="spend a skill point">+</button>`;
-      wrap.appendChild(el);
-      const plus=el.querySelector(".sp"); plus.title="spend a skill point (shift-click = all)"; plus.addEventListener("click",e=>{e.stopPropagation();allocate(s.id,e.shiftKey);});
-      HUD.chip[s.id]={el,v:el.querySelector(".sv"),plus};
-    });
     HUD.stage.textContent=STAGES[P.stage]||("New Game+ "+P.prestige);
     HUD.title.textContent=titleFor();
     $("#g_stages").textContent=STAGES.length;
@@ -1956,13 +2044,13 @@ notify("#general", "10x-ing that shit 🔥");`,
   // (MULT.workers=1+hire, so hire>=1 means an auto-swarm exists); telemetry/globe reuse their buys.
   const APPS=[
     {id:"terminal",    panelId:"terminalPanel", order:1, emoji:"💻", title:"Terminal",    unlocked:()=>true},
-    {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.up.hire>=1},
+    {id:"agents",      panelId:"agentsPanel",   order:2, emoji:"🤖", title:"Agent Swarm", unlocked:()=>P.agents.length>=2},
     {id:"status",      panelId:"statusPanel",   order:3, emoji:"📟", title:"Status",      unlocked:()=>!!P.unlocked.status},
     {id:"store",       panelId:"storePanel",    order:4, emoji:"🛒", title:"Store",       unlocked:()=>!!(P.reveal&&P.reveal.store)},
     {id:"inventory",   panelId:"inventoryPanel",order:5, emoji:"🧰", title:"Inventory",   unlocked:()=>!!P.unlocked.inventory},
     {id:"equipment",   panelId:"equipPanel",    order:6, emoji:"🔧", title:"Equipment",   unlocked:()=>!!P.unlocked.equipment},
     {id:"ide",         panelId:"idePanel",      order:7, emoji:"🛠", title:"The IDE",     unlocked:()=>!!P.unlocked.ide},
-    {id:"missions",    panelId:"missionsPanel", order:8, emoji:"📋", title:"Missions",    unlocked:()=>!!P.unlocked.missions},
+    {id:"queues",      panelId:"queuesPanel",   order:8, emoji:"📋", title:"Queues",      unlocked:()=>!!P.unlocked.queues},
     {id:"deploy_mesh", panelId:"globePanel",    order:9, emoji:"🌐", title:"Deploy Mesh", unlocked:()=>!!P.unlocked.globe},
     {id:"telemetry",   panelId:"chartsPanel",   order:10,emoji:"📊", title:"Telemetry",   unlocked:()=>!!P.unlocked.telemetry},
     {id:"achievements",panelId:"achievementsPanel",order:11,emoji:"🏆",title:"Achievements",unlocked:()=>!!P.unlocked.achievements},
@@ -2200,9 +2288,6 @@ notify("#general", "10x-ing that shit 🔥");`,
     }
   }
   function applyUnlocks(){
-    // stat chips visible per unlocked skill; app panels (incl. locked globe/telemetry) are shown/hidden
-    // wholesale by applyLayout — the old in-panel lockmask overlay is gone (a locked app just isn't tiled).
-    if(HUD.chip) for(const s of STATS){ const c=HUD.chip[s.id]; if(c) c.el.style.display=P.unlockedStats.includes(s.id)?"":"none"; }
     applyLayout();
   }
   function applyReveal(){   // intro funnel: full-screen terminal → credits → shop button
@@ -2221,7 +2306,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(!P.intro) return;
     P.intro=false; applyReveal(); applyUnlocks();
     let h=$("#hint"); if(!h){ h=document.createElement("div"); h.id="hint"; document.body.appendChild(h); }
-    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · spend <b>✦ skill points</b> on stats · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key';
+    h.innerHTML='🎮 <b>MASH / TAP</b> to grind · <b>🛒 Upgrades</b> to build your rig · <b>hire agents</b> to work the queue · <kbd>?</kbd> help · <kbd>Esc</kbd> boss key';
     h.style.opacity=""; hintFaded=false; setTimeout(fadeHint,10000);
     save();
   }
@@ -2256,111 +2341,97 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(UI.themeMenu){ if(themeMenuOpen) renderThemeMenu(); UI.themeMenu.classList.toggle("open",themeMenuOpen); }
   }
   function closeThemeMenu(){ toggleThemeMenu(false); }
-  function statUp(id,amt){ P.stats[id]+=amt; const c=HUD.chip[id]; if(c){ c.el.classList.remove("up"); void c.el.offsetWidth; c.el.classList.add("up"); } }
   function addXp(n){ P.xp+=n; P.totalXp+=n; let g=0; while(P.xp>=P.xpNeed && g++<8) levelUp(); }
-  function addLoot(){   // pure flavor/junk — no equip value, just a small stat bump (see LOOT array)
-    const item=pick(LOOT); P.loot++; const sid=pick(STAT_IDS); statUp(sid,rand(0.6,1.6));
-    toast("🎁 Looted!",item+" · +"+STAT[sid].lbl,STAT[sid].color,"grind");
-    termLine("t-git","★","looted "+item+" (+"+STAT[sid].lbl+")");
-  }
   function salvageValue(item){ return Math.round(item.ilvl*2)+1; }
-  // crafting update Phase 4 — a new item auto-equips only if that slot is empty (nothing to
-  // choose between yet); otherwise it becomes a Toolbox candidate instead of auto-equip-if-better,
-  // so comparing/picking between multiple rolls is an actual decision, not something the game
-  // makes for you. Shared by natural task drops and the Toolbox's "Roll for Hardware" purchases.
-  function addHardwareItem(item){
-    if(!P.equip[item.slot]){ P.equip[item.slot]=item; recompute(); return "equipped"; }
-    P.toolbox.push(item);
-    enforceToolboxCap();
-    return "stashed";
+  const INV_CAP=18;
+  function addItemToAgent(a,item){
+    if(item.slot!=="config" && !a.gear[item.slot]){ a.gear[item.slot]=item; recompute(); return "equipped"; }
+    a.inv.push(item); enforceInvCap(a); return "stashed";
   }
-  function enforceToolboxCap(){   // Toolbox has finite space — scrap the single worst item to make room
-    while(P.toolbox.length>TOOLBOX_CAP){
-      let worst=0; for(let i=1;i<P.toolbox.length;i++) if(P.toolbox[i].ilvl<P.toolbox[worst].ilvl) worst=i;
-      const gone=P.toolbox.splice(worst,1)[0], refund=salvageValue(gone);
-      P.credits+=refund;
-      toast("🧰 Toolbox full","Auto-scrapped "+gone.name+" (Lv "+gone.ilvl+") → +"+money(refund),"#5b6b86","grind");
-      termLine("t-dim","♻","toolbox full, auto-scrapped "+gone.name+" for "+money(refund));
+  function enforceInvCap(a){
+    while(a.inv.length>INV_CAP){
+      // prefer scrapping the lowest-ilvl non-Config; a Config is only fair game once nothing else is left
+      let worst=0; for(let i=1;i<a.inv.length;i++){
+        const cur=a.inv[worst], cand=a.inv[i];
+        if(cur.slot!=="config"&&cand.slot==="config") continue;
+        if(cur.slot==="config"&&cand.slot!=="config"){ worst=i; continue; }
+        if(cand.ilvl<cur.ilvl) worst=i;
+      }
+      const gone=a.inv.splice(worst,1)[0], refund=salvageValue(gone); P.credits+=refund;
+      termLine("t-dim","♻",a.name+"'s inventory full, auto-scrapped "+gone.name+" for "+money(refund));
     }
   }
-  function dropHardware(){   // real gear — see addHardwareItem() for the equip-or-stash rule
-    const slotId=pick(SLOTS.filter(s=>slotUnlocked(s.id))).id, item=rollItem(slotId);
-    if(addHardwareItem(item)==="equipped"){
-      toast("🔧 New Hardware!","Equipped "+item.name+" (Lv "+item.ilvl+")","#4d8cff","grind");
-      termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[slotId].lbl+" (Lv "+item.ilvl+")");
-    } else {
-      toast("🧰 Found gear","+1 "+item.name+" (Lv "+item.ilvl+") → Toolbox","#4d8cff","grind");
-      termLine("t-git","🧰","stashed "+item.name+" (Lv "+item.ilvl+") in Toolbox");
-    }
+  function dropHardware(a,q){
+    const slotId=pick(ASLOT_IDS), item=rollItem(slotId, rollIlvl(q));
+    const where=addItemToAgent(a,item);
+    toast("🧰 "+a.name+" found gear",item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" — equipped":" → inventory"),"#4d8cff","grind");
+    termLine("t-git","🧰",a.name+" found "+item.name+" (Lv "+item.ilvl+")"+(where==="equipped"?" and equipped it":""));
   }
-  // shared by equipFromToolbox()/equipFromCraftSlot() — swaps whatever's currently in that slot
-  // back into the Toolbox (rather than deleting it) before equipping the new item
-  function equipItem(item){
-    const old=P.equip[item.slot];
-    if(old){ if(old.id==null) old.id=++P.itemSeq; if(!old.rarity) old.rarity="stock"; P.toolbox.push(old); enforceToolboxCap(); }
-    P.equip[item.slot]=item; recompute();
-    toast("🔧 Equipped",item.name+" (Lv "+item.ilvl+")"+(old?" — "+old.name+" returned to Toolbox":""),"#4d8cff");
-    termLine("t-git","🔧","equipped "+item.name+" → "+SLOT[item.slot].lbl+" (Lv "+item.ilvl+")");
+  /* ============ bounties (spec Phase 3 §2) ============ */
+  // A bounty is a timed special ticket on one board: q.bounty = {name, D, pay, t, ttl, kind}. It spawns on a per-board
+  // clock (q.nextBounty) that only runs while the board is staffed, is taken by the NEXT FREE agent there (derived from
+  // the workers — never stored), pays BAL.bountyPay tickets' worth plus a reward, and expires unrewarded on a miss or a
+  // fail. Clocks tick in tickProgress, so hidden tabs, the boss key and closed tabs pause them; offline ignores bounties.
+  // Agent zero's manual ticket never locks a bounty: an idle player must not block it, so an automatic agent can take
+  // the same bounty and whoever clears first gets it (the other's ticket downgrades via the `live` check in resolveTask).
+  const bountyWorked=q=>WK.some(w=>!w.manual&&w.task&&w.task.bounty&&w.task.q===q);
+  function bountyTtl(q){ const D=queueD(q);   // a few tickets' worth for an agent geared for this D (Speed ≈ floor + D)
+    const ref=clamp((BAL.durBase+BAL.durPerD*D)/(1+(BAL.floor+D)/BAL.speedDiv),BAL.durMin,BAL.durMax)/(1+queueMods(q).speed);
+    return Math.round(BAL.bountyTtl*(ref+BAL.cooldown)); }
+  function rollBountyKind(q){
+    if(P.bountiesDone===0) return "config";   // the first clear always shows the player what a Config is
+    const s=BAL.bountyTierShift*q.tier, w={mats:BAL.bountyRewards.mats-s, gear:BAL.bountyRewards.gear+s/2, config:BAL.bountyRewards.config+s/2};
+    let r=Math.random()*(w.mats+w.gear+w.config); for(const k of ["mats","gear","config"]){ r-=w[k]; if(r<=0) return k; } return "mats";
   }
-  function equipFromToolbox(itemId){
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    equipItem(P.toolbox.splice(idx,1)[0]);
-    save(); renderShop();
+  function spawnBounty(q){
+    const D=queueD(q), ttl=bountyTtl(q), t=queueTier(q);
+    q.bounty={name:pick(BOUNTY_NAMES), D, pay:Math.round(Math.pow(D,BAL.payK)*(1+queueMods(q).pay)*BAL.bountyPay), t:ttl, ttl, kind:rollBountyKind(q)};
+    termLine("t-warn","⏱","BOUNTY on "+t.name+": ‹"+q.bounty.name+"› — "+money(q.bounty.pay)+" if cleared in "+ttl+"s");
+    toast("⏱ Bounty on "+t.name,q.bounty.name+" · "+money(q.bounty.pay)+" · "+ttl+"s","#ffb000","progress");
   }
-  function decommissionItem(itemId){   // scrap a Toolbox candidate you don't want for a small credit + material refund
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    const item=P.toolbox.splice(idx,1)[0], refund=salvageValue(item);
-    const matGain=Math.max(1,Math.round(item.ilvl/15));   // Phase 5 — Decommission also feeds the Commit material economy
-    P.credits+=refund; P.materials.commit=(P.materials.commit||0)+matGain;
-    toast("♻️ Decommissioned",item.name+" (Lv "+item.ilvl+") → +"+money(refund)+" · +"+matGain+" Commit"+(matGain>1?"s":""),"#5b6b86");
-    termLine("t-dim","♻","decommissioned "+item.name+" for "+money(refund)+" + "+matGain+" Commit"+(matGain>1?"s":""));
-    save(); renderShop();
+  const KIND_EM={mats:"📦",gear:"🧰",config:"🗂"};
+  function grantBountyReward(a,q,kind){
+    if(kind==="config"){ const it=rollConfig(q); addItemToAgent(a,it); return "🗂 "+it.name+" (Lv "+it.ilvl+", "+patchSummary(it)+")"; }
+    if(kind==="gear"){ const lo=queueTier(q).D, hi=Math.max(lo,queueBandTop(q)), it=rollItem(pick(ASLOT_IDS),Math.round(rand(lo+(hi-lo)*2/3,hi)));
+      const where=addItemToAgent(a,it); return "🧰 "+it.name+" (Lv "+it.ilvl+")"+(where==="equipped"?" — equipped":""); }
+    const got=["hotfix","refactor"]; if(Math.random()<0.25) got.push("revert"); if(q.tier>=2&&Math.random()<0.15) got.push("merge");
+    for(const k of got) P.materials[k]=(P.materials[k]||0)+1;
+    return "📦 "+got.map(k=>MAT[k].lbl).join(" + ");
   }
-  // crafting update Phase 4 — The IDE holds one item you're "working on," separate from the general
-  // stash. No craft verbs exist yet (that's Phase 5); for now it's just a staging spot Phase 5's
-  // add/reroll actions will attach to, so save-state and UI plumbing exist ahead of time.
-  function sendToCraftSlot(itemId){
-    const idx=P.toolbox.findIndex(i=>i.id===itemId); if(idx<0) return;
-    const item=P.toolbox.splice(idx,1)[0];
-    if(P.craftSlot){ P.toolbox.push(P.craftSlot); enforceToolboxCap(); }
-    P.craftSlot=item;
-    termLine("t-git","🛠","sent "+item.name+" to the IDE");
-    save(); renderShop();
+  function clearTaskLook(w){   // reset a worker tile's bounty look (amber tag/class/bar) back to an ordinary ticket
+    w.el.classList.remove("bounty"); const q=w.task&&w.task.q; if(w.task) w.task.bounty=false;
+    if(q){ const t=queueTier(q); w.sTag.textContent=t.em+" "+t.name; w.sTag.style.color="#00e5ff"; w.prog.style.background="linear-gradient(90deg,#00e5ff,#fff2)"; }
   }
-  function returnCraftSlotToToolbox(){
-    if(!P.craftSlot) return;
-    P.toolbox.push(P.craftSlot); P.craftSlot=null; enforceToolboxCap();
-    save(); renderShop();
+  function releaseBountyTasks(q){   // any worker still holding this board's bounty goes back to an ordinary ticket look
+    for(const w of WK) if(w.task&&w.task.bounty&&w.task.q===q) clearTaskLook(w);
   }
-  function equipFromCraftSlot(){
-    if(!P.craftSlot) return;
-    const item=P.craftSlot; P.craftSlot=null;
-    equipItem(item);
-    save(); renderShop();
+  function clearBounty(a,q){
+    const b=q.bounty; q.bounty=null; P.bountiesDone++; releaseBountyTasks(q);
+    const what=grantBountyReward(a,q,b.kind);
+    celebrate("⏱ BOUNTY CLEARED","#ffb000");
+    toast("⏱ Bounty cleared — "+money(b.pay),a.name+" · "+what,"#ffb000","progress");
+    termLine("t-ok","⏱",a.name+" cleared bounty ‹"+b.name+"›  +"+money(b.pay)+"  → "+what);
   }
-  function rollCost(){ return Math.round(15+P.level*3); }   // Toolbox "Roll for Hardware" gamble cost
-  function rollForSlot(slotId,count){
-    if(!slotUnlocked(slotId)) return;
-    let did=0;
-    for(let i=0;i<count;i++){
-      const c=rollCost(); if(P.credits<c) break;
-      P.credits-=c; addHardwareItem(rollItem(slotId)); did++;
-    }
-    if(did>0){
-      toast("🎲 Rolled Hardware","Bought "+did+"× "+SLOT[slotId].lbl+" roll"+(did>1?"s":""),"#c77dff","grind");
-      termLine("t-git","🎲","rolled "+did+"× "+SLOT[slotId].lbl);
-    }
-    save(); renderShop();
+  function expireBounty(q,why){
+    const b=q.bounty; if(!b) return; q.bounty=null; P.bountiesMissed++; releaseBountyTasks(q);
+    termLine("t-warn","⏱","bounty ‹"+b.name+"› expired — "+why);
   }
-
+  function tickBounties(dt){
+    if(!P.unlocked.queues) return;   // bounties live on the Queues app's boards
+    P.queues.forEach((q,qi)=>{
+      if(q.bounty){ q.bounty.t-=dt; if(q.bounty.t<=0) expireBounty(q,"nobody cleared it in time"); return; }
+      if(!P.agents.some(a=>a.q===qi&&!a.rogue)) return;   // the clock only runs on a staffed board
+      q.nextBounty-=dt; if(q.nextBounty<=0){ q.nextBounty=BAL.bountyEvery*rand(0.7,1.3); spawnBounty(q); }
+    });
+  }
   /* ============ crafting materials (crafting update Phase 5) ============ */
   const MATS=[
-    {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots"},
-    {id:"hotfix",  lbl:"Hotfix",                em:"🩹", does:"Reroll one patch's value (same mod, new number)"},
-    {id:"refactor",lbl:"Refactor Token",        em:"🔀", does:"Reroll one patch's type entirely"},
-    {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item"},
-    {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)"},
-    {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)"},
+    {id:"commit",  lbl:"Commit",               em:"📝", does:"Add a random patch to an item with open slots",                      src:"tickets"},
+    {id:"hotfix",  lbl:"Hotfix",                em:"🩹", does:"Reroll one patch's value (same mod, new number)",                    src:"bounties"},
+    {id:"refactor",lbl:"Refactor Token",        em:"🔀", does:"Reroll one patch's type entirely",                                   src:"bounties"},
+    {id:"rewrite", lbl:"Full Rewrite",          em:"📦", does:"Reroll all patches on an item",                                      src:"loc"},
+    {id:"revert",  lbl:"Revert Commit",         em:"⏪", does:"Strip an item back to Stock (no patches)",                           src:"bounties"},
+    {id:"merge",   lbl:"Feature Branch Merge",  em:"🔗", does:"Add a patch slot beyond the item's current count (up to 4)",         src:"bounties"},
   ];
   const MAT=Object.fromEntries(MATS.map(m=>[m.id,m]));
   // The crafting bench ring, in the order the orbs are laid out clockwise from the top — which is
@@ -2385,18 +2456,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(got){ P.materials[key]=(P.materials[key]||0)+1; P.matPity[key]=0; }
     return got;
   }
-  function grantMaterials(stat,locBefore){
-    materialAttempt("commit",0.35,true);                        // any task — common, no toast (too frequent)
-    materialAttempt("hotfix",0.5,stat==="debug");                // Debugging tasks
-    materialAttempt("refactor",0.5,stat==="systems");            // Systems tasks
-    if(materialAttempt("revert",0.03,true)){
-      toast("⏪ Found: Revert Commit","A rare material — strips an item back to Stock","#5b6b86","grind");
-      termLine("t-git","⏪","found a Revert Commit");
-    }
-    if(materialAttempt("merge",0.02,P.level>=40)){               // late-game gate
-      toast("🔗 Found: Feature Branch Merge","A rare material — adds a patch slot (up to 4)","#39ff14","grind");
-      termLine("t-git","🔗","found a Feature Branch Merge");
-    }
+  // Phase 3 (spec §3): tickets are the credit economy — they trickle Commits (× the queue's Open Source mods) and pay the
+  // LOC-milestone Full Rewrite. Everything rarer (Hotfix, Refactor, Revert, Merge) is bounty loot — see clearBounty.
+  function grantMaterials(q,locBefore){
+    materialAttempt("commit",Math.min(0.95,0.35*(1+queueMods(q).mats)),true);   // common, no toast (too frequent)
     const milestone=1000;   // Full Rewrite is deterministic off P.loc crossing a milestone, not RNG+pity
     if(Math.floor(P.loc/milestone)>Math.floor(locBefore/milestone)){
       P.materials.rewrite=(P.materials.rewrite||0)+1;
@@ -2414,7 +2477,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     return true;
   }
   function craftAddPatch(){
-    const it=P.craftSlot; if(!it||it.patches.length>=it.maxPatches) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||it.patches.length>=it.maxPatches) return;
     const ids=availablePatchIds(it); if(!ids.length) return;
     if(!spendCraftMaterial("commit",craftCost(it))) return;
     const id=pick(ids);
@@ -2425,7 +2488,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftHotfix(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     if(!spendCraftMaterial("hotfix",craftCost(it))) return;
     const p=pick(it.patches), def=PATCH_DEFS[p.id];
     p.value=def.tiers[p.tier]*rand(0.9,1.1);
@@ -2435,10 +2498,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftRefactor(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     const idx=(Math.random()*it.patches.length)|0;
     const have=new Set(it.patches.filter((_,i)=>i!==idx).map(p=>p.id));
-    const ids=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return (d.slot===null||d.slot===it.slot)&&!have.has(id); });
+    const ids=Object.keys(PATCH_DEFS).filter(id=>patchFits(PATCH_DEFS[id],it)&&!have.has(id));
     if(!ids.length) return;
     if(!spendCraftMaterial("refactor",craftCost(it))) return;
     it.patches[idx]=makePatch(pick(ids),it.ilvl);
@@ -2448,8 +2511,8 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftFullRewrite(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
-    const n=it.patches.length, pool=Object.keys(PATCH_DEFS).filter(id=>{ const d=PATCH_DEFS[id]; return d.slot===null||d.slot===it.slot; });
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
+    const n=it.patches.length, pool=Object.keys(PATCH_DEFS).filter(id=>patchFits(PATCH_DEFS[id],it));
     if(!spendCraftMaterial("rewrite",craftCost(it))) return;
     const chosen=[];
     while(chosen.length<n && chosen.length<pool.length){ const id=pick(pool); if(!chosen.includes(id)) chosen.push(id); }
@@ -2460,7 +2523,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftRevert(){
-    const it=P.craftSlot; if(!it||!it.patches.length) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||!it.patches.length) return;
     if(!spendCraftMaterial("revert",craftCost(it))) return;
     it.patches=[];
     recompute();
@@ -2469,7 +2532,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
   function craftAddSlot(){
-    const it=P.craftSlot; if(!it||it.maxPatches>=4) return;
+    const it=P.craftSlot&&P.craftSlot.item; if(!it||it.maxPatches>=4) return;
     if(!spendCraftMaterial("merge",craftCost(it)*2)) return;   // adding a slot is more impactful than any single reroll — priced accordingly
     it.maxPatches++;
     toast("🔗 Feature Branch Merged",it.name+" now holds "+it.maxPatches+" patches","#39ff14");
@@ -2477,222 +2540,180 @@ notify("#general", "10x-ing that shit 🔥");`,
     save(); renderShop();
   }
 
-  /* ============ missions (crafting update Phase 6) ============ */
-  // 3 always-active contracts. Each qualifying task decrements every non-done mission's counter
-  // (so nothing ever stalls from the player ignoring it); a task matching a mission's favored stat
-  // has a bonus-material chance and gets weighted higher in task selection (assignTask()) so
-  // leaning into a mission is worth it without being mandatory.
-  const MISSION_DEFS=[
-    {id:"debug_sprint",lbl:"Debugging Sprint", em:"🐛",favorStat:"debug",  bonusMat:"hotfix",  tasks:8,bonusChance:0.5},
-    {id:"deploy_week", lbl:"Deploy Week",       em:"🚀",favorStat:"systems",bonusMat:"refactor",tasks:8,bonusChance:0.5},
-    {id:"algo_grind",  lbl:"Algorithm Grind",   em:"🧮",favorStat:"algo",   bonusMat:"commit",  tasks:8,bonusChance:0.5},
-    {id:"focus_block", lbl:"Focus Block",       em:"🎯",favorStat:"focus",  bonusMat:"commit",  tasks:8,bonusChance:0.5},
-    {id:"hackathon",   lbl:"Hackathon",         em:"⚡",favorStat:null,     bonusMat:"commit",  tasks:5,bonusChance:0.8,allStats:true},
-  ];
-  const MISSION_DEF=Object.fromEntries(MISSION_DEFS.map(m=>[m.id,m]));
-  function rollMission(){
-    const def=pick(MISSION_DEFS), level=Math.max(1,Math.round(P.level*rand(0.8,1.2)));
-    return {id:++P.missionSeq, defId:def.id, level, tasksLeft:def.tasks, totalTasks:def.tasks, rewardMult:1, done:false};
-  }
-  function refreshBoard(){
-    P.missions=[rollMission(),rollMission(),rollMission()];
-    toast("📋 New mission board","3 fresh contracts available","#00e5ff");
-    termLine("t-git","📋","mission board refreshed");
-  }
-  function rerollCost(){ return P.missions.filter(m=>!m.done).reduce((s,m)=>s+m.level,0)*8; }
-  function rerollBoard(){
-    const cost=rerollCost(); if(P.credits<cost) return;
-    P.credits-=cost; refreshBoard();
-    save(); renderShop();
-  }
-  function completeMission(m){
-    m.done=true;
-    const def=MISSION_DEF[m.defId];
-    const matGain=Math.max(1,Math.round(m.level*0.15*m.rewardMult));
-    P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+matGain;
-    const sprintGain=Math.max(1,Math.round(1+m.level/20));
-    P.sprintConfig=(P.sprintConfig||0)+sprintGain;
-    toast("📋 Mission complete: "+def.lbl,"+"+matGain+" "+def.bonusMat+" · +"+sprintGain+" Sprint Config","#39ff14");
-    termLine("t-git","📋","completed mission: "+def.lbl+" (+"+matGain+" "+def.bonusMat+")");
-    if(Math.random()<0.35) dropHardware();   // missions can reward items directly, not just materials
-    if(P.missions.every(mm=>mm.done)) refreshBoard();
-  }
-  function progressMissions(stat){
-    for(const m of P.missions){
-      if(m.done) continue;
-      m.tasksLeft--;
-      const def=MISSION_DEF[m.defId];
-      if((def.favorStat===stat||def.allStats) && Math.random()<def.bonusChance*m.rewardMult){
-        P.materials[def.bonusMat]=(P.materials[def.bonusMat]||0)+1;
-      }
-      if(m.tasksLeft<=0) completeMission(m);
-    }
-  }
-  // Sprint Config — spend on an active mission to make it (and its eventual payout) bigger, the
-  // mission-crafting analogue of gear patches: same add/reroll-flavored verbs, different target.
-  function missionExtend(missionId){
-    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<2) return;
-    P.sprintConfig-=2; m.tasksLeft+=3; m.totalTasks+=3; m.rewardMult*=1.15;
-    toast("⚙️ Sprint Config spent","Extended "+MISSION_DEF[m.defId].lbl+" — bigger payout, more tasks","#c77dff");
-    termLine("t-git","⚙️","extended mission: "+MISSION_DEF[m.defId].lbl);
-    save(); renderShop();
-  }
-  function missionCrunch(missionId){
-    const m=P.missions.find(x=>x.id===missionId); if(!m||m.done||(P.sprintConfig||0)<3) return;
-    P.sprintConfig-=3; m.rewardMult*=1.35;
-    toast("⚙️ Sprint Config spent","Crunched "+MISSION_DEF[m.defId].lbl+" — bigger payout, same length","#c77dff");
-    termLine("t-git","⚙️","crunched mission: "+MISSION_DEF[m.defId].lbl);
-    save(); renderShop();
-  }
   function levelUp(){
     const before=titleFor();
-    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);   // tuned so Lv100 is a real, hard-fought (but reachable) milestone — see "crafting update.md" Phase 2
-    updateHpMax(); P.hp=P.hpMax;
-    const gain=2+Math.floor(P.level/8); P.sp+=gain;
+    P.xp-=P.xpNeed; P.level++; P.xpNeed=Math.round(P.xpNeed*1.10+18);
     const nt=titleFor();
-    if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");   // big banner only on rank-up, not every level
-    toast("⭐ Level "+P.level+" — "+nt,"+"+gain+" skill points · sanity restored","#ffb000","progress");
-    termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt+"  (+"+gain+" SP)");
-    HUD.title.textContent=nt; updateSPui(); save();
+    if(nt!==before) celebrate("NEW RANK · "+nt,"#ffb000");
+    toast("⭐ Level "+P.level+" — "+nt,"a new title for the résumé","#ffb000","progress");
+    termLine("t-warn","🎉","LEVEL UP → Lv "+P.level+" "+nt);
+    HUD.title.textContent=nt; save();
   }
   function stageAdvance(){
     P.plot-=P.plotNeed; P.stage++; P.plotNeed=Math.round(P.plotNeed*1.16+45);
     let name;
     if(P.stage>=STAGES.length){ P.prestige++; P.stage=0; name="✦ New Game+ "+P.prestige+" · "+STAGES[0]; }
     else name=STAGES[P.stage];
-    P.hp=P.hpMax;
     celebrate("📅 "+name,"#00e5ff"); flyMeme("NEW STAGE");
     toast("📅 New stage unlocked",name+" · difficulty ↑","#00e5ff","progress");
-    termLine("t-info","▶","═══ "+name+" ═══"); addXp(Math.round(30*(1+P.stage*.1)));
+    termLine("t-info","▶","═══ "+name+" ═══"); addXp(30);
     HUD.stage.textContent=name; save();
   }
-  function burnout(){
-    P.burnouts++; const lost=Math.round(P.xp*0.4); P.xp=Math.max(0,P.xp-lost);
-    P.hp=Math.round(P.hpMax*0.6); P.streak=0;   // Caffeine stat-dock retired with Phase 1; returns as a gear-patch downside in Phase 5
-    celebrate("🔥 BURNOUT","#ff2b5e"); flashHp();
-    toast("🔥 BURNOUT","Mental-health day forced · -"+lost+" XP","#ff2b5e","progress");
-    termLine("t-bad","☠","BURNOUT — sanity hit zero. -"+lost+" XP, coffee break enforced"); save();
+  // Rogue modes (doc §3). Phase 2 ships one; Phase 4 adds rows, escalation and Countermeasures — never branches here.
+  // tick(a,dt,w) runs at the top of tickWorker for every rogue agent (benched too), so it pauses with the boss key
+  // and never runs offline (offlineEarnings skips rogues).
+  const ROGUE_MODES={
+    embezzler:{lbl:"Embezzler", em:"💸", desc:"siphons a slice of your bank every second",
+      tick(a,dt,w){ const take=Math.min(P.credits,P.credits*BAL.rogueSteal*dt); if(take<=0) return;
+        P.credits-=take; a.rogue.stolen+=take; P.stolen+=take;
+        if(w){ w.dripT=(w.dripT||0)+dt; if(w.dripT>=10){ w.dripT=0; termLine("t-bad","💸",agentLabel(a)+" embezzled "+money(a.rogue.stolen)+" so far — Kill -9 for "+money(kill9Cost(a))); } } }},
+  };
+  function goRogue(a){
+    P.rogues++; a.rogue={mode:"embezzler",t:0,stolen:0}; a.sanity=0; P.streak=0;
+    const w=WK[P.agents.indexOf(a)]; if(w){ if(w.task&&w.task.bounty) clearTaskLook(w); w.task=null; w.dripT=0; w.el.classList.remove("win","fail","crit"); w.tk.textContent="gone rogue"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; }
+    const M=ROGUE_MODES[a.rogue.mode], nm=agentLabel(a);
+    celebrate("☠ "+nm.toUpperCase()+" WENT ROGUE","#ff2b5e"); if(a===agentZero()) flashHp();
+    toast("☠ Rogue — "+M.lbl, nm+" "+M.desc+" · Kill -9 for "+money(kill9Cost(a))+" or wait it out", "#ff2b5e","progress");
+    termLine("t-bad","☠",nm+" went ROGUE ("+M.em+" "+M.lbl+") — sanity hit zero");
+    renderAgentSheets(); renderQueues(); save();
+  }
+  function recoverRogue(a,how){
+    const st=a.rogue.stolen; a.rogue=null;
+    termLine("t-info","☕",agentLabel(a)+" "+how+(st>0?" — embezzled "+money(st)+" in total":""));
+    renderAgentSheets(); renderQueues(); save();
+  }
+  function kill9(a){
+    if(!a.rogue) return; const c=kill9Cost(a);
+    if(P.credits<c){ toast("💸 Can't afford Kill -9","need "+money(c)+" — or wait for sanity to recover","#ffb000","system"); return; }
+    P.credits-=c; if(!a.m) agentMult(a); a.sanity=a.m.sanityMax*0.5; a.immune=BAL.rogueImmune;
+    recoverRogue(a,"was killed -9 and restarted at half sanity ("+BAL.rogueImmune+"s immunity) for "+money(c));
+    toast("⚡ Kill -9",agentLabel(a)+" restarted · "+money(c),"#00e5ff","system"); renderShop();
   }
 
   /* ============ workers ============ */
-  const WK=[];
+  const WK=[];   // one worker per P.agents entry, same index. Slot 0 = "you" (manual) → terminal pane; 1+ → agents app
   function buildWorkers(){
-    // slot 0 = "you" (manual mash surface) → lives in the terminal app; slots 1+ = auto agents → agents app
     const autoList=$("#agentList"), manualWrap=$("#manualWrap");
     autoList.innerHTML=""; if(manualWrap) manualWrap.innerHTML=""; WK.length=0;
-    const n=MULT.workers, nAuto=n-1;
+    const nAuto=P.agents.length-1;
     autoList.style.gridTemplateRows=`repeat(${Math.max(1,nAuto)},1fr)`;
-    const autos=AGENTS.slice().sort(()=>Math.random()-.5);
-    for(let i=0;i<n;i++){
+    P.agents.forEach((a,i)=>{
       const manual=(i===0);
-      const a=manual?{name:"you",color:"#eafff0"}:autos[(i-1)%autos.length];
       const el=document.createElement("div"); el.className="agent"+(manual?" manual":"");
       el.innerHTML=`<div class="ah"><span class="nm" style="color:${a.color};text-shadow:0 0 8px ${a.color}"></span>
         <span class="tk"></span><span class="sTag"></span><span class="diff"></span></div>
+        <div class="sheet">${AGENT_STATS.map(s=>`<span class="ss" title="${s.expl}" style="color:${s.color}">${s.em}<b data-stat="${s.id}">0</b></span>`).join("")}
+          <span class="sanity" title="sanity"><i></i></span><span class="qn"></span><button class="buy sel" data-act="select" data-agent="${i}">Select</button><button class="buy k9" data-act="kill9" data-agent="${i}"></button></div>
         <div class="code"></div><div class="prog"><i></i></div>`;
       (manual&&manualWrap?manualWrap:autoList).appendChild(el);
-      const w={a,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
+      const w={i,manual,el,nm:el.querySelector(".nm"),tk:el.querySelector(".tk"),sTag:el.querySelector(".sTag"),
         dEl:el.querySelector(".diff"),code:el.querySelector(".code"),prog:el.querySelector(".prog i"),
+        sheet:el.querySelector(".sheet"),stat:Object.fromEntries(ASTAT_IDS.map(id=>[id,el.querySelector(`[data-stat="${id}"]`)])),
+        san:el.querySelector(".sanity i"),qn:el.querySelector(".qn"),sel:el.querySelector(".sel"),k9:el.querySelector(".k9"),
         task:null,elapsed:0,cooldown:0,flashT:0,buf:pick(SNIPPETS)+"\n\n",pos:0,shown:"",acc:0};
+      w.sel.addEventListener("click",e=>{e.stopPropagation();selectAgent(i);});
+      w.k9.addEventListener("click",e=>{e.stopPropagation();kill9(a);});
       w.nm.textContent=manual?"you ⌨️":a.name; WK.push(w);
-    }
+    });
+    renderAgentSheets();
   }
+  // The Equipment / Inventory / IDE apps all act on one agent at a time — the one picked here.
+  function selectedAgent(){ return P.agents[clamp(P.selectedAgent|0,0,P.agents.length-1)]; }
+  function selectAgent(i){ P.selectedAgent=clamp(i,0,P.agents.length-1); renderAgentSheets(); renderShop(); save(); }
+  function renderAgentSheets(){
+    for(const w of WK){ const a=workerAgent(w); if(!a) continue; if(!a.m) agentMult(a);
+      for(const id of ASTAT_IDS) w.stat[id].textContent=Math.round(a.m.st[id]);
+      w.san.style.width=clamp(a.sanity/a.m.sanityMax*100,0,100)+"%"; w.san.parentElement.classList.toggle("low",a.sanity/a.m.sanityMax<0.28);
+      const sq=seatedQueue(a); w.qn.textContent=(sq?(P.unlocked.queues?queueTier(sq).name:"on the queue"):"Bench")+(a.rogue?" · ☠ ROGUE":"");   // spec §1: the Backlog is nameless until the Queues app is owned
+      w.el.classList.toggle("rogue",!!a.rogue);
+      w.k9.style.display=a.rogue?"":"none"; if(a.rogue){ const k=kill9Cost(a); w.k9.textContent="Kill -9 "+money(k); w.k9.disabled=P.credits<k; }
+      w.sel.classList.toggle("on",w.i===P.selectedAgent); w.sel.textContent=w.i===P.selectedAgent?"Selected":"Select"; }
+  }
+  const workerAgent=w=>P.agents[w.i];
+  const workerQueue=w=>seatedQueue(workerAgent(w));
   function assignTask(w){
-    const pool=TASKS.filter(t=>P.unlockedStats.includes(t[1]));
-    // crafting update Phase 6 — active missions favoring a stat triple that stat's tasks in the
-    // pick pool, so leaning into a mission's stat is worth it without making other tasks impossible
-    const favored=new Set((P.missions||[]).filter(m=>!m.done).map(m=>MISSION_DEF[m.defId].favorStat).filter(Boolean));
-    let weighted=pool;
-    if(favored.size){ weighted=[]; for(const t of pool){ weighted.push(t); if(favored.has(t[1])) weighted.push(t,t); } }
-    const [name,stat]=pick(weighted.length?weighted:TASKS);
-    const diff=5+P.stage*1.35+rand(0,4);
-    const sv=P.stats[stat]+GEAR.stat[stat];   // patches (Phase 5) add flat stat bonus on top of the base value
-    const speed=(1+sv/22+(P.stats.focus+GEAR.stat.focus)/60)*MULT.speed;    // relevant stat + Focus + hardware → faster
-    const dur=clamp((5.5+diff*0.35)/speed,1.1,16);
-    w.task={name,stat,diff,dur}; w.elapsed=0; w.flashT=0;
-    w.el.classList.remove("win","fail","crit");
-    const s=STAT[stat];
-    w.tk.textContent=name; w.sTag.textContent=s.em+" "+s.lbl; w.sTag.style.color=s.color;
-    w.prog.style.background=`linear-gradient(90deg,${s.color},#fff2)`;
-    const stars=clamp(Math.round(diff/6),1,5); w.dEl.textContent="★".repeat(stars);
-    termLine("t-dim","→",w.a.name+" started ‹"+name+"›");
+    const a=workerAgent(w), q=workerQueue(w);
+    if(!q){ w.task=null; w.tk.textContent="on the bench"; w.sTag.textContent=""; w.dEl.textContent=""; w.prog.style.width="0%"; return; }
+    const b=(q.bounty&&!bountyWorked(q))?q.bounty:null;
+    const D=b?b.D:queueD(q);
+    const name=b?b.name:pick(TASKS)[0];
+    if(!a.m) agentMult(a);
+    const dur=a.m.dur(D,q);
+    w.task={name,D,dur,q,bounty:!!b}; w.elapsed=0; w.flashT=0;
+    w.el.classList.remove("win","fail","crit"); w.el.classList.toggle("bounty",!!b);
+    const t=queueTier(q);
+    w.tk.textContent=name; w.sTag.textContent=b?"⏱ BOUNTY":t.em+" "+t.name; w.sTag.style.color=b?"#ffb000":"#00e5ff";
+    w.prog.style.background=b?"linear-gradient(90deg,#ffb000,#fff2)":"linear-gradient(90deg,#00e5ff,#fff2)";
+    const stars=clamp(Math.round(a.m.chance(D)*5),1,5); w.dEl.textContent="★".repeat(stars); w.dEl.title=Math.round(a.m.chance(D)*100)+"% success";
+    termLine("t-dim","→",a.name+" started ‹"+name+"›");
   }
   function resolveTask(w){
-    const {name,stat,diff}=w.task, sv=P.stats[stat]+GEAR.stat[stat], s=STAT[stat];
-    const chance=(P.intro&&w.manual)?1:clamp(0.58+(sv-diff)*0.045+Math.min(0.15,P.streak*0.01)+MULT.success,0.15,0.98);
+    const a=workerAgent(w), {name,D,q,bounty}=w.task;
+    if(!a.m) agentMult(a);
+    const chance=(P.intro&&w.manual)?1:a.m.chance(D);
+    const drainWork=D*BAL.drainC*BAL.drainWork;
     if(Math.random()<chance){
-      const crit=Math.random()<MULT.crit?3:1; if(crit>1)P.crits++;
-      const xp=Math.round((diff+6)*(1+P.stage*0.08)*MULT.xp*crit);
-      const cr=Math.round((diff*0.6+4)*MULT.credit*crit);
-      addXp(xp); P.credits+=cr; P.earned+=cr; statUp(stat,rand(0.4,1.0)); checkReveal();
-      P.plot+=diff*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
-      P.tasksDone++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
-      if(stat==="debug")P.bugsFixed++;
-      P.hp=clamp(P.hp+2,0,P.hpMax);
+      const crit=Math.random()<0.05?3:1; if(crit>1)P.crits++;
+      const live=bounty&&q.bounty;   // the bounty may have expired mid-ticket — then this pays as an ordinary ticket
+      const cr=Math.round((live?q.bounty.pay*a.m.mult:a.m.payout(D,q))*crit), xp=Math.round((D+6)*crit);
+      addXp(xp); P.credits+=cr; P.earned+=cr; checkReveal();
+      P.plot+=D*0.5+4; P.streak++; if(P.streak>P.bestStreak)P.bestStreak=P.streak;
+      P.tasksDone++; a.done++; const locBefore=P.loc; P.loc+=Math.round(rand(20,120)); if(Math.random()<.3)P.deploys++;
+      a.sanity=clamp(a.sanity-drainWork,a.immune>0?1:0,a.m.sanityMax);
       w.el.classList.add(crit>1?"crit":"win"); w.flashT=0.6; spawnArc(crit>1?"#ffb000":"#39ff14");
-      termLine("t-ok","✓",w.a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+xp+"xp  +"+money(cr));
-      if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+xp+" XP · +"+money(cr)+" · "+s.em+" "+s.lbl,crit>1?"#ffb000":s.color,"grind");
-      if(Math.random()<.16){ if(Math.random()<.7) dropHardware(); else addLoot(); }
-      grantMaterials(stat,locBefore);
-      progressMissions(stat);
-      if(P.streak>0 && P.streak%25===0){ celebrate(P.streak+"× COMBO 🔥","#ff2bd6"); }
+      termLine("t-ok","✓",a.name+(crit>1?" CRIT ":" ")+"cleared ‹"+name+"›  +"+money(cr));
+      if(Math.random()<.8) toast((crit>1?"💥 CRIT · ":"✓ ")+name,"+"+money(cr)+" · "+queueTier(q).name,crit>1?"#ffb000":"#00e5ff","grind");
+      if(Math.random()<BAL.drop) dropHardware(a,q);
+      grantMaterials(q,locBefore);
+      if(live) clearBounty(a,q);
     } else {
-      const dmg=Math.max(1,Math.round(diff*rand(0.4,0.9)*(1-MULT.resist)));   // Rizz damage-reduction retired with Phase 1; returned as MULT.resist (a gear patch, Phase 5)
-      P.hp-=dmg; P.streak=0; P.tasksFailed++; addXp(Math.round((diff+6)*0.2*MULT.xp));
-      w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); flashHp();
-      termLine("t-bad","✗",w.a.name+" FAILED ‹"+name+"›  -"+dmg+" HP  (streak reset)");
-      toast("💥 "+name+" failed","-"+dmg+" HP · "+s.lbl+" too low","#ff2b5e","grind");
-      if(P.hp<=0) burnout();
+      const dmg=drainWork+D*BAL.drainC*BAL.drainFail;   // success drains 0.1·D·c, failure (0.1+3)·D·c → expected per ticket = D·c·(0.1+3·(1−chance)), exactly the sim's
+      a.sanity=clamp(a.sanity-dmg,a.immune>0?1:0,a.m.sanityMax); P.streak=0; P.tasksFailed++; a.failed++; addXp(Math.round((D+6)*0.2));
+      w.el.classList.add("fail"); w.flashT=0.6; spawnArc("#ff2b5e"); if(w.manual) flashHp();
+      termLine("t-bad","✗",a.name+" FAILED ‹"+name+"›  -"+Math.round(dmg)+" sanity  (streak reset)");
+      toast("💥 "+name+" failed","-"+Math.round(dmg)+" sanity · "+a.name+"'s Quality too low for "+queueTier(q).name,"#ff2b5e","grind");
+      if(bounty&&q.bounty&&(!w.manual||!bountyWorked(q))) expireBounty(q,a.name+" failed it");
+      if(a.sanity<=0) goRogue(a);
     }
-    w.task=null; w.cooldown=rand(0.4,1.0);
+    w.task=null; w.cooldown=rand(0.4,1.0); w.el.classList.remove("bounty");
   }
-  function revealChars(w,n){   // append n characters of fake code to a worker's buffer + re-render
-    while(n-->0){
-      if(w.pos>=w.buf.length){ w.buf=pick(SNIPPETS)+"\n\n"; w.pos=0; }
-      w.shown+=w.buf[w.pos++];
-    }
+  function revealChars(w,n){   // unchanged
+    while(n-->0){ if(w.pos>=w.buf.length){ w.buf=pick(SNIPPETS)+"\n\n"; w.pos=0; } w.shown+=w.buf[w.pos++]; }
     let lines=w.shown.split("\n"); if(lines.length>9){ lines=lines.slice(-9); w.shown=lines.join("\n"); }
     w.code.innerHTML=lines.map(hl).join("<br>");
   }
   function tickWorker(w,dt){
-    if(!w.manual){   // auto agents "type" on their own; the manual worker's code appears via real input (mashCode)…
-      w.acc+=dt*(12+surge*24); let n=w.acc|0; w.acc-=n;
-      if(n>0) revealChars(w,n);
-    } else if(MULT.assist>0){   // …and Autocomplete Assist passively types it too, at its trickle rate
-      w.acc+=dt*(12+surge*24)*MULT.assist; let n=w.acc|0; w.acc-=n;
-      if(n>0) revealChars(w,n);
-    }
+    const a=workerAgent(w); if(!a.m) agentMult(a);
+    if(a.immune>0) a.immune=Math.max(0,a.immune-dt);
+    // Regen: rogue agents recover at BAL.rogueRegen × normal (applied here, not in agentMult, so the transitions
+    // need no recompute()). While immune (just Kill -9'd) sanity can't touch zero.
+    a.sanity=clamp(a.sanity+dt*a.m.regen*(a.rogue?BAL.rogueRegen:1),a.immune>0?1:0,a.m.sanityMax);
+    if(a.rogue){ a.rogue.t+=dt; ROGUE_MODES[a.rogue.mode].tick(a,dt,w);
+      if(a.sanity>=a.m.sanityMax*0.5) recoverRogue(a,"is back — recovered on its own"); else return; }
+    if(a.q<0){ if(w.task||w.tk.textContent!=="on the bench") assignTask(w); return; }   // Bench: no tickets, tile says so
+    if(!w.manual){ w.acc+=dt*(12+surge*6); let n=w.acc|0; w.acc-=n; if(n>0) revealChars(w,n); }
     if(w.flashT>0){ w.flashT-=dt; if(w.flashT<=0) w.el.classList.remove("win","fail","crit"); }
-    if(!w.task){
-      w.cooldown-=dt*(1+surge*.5);
-      if(w.cooldown<=0) assignTask(w);
-      return;
-    }
-    if(!w.manual) w.elapsed+=dt*(1+surge*1.1);   // auto agents advance themselves
-    else w.elapsed+=dt*MULT.assist;               // "you" still need to type — Autocomplete Assist just adds a trickle
+    if(!w.task){ w.cooldown-=dt; if(w.cooldown<=0) assignTask(w); return; }
+    if(!w.manual) w.elapsed+=dt*(1+BAL.surgeSpeed*(surge-1));   // typing is a small team-wide boost, not a 4× lever
     w.prog.style.width=clamp(w.elapsed/w.task.dur*100,0,100)+"%";
     if(w.elapsed>=w.task.dur) resolveTask(w);
   }
-  function mashCode(){   // typing/tapping is the ONLY thing that reveals a manual worker's code or advances its task
-    for(const w of WK){ if(w.manual){ revealChars(w,(2+Math.random()*3)|0);
-      if(w.task){ w.elapsed+=w.task.dur*0.09; if(w.elapsed>=w.task.dur) resolveTask(w); } } }
+  function mashCode(){   // typing is the ONLY thing that advances agent zero's ticket
+    const w=WK[0]; if(!w) return; revealChars(w,(2+Math.random()*3)|0);
+    const a=workerAgent(w); if(w.task && !a.rogue && a.q>=0){ w.elapsed+=w.task.dur*BAL.typeProg; if(w.elapsed>=w.task.dur) resolveTask(w); }
   }
 
   /* ============ counters + HUD update ============ */
   let saveTimer=0,autoBuyT=0,shopRefresh=0,storeRefresh=0,achTimer=0;
   function tickProgress(dt){
-    P.hp=clamp(P.hp+dt*MULT.regen,0,P.hpMax);   // Espresso Machine → recovery; Caffeine-stat bonus returns as a gear patch in Phase 5
     const passiveInc=MULT.passive*dt; P.credits+=passiveInc; P.earned+=passiveInc;   // passive income (monitors) — counts toward earned so Telemetry's credits/sec includes it
     if(P.credits>P.maxCredits) P.maxCredits=P.credits;   // peak wealth — drives shop-item reveal, never decreases on spend
     P.playSecs+=dt;
+    tickBounties(dt);
     let g=0; while(P.plot>=P.plotNeed && g++<4) stageAdvance();
     // automation upgrades
-    if(P.up.autoAlloc && P.sp>0){ while(P.sp>0){ let lo=STAT_IDS[0]; for(const id of STAT_IDS) if(P.stats[id]<P.stats[lo])lo=id; statUp(lo,1); P.sp--; } }
     if(P.up.autoBuy){ autoBuyT+=dt; if(autoBuyT>=1.2){ autoBuyT=0; autoBuyCheapest(); } }
     // onboarding nudges (once each)
-    if(!P.seenTips.sp && P.sp>0){ P.seenTips.sp=true;
-      termLine("t-info","✦","you earned a skill point — spend it with the + buttons on a stat (higher stats clear tasks faster & more reliably)");
-      toast("✦ You earned a skill point!","Spend it on a stat with the + buttons — higher stats clear tasks faster & more reliably.","#00e5ff","system"); }
     if(!P.seenTips.shop && anyAffordable()){ P.seenTips.shop=true;
       termLine("t-info","🛒","you can afford an upgrade — open the Store to spend credits and speed everything up");
       toast("🛒 You can afford an upgrade!","Open the Store to spend credits and speed everything up.","#ffb000","system"); }
@@ -2702,10 +2723,10 @@ notify("#general", "10x-ing that shit 🔥");`,
     UI.s_credits.textContent=money(P.credits);
     UI.s_task.textContent=fmt(P.tasksDone);
     UI.s_streak.textContent=P.streak;
-    UI.s_loot.textContent=fmt(P.loot);
     const t=P.playSecs; const hh=String((t/3600|0)).padStart(2,"0"),mm=String((t/60%60|0)).padStart(2,"0"),ss=String((t%60|0)).padStart(2,"0");
     UI.s_up.textContent=`${hh}:${mm}:${ss}`;
-    const hpPct=clamp(P.hp/P.hpMax*100,0,100);
+    const z=agentZero(); if(!z.m) agentMult(z);
+    const hpPct=clamp(z.sanity/z.m.sanityMax*100,0,100);
     UI.s_hp.textContent=Math.round(hpPct);
     UI.hpfill.style.width=hpPct+"%";
     hpbar.classList.toggle("low",hpPct<28);
@@ -2715,20 +2736,18 @@ notify("#general", "10x-ing that shit 🔥");`,
     HUD.xppct.textContent=Math.floor(clamp(P.xp/P.xpNeed*100,0,100))+"%";
     HUD.plot.style.width=clamp(P.plot/P.plotNeed*100,0,100).toFixed(1)+"%";
     HUD.plotpct.textContent=Math.floor(clamp(P.plot/P.plotNeed*100,0,100))+"%";
-    for(const id of STAT_IDS) HUD.chip[id].v.textContent=Math.floor(P.stats[id]);
-    updateSPui();
 
     UI.g_stage.textContent=P.stage+1; UI.g_streak.textContent=P.streak; UI.g_arcs.textContent=globe?globe.arcs.length:0;
     UI.agentCount.textContent=WK.filter(w=>!w.manual&&w.task).length+"/"+Math.max(0,WK.length-1)+" agents on task";
 
     // Store is an always-on app → refresh its cards on the timer; the Toolbox drawer refreshes only when open
     // Store + Toolbox apps are on-screen tiles/windows → refresh their cards on the timer
-    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); }
+    storeRefresh+=dt; if(storeRefresh>=0.2){ storeRefresh=0; renderStore(); renderToolbox(); renderAgentSheets(); renderQueues(); }
 
     saveTimer+=dt; if(saveTimer>=3){ saveTimer=0; save(); }
   }
   function cacheUI(){   // cache per-frame DOM refs once (avoids ~13 querySelector calls per frame)
-    for(const id of ["s_credits","s_sp","s_task","s_streak","s_loot","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","spStat","themeLabel","themeMenu"]) UI[id]=$("#"+id);
+    for(const id of ["s_credits","s_task","s_streak","s_up","s_hp","hpfill","g_stage","g_streak","g_arcs","agentCount","themeLabel","themeMenu"]) UI[id]=$("#"+id);
   }
 
   /* ============ canvas helpers ============ */
@@ -2810,31 +2829,18 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   // stat sheet — HTML horizontal bars with real names + per-stat mouseover explainers (built once,
   // widths/values updated each tick). Replaces the old unlabeled canvas bars.
-  const STAT_EXPL={
-    coding:"Coding — your raw output. Powers coding tasks (writing code, shipping, git wrangling). Higher = faster clears and better odds on those tasks.",
-    focus:"Focus — deep work. Powers focus tasks (entering flow, inbox zero, ignoring pings).",
-    debug:"Debugging — bug-squashing. Powers debug tasks (race conditions, memory leaks, 3am prod fires).",
-    systems:"Systems — architecture & ops. Powers systems tasks (design, migrations, zero-downtime deploys).",
-    algo:"Algorithms — the hard CS. Powers algorithm tasks (complexity, data structures, optimization).",
-  };
   let ssRowEls={};
   function buildStatSheet(){
     const wrap=$("#ssBars"); if(!wrap) return; wrap.innerHTML=""; ssRowEls={};
-    for(const s of STATS){
-      const row=document.createElement("div"); row.className="ssRow"; row.title=STAT_EXPL[s.id]||s.lbl;
-      row.innerHTML=`<span class="ssn" style="color:${s.color}">${s.lbl}</span>`+
-        `<span class="ssbar"><i style="background:${s.color};box-shadow:0 0 6px ${s.color}"></i></span><span class="ssv">0</span>`;
+    for(const s of AGENT_STATS){
+      const row=document.createElement("div"); row.className="ssRow"; row.title=s.expl;
+      row.innerHTML=`<span class="ssn" style="color:${s.color}">${s.lbl}</span><span class="ssbar"><i style="background:${s.color};box-shadow:0 0 6px ${s.color}"></i></span><span class="ssv">0</span>`;
       wrap.appendChild(row); ssRowEls[s.id]={row,bar:row.querySelector("i"),v:row.querySelector(".ssv")};
     }
   }
   function renderStatSheet(){
-    const shown=STATS.filter(s=>P.unlockedStats.includes(s.id));
-    const max=Math.max(1,...shown.map(s=>P.stats[s.id]));
-    for(const s of STATS){ const el=ssRowEls[s.id]; if(!el) continue;
-      const on=P.unlockedStats.includes(s.id);
-      el.row.style.display=on?"":"none";
-      if(on){ el.bar.style.width=clamp(P.stats[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.floor(P.stats[s.id]); }
-    }
+    const z=agentZero(); if(!z.m) agentMult(z); const st=z.m.st, max=Math.max(1,...ASTAT_IDS.map(id=>st[id]));
+    for(const s of AGENT_STATS){ const el=ssRowEls[s.id]; if(!el) continue; el.bar.style.width=clamp(st[s.id]/max*100,0,100)+"%"; el.v.textContent=Math.round(st[s.id]); }
   }
   function drawSpark(){
     const {ctx,w,h}=chartCtx("cSpark");
@@ -2845,7 +2851,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   function drawGauge(dt){
     const {ctx,w,h}=chartCtx("cGauge");
-    const cx=w/2,cy=h*0.62,r=Math.min(w,h)*0.34;const val=clamp(P.hp/P.hpMax,0,1);
+    const cx=w/2,cy=h*0.62,r=Math.min(w,h)*0.34;const z=agentZero(); const val=z.m?clamp(z.sanity/z.m.sanityMax,0,1):1;
     const a0=Math.PI*0.85,a1=Math.PI*2.15;ctx.lineWidth=7;ctx.lineCap="round";
     ctx.strokeStyle="rgba(255,255,255,.06)";ctx.beginPath();ctx.arc(cx,cy,r,a0,a1);ctx.stroke();
     const a=a0+(a1-a0)*val;const col=val<0.28?"#ff2b5e":"#39ff14";
@@ -2975,11 +2981,11 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(e.key==="`"){ e.preventDefault(); toggleBoss(); return; }
     if(bossOn||helpOpen||wbOpen()||settingsOpen) return;   // don't grind behind the boss screen or a modal
     if(!P.intro && (e.key==="t"||e.key==="T")){ cycleTheme(); fadeHint(); return; }   // theme shortcut, once graduated
-    bumpSurge(0.9); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05;
+    bumpSurge(0.9); mashCode(); addXp(1);
     if(Math.random()<.3) spawnArc();
     fadeHint();
   });
-  addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()||settingsOpen) return; bumpSurge(1.2); mashCode(); addXp(1); P.plot+=0.3; for(const w of WK) if(!w.manual&&w.task) w.elapsed+=0.05; if(Math.random()<.3) spawnArc(); fadeHint(); });
+  addEventListener("click",()=>{ if(bossOn||helpOpen||wbOpen()||settingsOpen) return; bumpSurge(1.2); mashCode(); addXp(1); if(Math.random()<.3) spawnArc(); fadeHint(); });
   addEventListener("resize",()=>{ fitScale(); initMatrix(); applyLayout(); });   // rescale, re-clamp windows, flip tiling/float at the 820px breakpoint
   addEventListener("visibilitychange",()=>{ if(document.hidden) save(); });
   addEventListener("beforeunload",save);
@@ -3007,17 +3013,18 @@ notify("#general", "10x-ing that shit 🔥");`,
   function showWelcomeBack(el,gain){
     const set=(id,v)=>{ const e=$("#"+id); if(e) e.textContent=v; };
     set("wbTime",fmtDur(el)); set("wbEarned","+"+money(gain)); set("wbRate","+"+money(gain/Math.max(1,el))+"/s");
-    set("wbEff",Math.round(MULT.offlineEff*100)+"%"); set("wbBal",money(P.credits));
+    set("wbEff","50%"); set("wbBal",money(P.credits));
     const o=$("#welcomeBack"); if(o) o.classList.add("open");
   }
   function offlineEarnings(){
     if(!P.up.offline || !P.lastReal) return;
     const el=clamp((Date.now()-P.lastReal)/1000,0,8*3600);
     if(el<30) return;
-    const perSec=MULT.passive + MULT.workers*MULT.credit*0.8;   // rough idle rate
-    const gain=Math.floor(perSec*el*MULT.offlineEff);            // efficiency while away (Modem improves this)
+    let perSec=0; for(let i=1;i<P.agents.length;i++){ const a=P.agents[i]; const q=seatedQueue(a); if(a.rogue||!q) continue; if(!a.m) agentMult(a); const D=queueD(q); perSec+=a.m.chance(D)*a.m.payout(D,q)/(a.m.dur(D,q)+BAL.cooldown); }
+    const gain=Math.floor(perSec*el*0.5);   // offline runs at a flat 50% until the Modem-equivalent returns
     if(gain>0){ P.credits+=gain; P.earned+=gain;
-      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away)");
+      const idle=P.agents.slice(1).filter(a=>a.rogue||a.q<0).length;
+      termLine("t-info","🌙","offline earnings: +"+money(gain)+" ("+Math.round(el/60)+" min away"+(idle?" · "+idle+" rogue/benched sat out":"")+")");
       showWelcomeBack(el,gain);   // full "while you were away" summary modal (replaces the old toast)
     }
   }
@@ -3033,10 +3040,9 @@ notify("#general", "10x-ing that shit 🔥");`,
   // layout measured there would be double-width on a 4K screen. A restored save brings its own
   // arrangement; clampWindow() pulls anything out-of-bounds back in.
   if(!P.windows||typeof P.windows!=="object") P.windows=cloneWindows();
-  if(!P.missions||P.missions.length<3) refreshBoard();   // crafting update Phase 6 — bootstrap a fresh board (new game, or a save from before missions existed)
   recompute();
   cacheUI();
-  buildHUD(); buildWorkers(); buildShop(); buildToolbox(); buildStatSheet(); buildAchievements(); initGlobe(); initMatrix();
+  buildHUD(); buildWorkers(); buildShop(); buildQueues(); buildToolbox(); buildStatSheet(); buildAchievements(); initGlobe(); initMatrix();
   ambientTint(); setInterval(ambientTint, 5*60*1000);   // seasonal/time-of-day wash, drifts every 5 min
   tickClock(); setInterval(tickClock, 15*1000);         // taskbar clock (float mode)
   setupWindowChrome();
@@ -3048,9 +3054,8 @@ notify("#general", "10x-ing that shit 🔥");`,
   syncFocusMode();   // a reload while already fullscreen should still carry the bonus
   if(restored) offlineEarnings();
   lastEarned=P.earned;   // seed the credits/sec baseline AFTER offline earnings so they don't spike the first sample
-  WK.forEach(w=>{ assignTask(w); w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
+  WK.forEach(w=>{ assignTask(w); if(w.task) w.elapsed=w.manual?0:rand(0,w.task.dur*0.6); });
   for(let i=0;i<6;i++) spawnArc("rgba(0,229,255,.5)");
-  updateSPui();
   if(restored){ termLine("t-info","◈","save restored — Lv "+P.level+" "+titleFor()+" · "+(STAGES[P.stage]||"New Game+")+" · "+money(P.credits)); }
   else { termLine("t-info","◈","new career started — welcome, Script Kiddie"); }
   if(matchMedia("(pointer:coarse)").matches){
