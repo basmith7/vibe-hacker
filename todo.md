@@ -25,7 +25,8 @@ scheduled work. (Game speed is wanted sooner but sequenced in W5 — sequence �
   look, independent of your max tier — persisted as `themeChoice`. Old saves grandfather in whatever
   era their level used to imply, so nobody regresses. Resets to DOS on prestige, like the rest of the rig.
 - [ ] **[W6·M]** Per-era **sound**: DOS beeps, the Windows 95 startup chime, modern UI blips (mute toggle).
-- [ ] **[W6·M]** Era-appropriate fonts embedded (currently system fonts).
+- [x] **[W6·M]** Era-appropriate fonts embedded — base64 woff2 in the `#eraFonts` `<style>` block:
+      Px437 IBM VGA (DOS), W95FA (Win 3.1/95), Selawik (Win 10), Share Tech Mono (NEON), Oxanium (STARSHIP).
 - [ ] **[W6·M]** CRT curvature / boot sequence animation when the OS "upgrades".
 - [x] **[W1·S]** Seasonal / time-of-day palettes — `#ambient` overlay (`ambientTint()`, drifts every
       5 min) washes a subtle time-of-day sky glow (top) + seasonal horizon glow (bottom) over the

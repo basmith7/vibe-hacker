@@ -371,6 +371,10 @@ lock in that look forever: **click the OS name** (top-left, next to the logo) an
 menu of every look you've *ever* unlocked and switch back to it. Owning tier 4 doesn't cost you
 the ability to display tier 1's look.
 
+Each look also brings its own **era font**, built into the game so it looks the same on any machine:
+an IBM VGA text-mode face for MS-DOS, a Windows 95-style bitmap font for Windows 3.1/95, Selawik
+(a Segoe UI stand-in) for Windows 10, Share Tech Mono for NEON//OS and Oxanium for STARSHIP OS.
+
 Layered on top of whatever look you pick is a very subtle **ambient tint** that drifts with your
 local **time of day** (cool at night, warm at dawn/dusk, neutral at midday) and nudges with the
 **season** — a faint mood glow at the screen's edges, not a recolor, so your OS look stays intact.
