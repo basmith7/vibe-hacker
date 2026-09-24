@@ -107,6 +107,11 @@ reveal polish) — see its "Backlog absorbed" section.
   reason string shown when it's unavailable. `fitBench()` (a `ResizeObserver` on `#benchWrap`) sizes
   the ellipse and the centre socket in JS and flips to a stacked `.narrow` fallback under ~270px.
   Reordering the ring = reordering that table.
+- **Era fonts are base64 woff2 in a separate `<style id="eraFonts">` block** right after the main
+  `<style>`, so the ~100 KB of font data stays out of the way when you edit CSS. Themes use them via
+  `--mono` (DOS, NEON) or a `body{font-family}` override (Win 3.1/95/10, STARSHIP). Credits live in
+  that block's comment and in README's "Bundled fonts". Don't subset or edit the files: Share Tech
+  Mono has an OFL Reserved Font Name, and changing its glyphs would mean renaming it.
 - **New themed surfaces should carry the `card` class.** The per-era theme CSS is long repeated
   selector lists that include `.card`, so anything given that class gets every OS look for free
   (this is how the bench socket/orbs are themed). The catch: those rules use `!important`, so a

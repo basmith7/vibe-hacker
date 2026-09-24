@@ -62,3 +62,13 @@ runs offline by opening the file directly.
 
 Copyright © 2026 basmith7 — licensed under **AGPL-3.0** ([LICENSE](LICENSE)). Copyleft: modified versions
 you distribute *or host* must also be open-sourced under the AGPL.
+
+### Bundled fonts
+
+The era fonts are embedded (unmodified) in `index.html` and keep their own licenses:
+
+- **Px437 IBM VGA 8x16** — VileR, [The Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- **W95FA** — Alina Sava ([FontsArena](https://fontsarena.com/w95fa-by-alina-sava/)), [SIL OFL 1.1](https://openfontlicense.org/)
+- **Selawik** — [Microsoft](https://github.com/microsoft/Selawik), SIL OFL 1.1
+- **Share Tech Mono** — Carrois Type Design, SIL OFL 1.1 (Reserved Font Name "Share")
+- **Oxanium** — [The Oxanium Project Authors](https://github.com/sevmeyer/oxanium), SIL OFL 1.1
