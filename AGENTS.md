@@ -14,61 +14,34 @@ no bundler, no `npm install`.
 
 | File | What it's for |
 |---|---|
-| `index.html` | The entire game. Single `<script>` IIFE, ~2,850 lines. |
+| `index.html` | The entire game. Single `<script>` IIFE. |
 | `README.md` | Player-facing project overview (what the game is, controls, license). |
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
-| `todo.md` | Standing backlog of future ideas (formalized, but not commitments). Root, because it's the primary agent-facing worklist. |
-| `docs/ideas.md` | **Staging inbox** — raw ideas before they're formalized. Two sections with a specific workflow; see "Idea-intake workflow" below. |
 | `docs/agents-and-queues.md` | **The active rewrite** — the phased design+delivery doc for the Agents & Queues restructure being built on branch `agents-and-queues`. Its `## Status` line and Phase checkboxes are the source of truth for where to pick up. |
 | `tools/` | Node harnesses: `smoke.mjs` (headless-Chrome scenarios — the verification entry point), `aq-sim.mjs` (balance model + `--probe`), `validate-rate.mjs` (live game vs. model), `balance-sim.mjs` (the old economy on `main`). |
-| `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
-| `docs/window-manager.md` | An **active, in-progress** phased design+delivery doc (same format as `docs/crafting-update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system. Note: the design has since shifted so the moveable-window desktop is an *earned "Windows 3.1" upgrade*, with a tmux-style tiled terminal as the pre-upgrade UI — check its `## Status` line and top sections before assuming anything about the current UI's structure. |
+| `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc — a historical record now, not an active plan. Its own `## Status` line says so. |
+| `docs/window-manager.md` | An **in-progress** phased design+delivery doc (Phases 1–4 shipped, Phase 5 next — check its `## Status` line) for the UI progression: tmux-style tiled terminal first, then a draggable/minimizable window desktop earned with the "Windows 3.1" OS tier. |
 
-Design docs and the idea inbox live under `docs/`; player-facing docs (`README.md`, `guide.md`) and
-the primary worklist (`todo.md`) stay in root. Only `index.html` deploys, so file layout is purely
+Design docs live under `docs/`; player-facing docs (`README.md`, `guide.md`) stay in root. Work
+items (the backlog and new ideas) are tickets on the agent board (`vibe-hacker/T-n`). Only `index.html` deploys, so file layout is purely
 for navigation.
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
 should update `guide.md`/`README.md` in the same piece of work, not as a separate pass later.
 
-## Idea-intake workflow
+## Idea intake
 
-Ideas flow through `docs/ideas.md` before becoming real work. It has two sections, and the
-distinction is about **who acts**, not just how mature the idea is:
+New ideas are tickets on the agent board. Small ideas stay a ticket; a large or multi-phase one
+gets its own phased design doc under `docs/` (like `window-manager.md`), linked from its ticket.
 
-- **🌱 Still planning** — the *user's* thinking space. You may add input as indented sub-bullets
-  (questions, tradeoffs, what the code already does), but do **not** action, formalize, or move these.
-- **📥 Ready** — the user has blessed these; they're yours to route out. Routing means: small idea →
-  a line in `todo.md`; large/multi-phase idea → its own phased design doc under `docs/` (like
-  `window-manager.md`). **Delete each item from `ideas.md` once routed** — that file is a staging
-  area, not a second backlog.
+## Current state
 
-So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → `todo.md` **or** a new `docs/*.md` design doc.
-
-## Current state (as of the last major work)
-
-**Active work: the Agents & Queues rewrite, on branch `agents-and-queues` — `docs/agents-and-queues.md`
-is the spec and the source of truth for where to pick up.** It restructures the game around two systems:
-a **Desktop** (your machine — the OS ladder, apps, queues and their seats) and **Agents** (a roster where
-every agent, including you, has the same sheet: three stats, four gear slots, its own inventory and
-sanity bar, and **no levels** — item level is the only progression axis). **Phases 1 and 2 are shipped on
-that branch**: Phase 1 brought `P.agents[]`/`P.queues[]`, the per-agent worker loop on the Backlog queue,
-hires and Backlog seats in the Store, per-agent Equipment/Inventory/IDE, drops at the queue's ilvl band,
-and the removal of the old stat/skill-point system, Machine and AI Model ladders, global 8-slot rig,
-Toolbox roll, Mission Board and Legendaries; Phase 2 added queues as Store purchases generated from
-`QUEUE_TIERS`, the Queues app (boards, chips, click-picker + drag seating through `seatAgent()`, the Bench
-at `a.q = -1`), and rogue agents (`ROGUE_MODES`, Embezzler, Kill -9 with immunity); Phase 3 added
-**Configs** (`slot:"config"` items, one mod patch per lever, 2/3 sockets per board, `queueMods(q)`
-derived from `q.configs` and read per ticket) and **bounties** (timed tickets that spawn on staffed
-boards, picked up by the next free automatic agent, paying credits + a materials/gear/Config reward),
-and rebalanced ordinary tickets down to Commits-only so bounties are the crafting faucet. **Phases 1–3
-are shipped on that branch. Phase 4 (Automation, rogue types, Red Team, docs pass) is next.**
-
-**`main` still runs the previous game** and auto-deploys, so this branch merges only when the rewrite is
-playable end to end. Two earlier, fully-shipped plans describe what's on `main` and what Phase 1 replaced:
-`docs/crafting-update.md` (the 7-phase itemization overhaul) and `docs/window-manager.md` (the terminal →
-tiled-panes → floating-windows UI progression; Phases 1–4 shipped, Phase 5 next). The window-manager work
-is orthogonal to the rewrite and still applies.
+The Agents & Queues rewrite restructures the game around a **Desktop** (your machine — OS ladder, apps,
+queues and their seats) and **Agents** (a roster where every agent, including you, has the same sheet:
+three stats, four gear slots, inventory, sanity, no levels). Phases 1–3 are shipped on branch
+`agents-and-queues`; Phase 4 (Automation, rogue types, Red Team, docs pass) is next — see
+`docs/agents-and-queues.md` `## Status`. `main` still runs the old game and auto-deploys, so the branch
+merges only when the rewrite is playable end to end.
 
 ## Architecture inside `index.html`
 
@@ -77,8 +50,8 @@ is orthogonal to the rewrite and still applies.
   persisted field just means adding it to both `defaults()` and `PERSIST` — if a save doesn't
   have that key, `P` simply keeps whatever `defaults()` set for it, since `loadState()` only
   overwrites keys that are present in the loaded JSON.
-- **No save migrations — ever.** (User decision, 2026-09-14: the player base is the user plus
-  friends, so old saves are simply invalidated.) `SAVE_VER` is strict: a save whose `ver` doesn't
+- **No save migrations.** The players are Brian and friends, so old saves are simply invalidated.
+  `SAVE_VER` is strict: a save whose `ver` doesn't
   match boots into the **Guru Meditation** easter-egg screen (`guruMeditation()`, Amiga-style red
   box) and is wiped on click. So whenever a change transforms an existing field's *shape* (not just
   adds a new one), bump `SAVE_VER` and move on — don't write grandfather/backfill code. The old
@@ -155,6 +128,11 @@ is orthogonal to the rewrite and still applies.
   reason string shown when it's unavailable. `fitBench()` (a `ResizeObserver` on `#benchWrap`) sizes
   the ellipse and the centre socket in JS and flips to a stacked `.narrow` fallback under ~270px.
   Reordering the ring = reordering that table.
+- **Era fonts are base64 woff2 in a separate `<style id="eraFonts">` block** right after the main
+  `<style>`, so the ~100 KB of font data stays out of the way when you edit CSS. Themes use them via
+  `--mono` (DOS, NEON) or a `body{font-family}` override (Win 3.1/95/10, STARSHIP). Credits live in
+  that block's comment and in README's "Bundled fonts". Don't subset or edit the files: Share Tech
+  Mono has an OFL Reserved Font Name, and changing its glyphs would mean renaming it.
 - **New themed surfaces should carry the `card` class.** The per-era theme CSS is long repeated
   selector lists that include `.card`, so anything given that class gets every OS look for free
   (this is how the bench socket/orbs are themed). The catch: those rules use `!important`, so a
@@ -166,10 +144,8 @@ There are no unit tests, but there are three Node harnesses in `tools/` — use 
 new throwaway script unless none of them fits:
 
 - **`tools/smoke.mjs` is the verification entry point.** `node tools/smoke.mjs <scenario>` drives a real
-  headless Chrome and prints `PASS`/`FAIL`. Current scenarios (17): `boots stateShape loopEarns
-  storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue
-  offline configs faucets bounty`. Run the whole set before calling a change done (about 15 minutes):
-  `for s in boots stateShape loopEarns storeHire seatGate noOldSystems perAgentGear queuesApp buyQueue seatAgent dragSeat bench rogue offline configs faucets bounty; do node tools/smoke.mjs $s || break; done`
+  headless Chrome and prints `PASS`/`FAIL`. Run every scenario in `SCENARIOS` (tools/smoke.mjs, about
+  15 min) before calling a change done.
   Add a scenario rather than weakening one. It also cleans up its own Chrome profile scratch dirs
   (`rmSync` on the `mkdtemp`'d dir in `done()`, skipped only under `--keep`) — don't reintroduce a leak
   there.
@@ -218,25 +194,17 @@ All of them use the same CDP recipe, which is also what to follow for an ad-hoc 
 
 ## Git workflow
 
-- Branch per feature/phase (e.g. `phase7-depth-polish`), full verify pass on the branch, merge
-  `--no-ff` into `main`, delete the branch, push. Small, low-risk, already-double-verified cleanups
-  (e.g. a pure dedup with no behavior change) have been committed straight to `main` as an
-  acknowledged exception — not the default.
-- Never commit unless the user asks. Detailed commit messages, written for someone reading `git log`
-  later with zero other context.
+Branch per feature/phase; full verify pass before merging to `main` (it auto-deploys). Detailed
+commit messages for someone reading `git log` cold.
 
 ## Known, deliberate simplifications (not bugs)
 
 - OS-locked Store cards still *reveal* on the normal 50%-saved rule and just show a 🔒 button, so a
   player can see a thing they can't buy yet. Intentional: it's the roadmap. The Equipment app does the
   same for locked slots.
-
-- Legendary Build items aren't patch-locked — Commit/Hotfix/Refactor/Revert all still work on them,
-  so a Reverted Legendary keeps its unique name with 0 patches. Accepted tradeoff, not an oversight.
 - The DOS theme's `:root[data-theme="dos"] .card .buy{...!important}` CSS forces *all* `.card .buy`
   buttons to the same bright-green look, including disabled ones — so disabled buttons don't look
-  visually dimmed under that theme specifically. Pre-existing, tracked under `todo.md`'s "DRY the
-  theme CSS" item.
+  visually dimmed under that theme specifically. Pre-existing; part of the theme-CSS DRY work.
 - Decommissioning gear refunds credits + a flat material amount regardless of rarity — rarity isn't
   factored into the refund. Reasonable simplification (patches are the point of good gear, not
   resale value), not a missed feature.
