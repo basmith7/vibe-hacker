@@ -23,7 +23,7 @@ no bundler, no `npm install`.
 | `docs/window-manager.md` | An **in-progress** phased design+delivery doc (Phases 1–4 shipped, Phase 5 next — check its `## Status` line) for the UI progression: tmux-style tiled terminal first, then a draggable/minimizable window desktop earned with the "Windows 3.1" OS tier. |
 
 Design docs live under `docs/`; player-facing docs (`README.md`, `guide.md`) stay in root. Work
-items (the backlog and new ideas) are tickets on the agent board (`vibe-hacker/T-n`). Only `index.html` deploys, so file layout is purely
+items (the backlog and new ideas) are GitHub Issues on `basmith7/vibe-hacker`. Only `index.html` deploys, so file layout is purely
 for navigation.
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
@@ -31,8 +31,8 @@ should update `guide.md`/`README.md` in the same piece of work, not as a separat
 
 ## Idea intake
 
-New ideas are tickets on the agent board. Small ideas stay a ticket; a large or multi-phase one
-gets its own phased design doc under `docs/` (like `window-manager.md`), linked from its ticket.
+New ideas are GitHub Issues. Small ideas stay an issue; a large or multi-phase one gets its own
+phased design doc under `docs/` (like `window-manager.md`), linked from its issue.
 
 ## Current state
 
