@@ -17,13 +17,13 @@ no bundler, no `npm install`.
 | `index.html` | The entire game. Single `<script>` IIFE, ~2,850 lines. |
 | `README.md` | Player-facing project overview (what the game is, controls, license). |
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
-| `todo.md` | Standing backlog of future ideas (formalized, but not commitments). Root, because it's the primary agent-facing worklist. |
+| `todo.md` | Legacy idea list with the shipped-item history. Not the live backlog: work items are GitHub Issues on `basmith7/vibe-hacker` (`gh issue list -R basmith7/vibe-hacker`). |
 | `docs/ideas.md` | **Staging inbox** — raw ideas before they're formalized. Two sections with a specific workflow; see "Idea-intake workflow" below. |
 | `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
 | `docs/window-manager.md` | An **active, in-progress** phased design+delivery doc (same format as `docs/crafting-update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system. Note: the design has since shifted so the moveable-window desktop is an *earned "Windows 3.1" upgrade*, with a tmux-style tiled terminal as the pre-upgrade UI — check its `## Status` line and top sections before assuming anything about the current UI's structure. |
 
 Design docs and the idea inbox live under `docs/`; player-facing docs (`README.md`, `guide.md`) and
-the primary worklist (`todo.md`) stay in root. Only `index.html` deploys, so file layout is purely
+the legacy `todo.md` stay in root. Only `index.html` deploys, so file layout is purely
 for navigation.
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
@@ -37,11 +37,11 @@ distinction is about **who acts**, not just how mature the idea is:
 - **🌱 Still planning** — the *user's* thinking space. You may add input as indented sub-bullets
   (questions, tradeoffs, what the code already does), but do **not** action, formalize, or move these.
 - **📥 Ready** — the user has blessed these; they're yours to route out. Routing means: small idea →
-  a line in `todo.md`; large/multi-phase idea → its own phased design doc under `docs/` (like
+  a GitHub Issue on `basmith7/vibe-hacker`; large/multi-phase idea → its own phased design doc under `docs/` (like
   `window-manager.md`). **Delete each item from `ideas.md` once routed** — that file is a staging
   area, not a second backlog.
 
-So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → `todo.md` **or** a new `docs/*.md` design doc.
+So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → a GitHub Issue **or** a new `docs/*.md` design doc.
 
 ## Current state (as of the last major work)
 
@@ -50,7 +50,7 @@ The "crafting update" — a Path-of-Exile-style itemization overhaul — is full
 each). In short: the old flat repeatable Hardware upgrades are gone, replaced by 8 equip slots fed
 by drops/gambling, a Toolbox stash + IDE crafting bench, patches/rarity, a materials economy, a
 rotating Mission Board, and endgame depth (item-level caps, set bonuses, Legendary uniques). Any
-further itemization work (rebalancing, more content) is now regular `todo.md` backlog, not a new
+further itemization work (rebalancing, more content) is now a regular GitHub Issue, not a new
 phase of that plan.
 
 In progress: `docs/window-manager.md`, a phased plan (Phases 1–4 shipped, Phase 5 next — check its
@@ -162,8 +162,7 @@ across every phase of this project:
   so a Reverted Legendary keeps its unique name with 0 patches. Accepted tradeoff, not an oversight.
 - The DOS theme's `:root[data-theme="dos"] .card .buy{...!important}` CSS forces *all* `.card .buy`
   buttons to the same bright-green look, including disabled ones — so disabled buttons don't look
-  visually dimmed under that theme specifically. Pre-existing, tracked under `todo.md`'s "DRY the
-  theme CSS" item.
+  visually dimmed under that theme specifically. Pre-existing, tracked in `docs/window-manager.md`'s "Backlog absorbed" ("DRY the theme CSS").
 - Decommissioning gear refunds credits + a flat material amount regardless of rarity — rarity isn't
   factored into the refund. Reasonable simplification (patches are the point of good gear, not
   resale value), not a missed feature.
