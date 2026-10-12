@@ -43,8 +43,8 @@ progression is real and auto-saves.
   but buying **Windows 3.1** unbolts them into **real draggable windows** with a **⊞ Start** menu to
   reopen anything you close (desktop only; prestige drops you back to the tiled DOS layout).
 
-See [guide.md](guide.md) for exactly what every stat and upgrade does, and [todo.md](todo.md) for the
-future-ideas backlog.
+See [guide.md](guide.md) for exactly what every stat and upgrade does, and the
+[GitHub Issues](https://github.com/basmith7/vibe-hacker/issues) for the future-ideas backlog.
 
 ## Controls
 

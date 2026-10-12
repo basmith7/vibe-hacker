@@ -17,31 +17,21 @@ no bundler, no `npm install`.
 | `index.html` | The entire game. Single `<script>` IIFE, ~2,850 lines. |
 | `README.md` | Player-facing project overview (what the game is, controls, license). |
 | `guide.md` | Player-facing mechanics reference (every stat/upgrade/system explained in detail). |
-| `todo.md` | Legacy idea list with the shipped-item history. Not the live backlog: work items are GitHub Issues on `basmith7/vibe-hacker` (`gh issue list -R basmith7/vibe-hacker`). |
-| `docs/ideas.md` | **Staging inbox** — raw ideas before they're formalized. Two sections with a specific workflow; see "Idea-intake workflow" below. |
 | `docs/crafting-update.md` | A **completed** 7-phase itemization design+delivery doc (see below) — a historical record now, not an active plan. Its own `## Status` line says so. |
 | `docs/window-manager.md` | An **active, in-progress** phased design+delivery doc (same format as `docs/crafting-update.md`) for turning the fixed panel grid + shop drawer into a real draggable/minimizable window system. Note: the design has since shifted so the moveable-window desktop is an *earned "Windows 3.1" upgrade*, with a tmux-style tiled terminal as the pre-upgrade UI — check its `## Status` line and top sections before assuming anything about the current UI's structure. |
 
-Design docs and the idea inbox live under `docs/`; player-facing docs (`README.md`, `guide.md`) and
-the legacy `todo.md` stay in root. Only `index.html` deploys, so file layout is purely
+Design docs live under `docs/`; player-facing docs (`README.md`, `guide.md`) stay in root. Only `index.html` deploys, so file layout is purely
 for navigation.
 
 **Docs are part of "done," not a follow-up.** Any change that alters what a player sees or does
 should update `guide.md`/`README.md` in the same piece of work, not as a separate pass later.
 
-## Idea-intake workflow
+## Ideas and backlog
 
-Ideas flow through `docs/ideas.md` before becoming real work. It has two sections, and the
-distinction is about **who acts**, not just how mature the idea is:
-
-- **🌱 Still planning** — the *user's* thinking space. You may add input as indented sub-bullets
-  (questions, tradeoffs, what the code already does), but do **not** action, formalize, or move these.
-- **📥 Ready** — the user has blessed these; they're yours to route out. Routing means: small idea →
-  a GitHub Issue on `basmith7/vibe-hacker`; large/multi-phase idea → its own phased design doc under `docs/` (like
-  `window-manager.md`). **Delete each item from `ideas.md` once routed** — that file is a staging
-  area, not a second backlog.
-
-So the pipeline is: `ideas.md` 🌱 → `ideas.md` 📥 → a GitHub Issue **or** a new `docs/*.md` design doc.
+Work items and new ideas are GitHub Issues on `basmith7/vibe-hacker`
+(`gh issue list -R basmith7/vibe-hacker`). A large or multi-phase idea gets its own phased design
+doc under `docs/` (like `window-manager.md`), linked from its issue. Shipped-item history from the old
+`todo.md` is in git history.
 
 ## Current state (as of the last major work)
 
