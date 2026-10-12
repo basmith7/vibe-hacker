@@ -47,8 +47,8 @@ run and how high an item level you can even find.
   **Windows 3.1** unbolts them into **real draggable windows** with a **⊞ Start** menu (desktop only;
   prestige drops you back to the tiled DOS layout).
 
-See [guide.md](guide.md) for exactly what every stat and upgrade does, and [todo.md](todo.md) for the
-future-ideas backlog.
+See [guide.md](guide.md) for exactly what every stat and upgrade does, and the
+[GitHub Issues](https://github.com/basmith7/vibe-hacker/issues) for the backlog.
 
 ## Controls
 

@@ -10,14 +10,14 @@ it's a staging area. Things move *through* it and then leave it.
   move these. They're a conversation, not a work order.
 - **📥 Ready** — the user has blessed these; they are now the agent's to route out. Once routed, the
   item is **deleted from this file** (this file must not accumulate — if it grows into a mirror of
-  todo.md, the workflow has failed).
+  the issue tracker, the workflow has failed).
 
 **Routing has two destinations:**
 
-- Small, self-contained ideas → a line in [`../todo.md`](../todo.md).
+- Small, self-contained ideas → a GitHub Issue on `basmith7/vibe-hacker`.
 - Large, multi-phase efforts → their own phased design doc in this folder (like
   [`window-manager.md`](window-manager.md) / [`crafting-update.md`](crafting-update.md)), then a
-  pointer line in `todo.md` if useful.
+  GitHub Issue linking to it.
 
 The agent picks the destination based on size; when in doubt, ask.
 
@@ -35,4 +35,4 @@ The agent picks the destination based on size; when in doubt, ask.
 *(User has blessed these. Agent formalizes and routes each out, then deletes it from here.)*
 
 _(nothing pending — batch routed 2026-09-16: mini-games, Claude Auto endgame, training-data model,
-and Slack app → todo.md Gameplay depth, all W7.)_
+and Slack app → the backlog (now GitHub Issues), all W7.)_
