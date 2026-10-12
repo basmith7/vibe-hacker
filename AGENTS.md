@@ -22,8 +22,7 @@ touching the area).
 
 Work items (backlog and new ideas) are GitHub Issues on `basmith7/vibe-hacker`. A large or
 multi-phase idea gets its own phased design doc under `docs/` (like `window-manager.md`), linked from
-its issue. `docs/ideas.md` is a staging inbox with an owner-only section: don't action or move items
-there.
+its issue.
 
 **Docs are part of "done".** A change to what a player sees or does updates `guide.md`/`README.md` in
 the same piece of work.
