@@ -1324,15 +1324,26 @@ notify("#general", "10x-ing that shit 🔥");`,
   }
   let STALE_VER=null;
   // Easter egg: an incompatible save boots into an Amiga-style Guru Meditation. Any click/key wipes
-  // the old save and reboots into a fresh game.
-  function guruMeditation(){
+  // the old save and reboots into a fresh game. Visitors from the Sugarbowl honeypot repo
+  // (?ref=sugarbowl*) get a branded crash instead, and dismissing it just reveals the game.
+  function guruMeditation(opts={}){
     const el=document.createElement("div"); el.id="guru";
-    const code=String(STALE_VER==null?0:STALE_VER).padStart(8,"0")+"."+String(SAVE_VER).padStart(8,"0");
-    el.innerHTML=`<div class="guruBox"><div>Software Failure.&nbsp;&nbsp;&nbsp;Press left mouse button to continue.</div><div>Guru Meditation #${code}</div></div>`;
+    const code=opts.code||String(STALE_VER==null?0:STALE_VER).padStart(8,"0")+"."+String(SAVE_VER).padStart(8,"0");
+    const msg=opts.msg||"Software Failure.&nbsp;&nbsp;&nbsp;Press left mouse button to continue.";
+    el.innerHTML=`<div class="guruBox"><div>${msg}</div><div>Guru Meditation #${code}</div></div>`;
     document.body.appendChild(el); document.body.classList.add("guru");
     let armed=false; setTimeout(()=>{armed=true;},600);   // ignore the click that may have loaded the page
-    const go=()=>{ if(!armed) return; wipe(); };
+    const go=()=>{ if(!armed) return; (opts.onContinue||wipe)(el,go); };
     el.addEventListener("click",go); addEventListener("keydown",go);
+  }
+  function sugarbowlCrash(){
+    if(!/^sugarbowl/.test(new URLSearchParams(location.search).get("ref")||"")) return;
+    history.replaceState(null,"",location.pathname+location.hash);   // one crash per visit, not per reload
+    guruMeditation({
+      code:"5U6A8B0W.00000042",
+      msg:"Sugarbowl Agent Fabric&trade; failure.&nbsp;&nbsp;&nbsp;Press left mouse button to continue.",
+      onContinue:(el,go)=>{ removeEventListener("keydown",go); el.remove(); document.body.classList.remove("guru"); },
+    });
   }
   function save(){
     P.lastReal=Date.now();
@@ -3033,6 +3044,7 @@ notify("#general", "10x-ing that shit 🔥");`,
     if(fb) fb.addEventListener("click",()=>{ if(document.fullscreenElement) document.exitFullscreen(); }); }
   const restored=loadState();
   if(restored==="stale"){ guruMeditation(); return; }   // wipe-on-click; nothing else boots, and no beforeunload save can overwrite the stale file
+  sugarbowlCrash();
   // Seed the float-mode layout now that fitScale() has fixed the logical canvas size. defaults()
   // deliberately leaves this null: it runs at IIFE-eval time, before the UI zoom is applied, so a
   // layout measured there would be double-width on a 4K screen. A restored save brings its own

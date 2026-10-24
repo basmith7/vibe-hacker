@@ -65,6 +65,9 @@ reveal polish) — see its "Backlog absorbed" section.
   box) and is wiped on click. So whenever a change transforms an existing field's *shape* (not just
   adds a new one), bump `SAVE_VER` and move on — don't write grandfather/backfill code. The old
   key-sniffing migration ladder that used to live in `loadState()` was deleted for this reason.
+- **Sugarbowl crash.** Visitors arriving with `?ref=sugarbowl*` (links from the
+  [Sugarbowl](https://github.com/basmith7/sugarbowl) honeypot repo) get a branded Guru Meditation
+  (`sugarbowlCrash()`). Dismissing it only removes the overlay; it never touches the save.
 - **The OS tier (`P.up.os`, index into `OS_TIERS`) is the milestone spine.** It gates hardware slots
   (`SLOTS[].os`), the agent cap (`HIRE_CAP`), Automation items (`UPG[].reqOs`), the window paradigm
   (`wmFloat()`), item-level caps and retro item names. `osLock(u)` is the single check the Store uses;
