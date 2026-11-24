@@ -548,18 +548,18 @@
   body.intro #hud{display:none}
   body.intro #hint,body.intro #toasts,body.intro #memes,body.intro #flash,body.intro .levelup{display:none}
   body.intro .agent .ah .sTag,body.intro .agent .ah .diff,body.intro .agent .sheet{display:none}
-  /* day-1 immersive terminal — only until the Store reveals at 10 credits; after that the terminal is
+  /* day-1 immersive terminal — only until the player opens the Store; after that the terminal is
      a normal tile beside the Store. Strips the terminal's chrome + build log and enlarges the mash surface. */
-  body.intro:not(.reveal-shop) #terminalPanel{border:none;border-radius:0}
-  body.intro:not(.reveal-shop) #terminalPanel > .head{display:none}
-  body.intro:not(.reveal-shop) #terminalBody{inset:0}
-  body.intro:not(.reveal-shop) #termBody{display:none}
-  body.intro:not(.reveal-shop) #manualWrap .code{font-size:15px;padding:16px 22px}
-  body.intro:not(.reveal-shop) #manualWrap .prog{height:10px}
-  body.intro:not(.reveal-shop) #manualWrap .agent{border:none;border-radius:0;background:transparent}
-  body.intro:not(.reveal-shop) #manualWrap .agent .ah{padding:14px 22px 6px;border-bottom:none}
-  body.intro:not(.reveal-shop) #manualWrap .agent .ah .nm{font-size:14px}
-  body.intro:not(.reveal-shop) #manualWrap .agent .ah .tk{font-size:13px;color:var(--dim)}
+  body.intro:not(.store-open) #terminalPanel{border:none;border-radius:0}
+  body.intro:not(.store-open) #terminalPanel > .head{display:none}
+  body.intro:not(.store-open) #terminalBody{inset:0}
+  body.intro:not(.store-open) #termBody{display:none}
+  body.intro:not(.store-open) #manualWrap .code{font-size:15px;padding:16px 22px}
+  body.intro:not(.store-open) #manualWrap .prog{height:10px}
+  body.intro:not(.store-open) #manualWrap .agent{border:none;border-radius:0;background:transparent}
+  body.intro:not(.store-open) #manualWrap .agent .ah{padding:14px 22px 6px;border-bottom:none}
+  body.intro:not(.store-open) #manualWrap .agent .ah .nm{font-size:14px}
+  body.intro:not(.store-open) #manualWrap .agent .ah .tk{font-size:13px;color:var(--dim)}
   @keyframes reveal{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 
   /* ---------- mobile: let the page scroll, stack panels with real heights ---------- */
@@ -2281,7 +2281,7 @@ notify("#general", "10x-ing that shit 🔥");`,
   function checkReveal(){
     if(!P.intro) return;
     if(!P.reveal.credits && P.credits>0){ P.reveal.credits=true; applyReveal(); save(); }
-    if(!P.reveal.shop && P.credits>=10){ P.reveal.shop=true; applyReveal(); applyLayout(); save(); }   // Store app tiles in at 10 credits
+    if(!P.reveal.shop && P.credits>=10){ P.reveal.shop=true; applyReveal(); applyLayout(); save(); }   // Open Store button appears at 10 credits
   }
   function endIntro(){
     if(!P.intro) return;

@@ -23,7 +23,7 @@ that only moves when you type or tap. That's deliberate: nothing is explained up
 buy your way into each app one at a time.
 
 - Fill the bar once (clear your first ticket) → the **$ credits** counter appears.
-- Reach **10 credits** → the **🛒 Store** app tiles in beside the terminal.
+- Reach **10 credits** → an **🛒 Open Store** button appears; click it and the Store tiles in beside the terminal (with its build log).
 - Your **first purchase** graduates you into the cockpit: the slim top strip fills in (logo, OS name,
   credits) plus a **📟 Status** app.
 - From there, **every system is its own app, bought one at a time** from the Store's "Getting Started"
